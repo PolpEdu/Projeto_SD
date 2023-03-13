@@ -4,7 +4,7 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-class Client extends Thread {
+class RMIClient extends Thread {
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
 
@@ -21,7 +21,7 @@ class Client extends Thread {
 
         }
 
-        Client client = new Client();
+        RMIClient client = new RMIClient();
         client.start();
     }
 
