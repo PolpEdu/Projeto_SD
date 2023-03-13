@@ -11,7 +11,7 @@ class Client extends Thread {
     public static void main(String[] args) {
 
         try {
-            InputStream config = new FileInputStream(new File("MulticastServer.properties"));
+            InputStream config = new FileInputStream("MulticastServer.properties");
             Properties prop = new Properties();
             prop.load(config);
             String multicastAddress = prop.getProperty("ADDR");

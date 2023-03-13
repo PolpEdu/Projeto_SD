@@ -5,42 +5,119 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.StringTokenizer;
+import java.io.*;
+import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
-public class Downloader {
-    private File links;
-    private File words;
-    private File linkInfo;
+import java.util.concurrent.LinkedBlockingQueue;
+public class Downloader extends Thread {
+//    private File links;
+//    private File words;
+//    private File linkInfo;
 
-    public static void main(String args[]) {
-        String url = "https://pornhub.com";
+    private LinkedBlockingQueue<String> urlQueue;
+
+    public Downloader(){
+        this.urlQueue = new LinkedBlockingQueue<String>();
+    }
+
+    public static void main(String[] args) {
+        ArrayList<String> Links = new ArrayList<>();
+        ArrayList<String> Words = new ArrayList<>();
+        ArrayList<String> SiteInfo = new ArrayList<>();
+        getInfoFromWebsite("https://pt.pornhub.com/", Links, Words, SiteInfo);
+
+    }
+
+    private static void getInfoFromWebsite(String webs, ArrayList<String> Links, ArrayList<String> Words, ArrayList<String> SiteInfo) {
+
         try {
-            Document doc = Jsoup.connect(url).get();
-            StringTokenizer tokens = new StringTokenizer(doc.text());
-            int countTokens = 0;
-            while (tokens.hasMoreElements() && countTokens++ < 100)
-                System.out.println(tokens.nextToken().toLowerCase());
-            Elements links = doc.select("a[href]");
-            for (Element link : links)
-                System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
+            String ws = webs;
+            if(!ws.startsWith("http://") && !ws.startsWith("https://")){
+                ws = "http://".concat(ws);
+            }
+
+
+            Document doc = Jsoup.connect(ws).get();
+
+            String title = doc.title();
+            String desciption = doc.select("meta[name=description]").attr("content");
+            if(desciption.equals("")){
+                desciption = "This page has no description";
+            }
+            SiteInfo.add(title);
+            SiteInfo.add(desciption);
+
+            Elements hrefs = doc.select("a[href]");
+            for(Element link: hrefs){
+                if(!link.attr("href").startsWith("#") || link.attr("href").startsWith("http")){
+                    Links.add(link.attr("href"));
+                }
+            }
+
+            String words = doc.text();
+            seperateWords(words, Words);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public HashMap<String,HashSet<String>> getLinks() {
-        
+    private void QueueInfo(){
+        while(true){
+            try{
+                String link = this.urlQueue.take();
+                ArrayList<String> Links = new ArrayList<>();
+                ArrayList<String> Words = new ArrayList<>();
+                ArrayList<String> SiteInfo = new ArrayList<>();
+                getInfoFromWebsite(link, Links, Words, SiteInfo);
+
+            }
+            catch(InterruptedException e){
+                System.out.println("Failed to check the queue and get the link");
+            }
+        }
     }
 
+    private static void seperateWords(String words, ArrayList<String> Words){
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(words.getBytes(StandardCharsets.UTF_8))));
+        String line;
+        String[] pois = {"de",  "a",  "o",  "que",  "e",  "do",  "da",  "em",  "um",  "para",  "é",  "com",  "não",  "uma",  "os",  "no",  "se",  "na",  "por",  "mais",  "as",  "dos",  "como",  "mas",  "foi",  "ao",  "ele",  "das",  "tem",  "à",  "seu",  "sua",  "ou",  "ser",  "quando",  "muito",  "há",  "nos",  "já",  "está",  "eu",  "também",  "só",  "pelo",  "pela",  "até",  "isso",  "ela",  "entre",  "era",  "depois",  "sem",  "mesmo",  "aos",  "ter",  "seus",  "quem",  "nas",  "me",  "esse",  "eles",  "estão",  "você",  "tinha",  "foram",  "essa",  "num",  "nem",  "suas",  "meu",  "às",  "minha",  "têm",  "numa",  "pelos",  "elas",  "havia",  "seja",  "qual",  "será",  "nós",  "tenho",  "lhe",  "deles",  "essas",  "esses",  "pelas",  "este",  "fosse",  "dele",  "tu",  "te",  "vocês",  "vos",  "lhes",  "meus",  "minhas",  "teu",  "tua",  "teus",  "tuas",  "nosso",  "nossa",  "nossos",  "nossas",  "dela",  "delas",  "esta",  "estes",  "estas",  "aquele",  "aquela",  "aqueles",  "aquelas",  "isto",  "aquilo",  "estou",  "está",  "estamos",  "estão",  "estive",  "esteve",  "estivemos",  "estiveram",  "estava",  "estávamos",  "estavam",  "estivera",  "estivéramos",  "esteja",  "estejamos",  "estejam",  "estivesse",  "estivéssemos",  "estivessem",  "estiver",  "estivermos",  "estiverem",  "hei",  "há",  "havemos",  "hão",  "houve",  "houvemos",  "houveram",  "houvera",  "houvéramos",  "haja",  "hajamos",  "hajam",  "houvesse",  "houvéssemos",  "houvessem",  "houver",  "houvermos",  "houverem",  "houverei",  "houverá",  "houveremos",  "houverão",  "houveria",  "houveríamos",  "houveriam",  "sou",  "somos",  "são",  "era",  "éramos",  "eram",  "fui",  "foi",  "fomos",  "foram",  "fora",  "fôramos",  "seja",  "sejamos",  "sejam",  "fosse",  "fôssemos",  "fossem",  "for",  "formos",  "forem",  "serei",  "será",  "seremos",  "serão",  "seria",  "seríamos",  "seriam",  "tenho",  "tem",  "temos",  "tém",  "tinha",  "tínhamos",  "tinham",  "tive",  "teve",  "tivemos",  "tiveram",  "tivera",  "tivéramos",  "tenha",  "tenhamos",  "tenham",  "tivesse",  "tivéssemos",  "tivessem",  "tiver",  "tivermos",  "tiverem",  "terei",  "terá",  "teremos",  "terão",  "teria",  "teríamos",  "teriam"};
+        ArrayList<String> stopWords = new ArrayList<>(Arrays.asList(pois));
 
+        while(true){
 
-    // create a function to download the page
+            try{
+                line = reader.readLine();
+                if(line == null){
+                    break;
+                }
+                String[] splited = line.split("[ ,;:.?!“”(){}\\[\\]<>'\n]+");
+                for(String word: splited){
+                    word = word.toLowerCase();
+                    if(!Words.contains(word) && !"".equals(word) && !stopWords.contains(word)){
+                        Words.add(word);
+                    }
+                }
+            }
+            catch (IOException e){
+                e.printStackTrace();
+            }
+        }
 
+        try{
+            reader.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
 
-
+    }
 }
+
+
+
+
+
+
