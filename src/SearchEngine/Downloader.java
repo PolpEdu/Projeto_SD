@@ -4,10 +4,19 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 
 public class Downloader {
+    private File links;
+    private File words;
+    private File linkInfo;
+
     public static void main(String args[]) {
         String url = "https://pornhub.com";
         try {
@@ -23,5 +32,15 @@ public class Downloader {
             e.printStackTrace();
         }
     }
+
+    public HashMap<String,HashSet<String>> getLinks() {
+        
+    }
+
+
+
+    // create a function to download the page
+
+
 
 }
