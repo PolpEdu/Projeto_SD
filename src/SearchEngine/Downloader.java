@@ -92,6 +92,17 @@ public class Downloader extends Thread {
 
                 siteInfo.put(link, info);
 
+                //adicionar num ficheiro
+                //
+                //
+                //
+                //-----------------------
+
+                //colocar os novos links na queue para continuar a ir buscar informação
+                for (String l: links){
+                    this.urlQueue.offer(l);
+                }
+
             }
             catch(InterruptedException e){
                 System.out.println("Failed to check the queue and get the link");
