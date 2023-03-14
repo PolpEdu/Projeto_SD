@@ -76,6 +76,21 @@ public class Downloader extends Thread {
                 HashMap<String, HashSet<String>> siteWords = new HashMap<>();
                 HashMap<String, ArrayList<String>> siteInfo = new HashMap<>();
 
+                for(String w: listWords){
+                    if(!siteWords.containsKey(w)){
+                        siteWords.put(w, new HashSet<>());
+                    }
+                    siteWords.get(w).add(link);
+                }
+
+                for(String l: links){
+                    if(!siteLinks.containsKey(l)){
+                        siteLinks.put(l, new HashSet<>());
+                    }
+                    siteLinks.get(l).add(link);
+                }
+
+                siteInfo.put(link, info);
 
             }
             catch(InterruptedException e){
