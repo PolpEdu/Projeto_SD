@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 
-public class MultiCastServer extends Thread {
+class MultiCastServer extends Thread {
     // current number of the server, serves as an identifier
     private int serverNumber;
 

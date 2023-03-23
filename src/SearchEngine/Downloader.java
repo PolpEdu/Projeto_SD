@@ -16,8 +16,8 @@ public class Downloader extends Thread {
 //    private File words;
 //    private File linkInfo;
 
-    private LinkedBlockingQueue<String> urlQueue;
 
+    private LinkedBlockingQueue<String> urlQueue;
     public Downloader(){
         this.urlQueue = new LinkedBlockingQueue<String>();
     }
@@ -26,11 +26,10 @@ public class Downloader extends Thread {
         ArrayList<String> Links = new ArrayList<>();
         ArrayList<String> Words = new ArrayList<>();
         ArrayList<String> SiteInfo = new ArrayList<>();
-        getInfoFromWebsite("https://pt.pornhub.com/", Links, Words, SiteInfo);
 
     }
 
-    private static void getInfoFromWebsite(String webs, ArrayList<String> Links, ArrayList<String> Words, ArrayList<String> SiteInfo) {
+    private void getInfoFromWebsite(String webs, ArrayList<String> Links, ArrayList<String> Words, ArrayList<String> SiteInfo) {
 
         try {
             String ws = webs;
@@ -68,29 +67,32 @@ public class Downloader extends Thread {
         while(true){
             try{
                 String link = this.urlQueue.take();
+                StringBuilder message = null;
                 ArrayList<String> links = new ArrayList<>();
                 ArrayList<String> listWords = new ArrayList<>();
                 ArrayList<String> info = new ArrayList<>();
+
                 getInfoFromWebsite(link, links, listWords, info);
-                HashMap<String, HashSet<String>> siteLinks = new HashMap<>();
-                HashMap<String, HashSet<String>> siteWords = new HashMap<>();
-                HashMap<String, ArrayList<String>> siteInfo = new HashMap<>();
+//                HashMap<String, HashSet<String>> siteLinks = new HashMap<>();
+//                HashMap<String, HashSet<String>> siteWords = new HashMap<>();
+//                HashMap<String, ArrayList<String>> siteInfo = new HashMap<>();
 
+                System.out.println("sexo");
                 for(String w: listWords){
-                    if(!siteWords.containsKey(w)){
-                        siteWords.put(w, new HashSet<>());
-                    }
-                    siteWords.get(w).add(link);
+                    message.append("word|");
+                    message.append(w);
+                    message.append(link);
                 }
-
-                for(String l: links){
-                    if(!siteLinks.containsKey(l)){
-                        siteLinks.put(l, new HashSet<>());
-                    }
-                    siteLinks.get(l).add(link);
-                }
-
-                siteInfo.put(link, info);
+                System.out.println(message);
+//
+//                for(String l: links){
+//                    if(!siteLinks.containsKey(l)){
+//                        siteLinks.put(l, new HashSet<>());
+//                    }
+//                    siteLinks.get(l).add(link);
+//                }
+//
+//                siteInfo.put(link, info);
 
                 //adicionar num ficheiro
                 //
