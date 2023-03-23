@@ -6,5 +6,5 @@ import java.util.ArrayList;
 import Client.*;
 
 public interface ServerInterface extends Remote {
-    public int alive() throws RemoteException;
+    int alive() throws RemoteException;
 }

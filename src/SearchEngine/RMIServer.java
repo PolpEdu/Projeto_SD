@@ -21,7 +21,7 @@ import java.util.concurrent.Semaphore;
 
 public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     // number of times to check if server is alive
-    static final int checks = 5;
+    static final int alive_checks = 5;
 
     // time to wait between checks in milliseconds, if server is alive
     static final int await_time = 1000;
@@ -68,6 +68,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
         String mcRecievePort;
         int mcSendPort;
 
+        String rmiRegistryName;
 
         /*
         System.getProperties().put("java.security.policy", "policy.all");
@@ -80,18 +81,22 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
             rmiHost = prop.getProperty("HOST");
             rmiPort = Integer.parseInt(prop.getProperty("PORT"));
 
+            rmiRegistryName = prop.getProperty("RMI_REGISTRY_NAME");
+
             mcAddress = prop.getProperty("MC_ADDR");
             mcRecievePort = prop.getProperty("MC_REC_PORT");
             mcSendPort = Integer.parseInt(prop.getProperty("MC_SEND_PORT"));
 
+
+
             // check if any of the properties are null
-            if (rmiHost == null || mcAddress == null || mcRecievePort == null || mcSendPort == 0 || rmiPort == 0) {
+            if (rmiHost == null || mcAddress == null || mcRecievePort == null || mcSendPort == 0 || rmiPort == 0 || rmiRegistryName == null) {
                 System.out.println("[EXCEPTION] Properties file is missing some properties");
+                System.out.println("Current config: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName);
                 return;
             }
 
             rmiServer = new RMIServer(mcAddress, mcSendPort, Integer.parseInt(mcRecievePort), null);
-
 
         } catch(RemoteException er){
             System.out.println("[EXCEPTION] RemoteException");
@@ -107,8 +112,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
             try {
                 Registry r = LocateRegistry.createRegistry(rmiPort);
                 System.setProperty("java.rmi.server.hostname", rmiHost); // set the host name
-                r.rebind("rmiServer", rmiServer);
-                System.out.println("Server is running on port " + rmiPort);
+                r.rebind(rmiRegistryName, rmiServer);
+                System.out.println("[Server] Running on " + rmiHost+ ":" + rmiPort + "");
 
                 // keep the server running
                 rmiServer.loop();
@@ -117,14 +122,49 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
                 System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
                 try {
                     Thread.sleep(1000);
-                    rmiServer.hPrincipal = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup("rmiServer");
+                    rmiServer.hPrincipal = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
 
+                    // start backup server protocol
+                    rmiServer.backUp(rmiPort, rmiHost, rmiRegistryName);
                 } catch (InterruptedException | NotBoundException ei) {
                     System.out.println("[EXCEPTION] InterruptedException | NotBoundException");
                     ei.printStackTrace();
                     return;
                 }
             }
+        }
+    }
+
+    public void backUp(int rmiPort, String rmiHost, String rmiRegistryName) throws NotBoundException, RemoteException, InterruptedException {
+        while (true) {
+                Thread.sleep(1000);
+
+                try {
+                    // check if server is alive
+                    if (this.hPrincipal.alive() == 1) {
+                        System.out.println("Server is alive");
+                    }
+                } catch (RemoteException e) {
+                    System.out.println("Server is dead");
+
+                    for (int i = 0; i < alive_checks; i++) {
+                        try {
+                            Thread.sleep(await_time);
+                            this.hPrincipal = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
+                        } catch (RemoteException er) {
+                            System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
+                            this.hPrincipal = null;
+                        } catch (InterruptedException ei) {
+                            System.out.println("[EXCEPTION] InterruptedException");
+                            ei.printStackTrace();
+                            return;
+                        } catch (NotBoundException en) {
+                            System.out.println("[EXCEPTION] NotBoundException");
+                            en.printStackTrace();
+                            return;
+                        }
+                    }
+                }
         }
     }
 

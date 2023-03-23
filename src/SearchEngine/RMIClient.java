@@ -25,19 +25,33 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
     }
 
     public static void main(String[] args) {
-        String host;
-        int port;
-        String SETTINGS_PATH = "src\\MulticastServer.properties";
+        String rmiHost;
+        int rmiPort;
+
+        String rmiRegistryName;
+
+        String SETTINGS_PATH = "src\\RMIClient.properties";
 
         try {
             InputStream config = new FileInputStream(SETTINGS_PATH);
             Properties prop = new Properties();
             prop.load(config);
-            host = prop.getProperty("ADDR");
-            port = Integer.parseInt(prop.getProperty("PORT"));
+
+            rmiHost = prop.getProperty("HOST");
+            rmiPort = Integer.parseInt(prop.getProperty("PORT"));
+            rmiRegistryName = prop.getProperty("RMI_REGISTRY_NAME");
+
+            if (rmiHost == null || rmiPort == 0 || rmiRegistryName == null) {
+                System.out.println("[EXCEPTION] Properties file is missing some properties");
+                System.out.println("Current config: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName);
+                return;
+            }
+
+            System.out.println("[CLIENT] Running on " + rmiHost + ":" + rmiPort);
+
 
             // GET SERVER INTERFACE USING REGISTRY
-            ServerInterface svInterface = (ServerInterface) LocateRegistry.getRegistry(host, port).lookup("ServerInterface");
+            ServerInterface svInterface = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
 
 
             Client client = new Client("Anon", false);
@@ -55,6 +69,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
         } catch (NotBoundException e) {
             System.out.println("[EXCEPTION] NotBoundException");
             e.printStackTrace();
+            return;
         }
     }
 
