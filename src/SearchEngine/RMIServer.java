@@ -56,6 +56,8 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     }
 
     public static void main(String[] args) throws RemoteException {
+        System.getProperties().put("java.security.policy", "policy.all");
+
         RMIServer rmiServer = null;
         Properties prop = new Properties();
 

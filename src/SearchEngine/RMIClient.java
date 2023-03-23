@@ -73,27 +73,42 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
-    private void printMenus(int type, Boolean admin) {
+    private void printMenus(int type) {
+
         switch (type) {
             case 0:
                 // register type
-                System.out.print("\nMENU\n  1.Login\n  2.Register\n  3.Search words\n  4.Search Link\n  e.Exit\nChoice: ");
+                System.out.print("\n###MENU###\n1.Login\n2.Register\n 3.Search words\n4.Search Link\ne.Exit\n -> Choice: ");
                 break;
+            case 1:
+                if (this.client.admin) {
+                    // admin menu
+                    return;
+                }
+
 
         }
+
     }
 
     private void menu() {
-        // create a new client object
+        InputStream in  = System.in;
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
         String choice = "";
         boolean end = false;
 
+        // create a new client object
         this.client = new Client("Anon", false);
 
+
+
         while (true) {
+            // anonymous user, not logged yet
             if (this.client.username.equals("Anon")) {
-
-
+                printMenus(0);
+            } else {
+                printMenus(1);
             }
 
         }
