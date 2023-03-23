@@ -1,49 +1,93 @@
 package SearchEngine;
 
-import java.net.*;
+import interfaces.ClientInterface;
+import interfaces.ServerInterface;
+
 import java.io.*;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
-class RMIClient extends Thread {
-    private String MULTICAST_ADDRESS = "224.3.2.1";
-    private int PORT = 4321;
+import Client.Client;
 
-    public static void main(String[] args) {
+class RMIClient extends UnicastRemoteObject implements ClientInterface {
+    static final int keepAliveTime = 5000;
 
-        try {
-            InputStream config = new FileInputStream("MulticastServer.properties");
-            Properties prop = new Properties();
-            prop.load(config);
-            String multicastAddress = prop.getProperty("ADDR");
+    private final ServerInterface serverInterface;
+    private Client client;
 
-
-        } catch (IOException e) {
-
-        }
-
-        RMIClient client = new RMIClient();
-        client.start();
+    public RMIClient(ServerInterface svInterface, Client client) throws RemoteException{
+        super();
+        this.serverInterface = svInterface;
+        this.client = client;
     }
 
-    public void run() {
-        MulticastSocket socket = null;
-        try {
-            socket = new MulticastSocket(PORT);  // create socket and bind it
-            InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
-            socket.joinGroup(group);
-            while (true) {
-                byte[] buffer = new byte[256];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
+    public static void main(String[] args) {
+        String host;
+        int port;
+        String SETTINGS_PATH = "src\\MulticastServer.properties";
 
-                System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
-                String message = new String(packet.getData(), 0, packet.getLength());
-                System.out.println(message);
-            }
-        } catch (IOException e) {
+        try {
+            InputStream config = new FileInputStream(SETTINGS_PATH);
+            Properties prop = new Properties();
+            prop.load(config);
+            host = prop.getProperty("ADDR");
+            port = Integer.parseInt(prop.getProperty("PORT"));
+
+            // GET SERVER INTERFACE USING REGISTRY
+            ServerInterface svInterface = (ServerInterface) LocateRegistry.getRegistry(host, port).lookup("ServerInterface");
+
+
+            Client client = new Client("Anon", false);
+            RMIClient rmi_client = new RMIClient(svInterface, client);
+            rmi_client.menu();
+
+        } catch (RemoteException e){
+            System.out.println("[EXCEPTION] RemoteException");
             e.printStackTrace();
-        } finally {
-            socket.close();
+            return;
+        } catch (IOException e) {
+            System.out.println("[EXCEPTION] IOException");
+            e.printStackTrace();
+            return;
+        } catch (NotBoundException e) {
+            System.out.println("[EXCEPTION] NotBoundException");
+            e.printStackTrace();
         }
+    }
+
+    private void printMenus(int type, Boolean admin) {
+        switch (type) {
+            case 0:
+                // register type
+                System.out.print("\nMENU\n  1.Login\n  2.Register\n  3.Search words\n  4.Search Link\n  e.Exit\nChoice: ");
+                break;
+
+        }
+    }
+
+    private void menu() {
+        // create a new client object
+        String choice = "";
+        boolean end = false;
+
+        this.client = new Client("Anon", false);
+
+        while (true) {
+            if (this.client.username.equals("Anon")) {
+
+
+            }
+
+        }
+
+    }
+
+
+    @Override
+    public void notifyMessage(String message) throws RemoteException {
+        System.out.println(message);
     }
 }

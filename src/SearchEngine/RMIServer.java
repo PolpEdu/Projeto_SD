@@ -9,7 +9,10 @@ import java.io.IOException;
 
 import java.net.*;
 
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -52,30 +55,85 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
         this.sendQueue = new LinkedList<>();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws RemoteException {
+        RMIServer rmiServer = null;
+        Properties prop = new Properties();
+
+
+        String SETTINGS_PATH = "src\\RMIServer.properties";
+        String rmiHost;
+        int rmiPort;
+
+        String mcAddress;
+        String mcRecievePort;
+        int mcSendPort;
+
 
         /*
         System.getProperties().put("java.security.policy", "policy.all");
         System.setSecurityManager(new RMISecurityManager());
         */
 
-        RMIServer server = null;
-        Properties prop = new Properties();
+
         try {
-            prop.load(new FileInputStream("MulticastServer.properties"));
+            prop.load(new FileInputStream(SETTINGS_PATH));
+            rmiHost = prop.getProperty("HOST");
+            rmiPort = Integer.parseInt(prop.getProperty("PORT"));
+
+            mcAddress = prop.getProperty("MC_ADDR");
+            mcRecievePort = prop.getProperty("MC_REC_PORT");
+            mcSendPort = Integer.parseInt(prop.getProperty("MC_SEND_PORT"));
+
+            // check if any of the properties are null
+            if (rmiHost == null || mcAddress == null || mcRecievePort == null || mcSendPort == 0 || rmiPort == 0) {
+                System.out.println("[EXCEPTION] Properties file is missing some properties");
+                return;
+            }
+
+            rmiServer = new RMIServer(mcAddress, mcSendPort, Integer.parseInt(mcRecievePort), null);
+
 
         } catch(RemoteException er){
             System.out.println("[EXCEPTION] RemoteException");
+            er.printStackTrace();
             return;
-        } catch(IOException ei){}
+        } catch(IOException ei){
+            System.out.println("[EXCEPTION] IOException");
+            ei.printStackTrace();
+            return;
+        }
 
+        while (true) {
+            try {
+                Registry r = LocateRegistry.createRegistry(rmiPort);
+                System.setProperty("java.rmi.server.hostname", rmiHost); // set the host name
+                r.rebind("rmiServer", rmiServer);
+                System.out.println("Server is running on port " + rmiPort);
 
+                // keep the server running
+                rmiServer.loop();
 
+            } catch (RemoteException e) {
+                System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
+                try {
+                    Thread.sleep(1000);
+                    rmiServer.hPrincipal = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup("rmiServer");
 
+                } catch (InterruptedException | NotBoundException ei) {
+                    System.out.println("[EXCEPTION] InterruptedException | NotBoundException");
+                    ei.printStackTrace();
+                    return;
+                }
+            }
+        }
     }
 
     public int alive() throws RemoteException {
         return 1;
+    }
+
+    public static void loop() {
+        while (true) {}
     }
 }
 
