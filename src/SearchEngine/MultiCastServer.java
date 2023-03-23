@@ -4,6 +4,7 @@ import Utility.Message;
 
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -49,6 +50,13 @@ class MultiCastServer extends Thread {
 
     // Online Ports of the servers in the network
     HashMap<String, HashSet<Integer>> ports;
+
+    public static void main(String[] args) {
+        Downloader dl = new Downloader();
+
+        dl.QueueInfo();
+        System.out.println("asdf");
+    }
 
 
 

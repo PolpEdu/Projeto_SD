@@ -6,7 +6,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -22,14 +21,7 @@ public class Downloader extends Thread {
         this.urlQueue = new LinkedBlockingQueue<String>();
     }
 
-    public static void main(String[] args) {
-        ArrayList<String> Links = new ArrayList<>();
-        ArrayList<String> Words = new ArrayList<>();
-        ArrayList<String> SiteInfo = new ArrayList<>();
-
-    }
-
-    private void getInfoFromWebsite(String webs, ArrayList<String> Links, ArrayList<String> Words, ArrayList<String> SiteInfo) {
+    boolean getInfoFromWebsite(String webs, ArrayList<String> Links, ArrayList<String> Words, ArrayList<String> SiteInfo) {
 
         try {
             String ws = webs;
@@ -41,6 +33,7 @@ public class Downloader extends Thread {
             Document doc = Jsoup.connect(ws).get();
 
             String title = doc.title();
+
             String desciption = doc.select("meta[name=description]").attr("content");
             if(desciption.equals("")){
                 desciption = "This page has no description";
@@ -60,49 +53,52 @@ public class Downloader extends Thread {
 
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
-    private void QueueInfo(){
+    void QueueInfo(){
+
         while(true){
             try{
-                String link = this.urlQueue.take();
-                StringBuilder message = null;
+                String link = "https://www.pornhub.com/";
+                if(!urlQueue.isEmpty()){
+                    link = this.urlQueue.take();
+                }
+
+                StringBuilder message = new StringBuilder();
                 ArrayList<String> links = new ArrayList<>();
                 ArrayList<String> listWords = new ArrayList<>();
                 ArrayList<String> info = new ArrayList<>();
 
-                getInfoFromWebsite(link, links, listWords, info);
-//                HashMap<String, HashSet<String>> siteLinks = new HashMap<>();
-//                HashMap<String, HashSet<String>> siteWords = new HashMap<>();
-//                HashMap<String, ArrayList<String>> siteInfo = new HashMap<>();
+                if(getInfoFromWebsite(link, links, listWords, info)){
+                    for(String w: listWords){
+                        message.append("word|");
+                        message.append(w);
+                        message.append("|");
+                        message.append(link);
+                        message.append(";");
+                    }
+                    for(String l: links){
+                        message.append("link|");
+                        message.append(l);
+                        message.append("|");
+                        message.append(link);
+                        message.append(";");
+                    }
 
-                System.out.println("sexo");
-                for(String w: listWords){
-                    message.append("word|");
-                    message.append(w);
-                    message.append(link);
-                }
-                System.out.println(message);
-//
-//                for(String l: links){
-//                    if(!siteLinks.containsKey(l)){
-//                        siteLinks.put(l, new HashSet<>());
-//                    }
-//                    siteLinks.get(l).add(link);
-//                }
-//
-//                siteInfo.put(link, info);
+                    message.append("siteinfo|");
+                    message.append(info.get(0));
+                    message.append("|");
+                    message.append(info.get(1));
+                    message.append(";");
 
-                //adicionar num ficheiro
-                //
-                //
-                //
-                //-----------------------
-
-                //colocar os novos links na queue para continuar a ir buscar informação
-                for (String l: links){
-                    this.urlQueue.offer(l);
+                    System.out.println(message);
+                    //colocar os novos links na queue para continuar a ir buscar informação
+                    for (String l: links){
+                        this.urlQueue.offer(l);
+                    }
                 }
 
             }
