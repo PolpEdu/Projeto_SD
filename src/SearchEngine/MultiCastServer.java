@@ -2,14 +2,10 @@ package SearchEngine;
 
 import Utility.Message;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.net.*;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.Semaphore;
 
 class MultiCastServer extends Thread {
 
@@ -19,8 +15,9 @@ class MultiCastServer extends Thread {
     private Database fileManager;
 
     // string representation of the multicast address
-    private String MULTICAST_ADDRESS;
+
     public int MULTICAST_SEND_PORT;
+    private String MULTICAST_ADDRESS;
     public int MULTICAST_RECEIVE_PORT;
     public int tcpPort;
     public String tcpHost;
@@ -30,7 +27,7 @@ class MultiCastServer extends Thread {
     LinkedList<Message> receivedQueue;
     Downloader downloader;
     //TCPServer tcpServer;
-    private Connection connection;
+    //private Connection connection;
     HashMap<String, HashSet<Integer>> ports;
     Semaphore conSem;
     public MultiCastServer(String tcpHost, int tcpPort, String multicastAddress, int sendPort, int receivePort){
@@ -49,7 +46,6 @@ class MultiCastServer extends Thread {
     }
     public void run(){
         this.downloader = new Downloader(this.receiveSocket,this.group, this.ports,this.conSem, this.tcpPort, this.tcpHost);
-        
     }
 
     public static void main(String[] args) {
@@ -64,17 +60,12 @@ class MultiCastServer extends Thread {
             int receivePort = Integer.parseInt(MulticastServer.getProperty("multicastReceivePort"));
 
 
-            MulticastServer myServer = new MulticastServer(tcpHost,tcpPort,multicastAddress, sendPort,receivePort);
-            myServer.start();
-        } catch(IOException e) {
+            MultiCastServer multicastServer = new MultiCastServer(tcpHost, tcpPort, multicastAddress, sendPort, receivePort);
+            multicastServer.start();
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
-
-
-
-
-
-
 
 }
