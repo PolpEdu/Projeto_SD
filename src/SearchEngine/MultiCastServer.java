@@ -33,9 +33,6 @@ class MultiCastServer extends Thread {
     int messageSize = 1024*8;
 
     public MultiCastServer(String tcpHost, int tcpPort, String multicastAddress, int sendPort, int receivePort){
-        this.receiveSocket = null;
-        this.sendSocket = null;
-        this.group = null;
         this.tcpPort = tcpPort;
         this.tcpHost = tcpHost;
         this.MULTICAST_ADDRESS = multicastAddress;
@@ -46,11 +43,14 @@ class MultiCastServer extends Thread {
         this.conSem = new Semaphore(1);
         this.urlQueue = new UrlQueue();
 
+        this.receiveSocket = null;
+        this.sendSocket = null;
+        this.group = null;
     }
     public void run(){
         byte[] receivebuffer;
         String received;
-        System.out.println(this.getName() + " is running...");
+        System.out.println("[" + this.getName() + "] Running...");
         try{
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.sendSocket = new MulticastSocket(MULTICAST_SEND_PORT);
@@ -61,19 +61,39 @@ class MultiCastServer extends Thread {
             //initialize downloader
             this.downloader = new Downloader(this.urlQueue, this.receiveSocket,this.group, this.ports,this.conSem, this.tcpPort, this.tcpHost);
 
-            //for now receiving message
+            try {
+                String id = UUID.randomUUID().toString();
+                String msgAlive = "id:"+id+" | type:alive | status:online | address:"+this.tcpHost+" | port:"+this.tcpPort;
+                byte[] sendbuffer = msgAlive.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendbuffer, sendbuffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+                // print sent message
+                System.out.println("[" + this.getName() + "] Sending: " + msgAlive);
+                this.receiveSocket.send(sendPacket);
+            } catch (IOException e) {
+                System.out.println("[EXCEPTION] " + e.getMessage());
+                e.printStackTrace();
+                return;
+            }
+
+            //for now receiving message, we are just recieving, we need to send a message to donwloaders first
             while(true){
                 receivebuffer = new byte[messageSize];
                 receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
                 this.receiveSocket.receive(receivePacket);
 
                 received = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                System.out.printf(received);
+                System.out.println("[" + this.getName() + "] Received: " + received);
+
+
             }
+
+
         }
 
         catch (IOException e){
-            System.out.println("IO: " + e.getMessage());
+            System.out.println("[EXCEPTION] " + e.getMessage());
+            e.printStackTrace();
+            return;
         }
 
     }

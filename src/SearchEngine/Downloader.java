@@ -105,27 +105,15 @@ public class Downloader extends Thread {
                     for(String w: listWords){
                         Matcher matcher = pattern.matcher(w);
                         if(matcher.matches()){
-                            message.append("word|");
-                            message.append(w);
-                            message.append("|");
-                            message.append(link);
-                            message.append(";");
+                            message.append("word|"+ w + "|"+ link + ";");
                         }
 
                     }
                     for(String l: links){
-                        message.append("link|");
-                        message.append(l);
-                        message.append("|");
-                        message.append(link);
-                        message.append(";");
+                        message.append("link|"+ l + "|"+ link + ";");
                     }
 
-                    message.append("siteinfo|");
-                    message.append(info.get(0));
-                    message.append("|");
-                    message.append(info.get(1));
-                    message.append(";");
+                    message.append("siteinfo|"+ info.get(0) + "|"+ info.get(1) + ";");
 
                     send = message.toString();
                     //System.out.println(send);
