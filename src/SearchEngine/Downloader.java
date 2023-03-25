@@ -24,12 +24,14 @@ public class Downloader extends Thread {
     private int MULTICAST_RECEIVE_PORT;
     private InetAddress group;
     private HashMap<String, HashSet<Integer>> onlinePorts;
+
     private Semaphore conSem;
     private int tcpPort;
     private String tcpHost;
 
-    public Downloader(MulticastSocket receiveSocket, InetAddress group, HashMap<String, HashSet<Integer>> onlinePorts, Semaphore conSem, int tcpPort, String tcpHost){
-        this.urlQueue = new LinkedBlockingQueue<String>();
+    public Downloader(UrlQueue urlQueue,MulticastSocket receiveSocket, InetAddress group, HashMap<String, HashSet<Integer>> onlinePorts, Semaphore conSem, int tcpPort, String tcpHost){
+
+        this.urlQueue = urlQueue.getUrlQueue();
         this.receiveSocket = receiveSocket;
         this.group = group;
         this.onlinePorts = onlinePorts;
@@ -84,10 +86,11 @@ public class Downloader extends Thread {
 
         while(true){
             try{
-                String link = "https://www.uc.pt/";
-                if(!urlQueue.isEmpty()){
-                    link = this.urlQueue.take();
+
+                while(urlQueue.isEmpty()){
+                    sleep(1000);
                 }
+                String link = this.urlQueue.take();
 
                 StringBuilder message = new StringBuilder();
                 ArrayList<String> links = new ArrayList<>();

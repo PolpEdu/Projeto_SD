@@ -19,6 +19,8 @@ class MultiCastServer extends Thread {
     public int MULTICAST_RECEIVE_PORT;
     public int tcpPort;
     public String tcpHost;
+
+    public UrlQueue urlQueue;
     MulticastSocket receiveSocket;
     MulticastSocket sendSocket;
     InetAddress group;
@@ -40,10 +42,11 @@ class MultiCastServer extends Thread {
         this.ports = new HashMap<>();
         this.receivedQueue = new LinkedList<>();
         this.conSem = new Semaphore(1);
+        this.urlQueue = new UrlQueue();
 
     }
     public void run(){
-        this.downloader = new Downloader(this.receiveSocket,this.group, this.ports,this.conSem, this.tcpPort, this.tcpHost);
+        this.downloader = new Downloader(this.urlQueue, this.receiveSocket,this.group, this.ports,this.conSem, this.tcpPort, this.tcpHost);
     }
 
     public static void main(String[] args) {
