@@ -55,7 +55,6 @@ class MultiCastServer extends Thread {
         Downloader dl = new Downloader();
 
         dl.QueueInfo();
-        System.out.println("asdf");
     }
 
 

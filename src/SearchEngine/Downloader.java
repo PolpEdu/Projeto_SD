@@ -10,6 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class Downloader extends Thread {
 //    private File links;
 //    private File words;
@@ -62,7 +65,7 @@ public class Downloader extends Thread {
 
         while(true){
             try{
-                String link = "https://www.pornhub.com/";
+                String link = "https://www.uc.pt/";
                 if(!urlQueue.isEmpty()){
                     link = this.urlQueue.take();
                 }
@@ -72,13 +75,18 @@ public class Downloader extends Thread {
                 ArrayList<String> listWords = new ArrayList<>();
                 ArrayList<String> info = new ArrayList<>();
 
+                Pattern pattern = Pattern.compile("^[a-zA-Z0-9]*$");
                 if(getInfoFromWebsite(link, links, listWords, info)){
                     for(String w: listWords){
-                        message.append("word|");
-                        message.append(w);
-                        message.append("|");
-                        message.append(link);
-                        message.append(";");
+                        Matcher matcher = pattern.matcher(w);
+                        if(matcher.matches()){
+                            message.append("word|");
+                            message.append(w);
+                            message.append("|");
+                            message.append(link);
+                            message.append(";");
+                        }
+
                     }
                     for(String l: links){
                         message.append("link|");
@@ -95,6 +103,7 @@ public class Downloader extends Thread {
                     message.append(";");
 
                     System.out.println(message);
+
                     //colocar os novos links na queue para continuar a ir buscar informação
                     for (String l: links){
                         this.urlQueue.offer(l);
