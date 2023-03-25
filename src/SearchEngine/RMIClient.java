@@ -50,7 +50,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
 
             if (rmiHost == null || rmiPort == 0 || rmiRegistryName == null) {
                 System.out.println("[EXCEPTION] Properties file is missing some properties");
-                System.out.println("Current config: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName);
+                System.out.println("[EXCEPTION] Current config: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName);
                 return;
             }
 
@@ -85,18 +85,18 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
         switch (type) {
             case 0:
                 // Login or Register
-                System.out.print("\n### Login ###\n1.Search words\n2.Search Link\n 3.Login\n4.Register\n  e.Exit\n -> Choice: ");
+                System.out.print("\n### Login ###\n1.Search words\n2.Search Link\n  3.Login\n  4.Register\n   e.Exit\n --> Choice: ");
                 return;
             case 1:
                 // admin - main menu
-                System.out.print("\n### Admin User Panel ###\n1.Search words\n2.Search Link\n3.Index new URL\n4.User List\n5.Give admin Perms\n6.History\n7.Logout\n  e.Exit\n -> Choice: ");
+                System.out.print("\n### Admin User Panel ###\n1.Search words\n2.Search Link\n3.Index new URL\n4.User List\n5.Give admin Perms\n6.History\n7.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 2:
                 // user - main menu
-                System.out.print("\n### User Panel ###\n1.Search words\n2.Search Link\n3.History\n4.Logout\n  e.Exit\n -> Choice: ");
+                System.out.print("\n### User Panel ###\n1.Search words\n2.Search Link\n3.History\n  4.Logout\n   e.Exit\n --> Choice: ");
                 return;
             case 3:
-                System.out.print("\n### Admin Panel ###\n1.Top 10 pages\n2.Top 10 searches\n3.Multicast Servers\nb.Back\n  e.Exit\n -> Choice: ");
+                System.out.print("\n### Admin Panel ###\n1.Top 10 pages\n2.Top 10 searches\n3.Multicast Servers\nb.Back\n  e.Exit\n --> Choice: ");
                 return;
             default:
                 System.out.println("[EXCEPTION] Invalid menu type");
@@ -190,7 +190,6 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
 
                 ArrayList<String> checked = this.sv.checkLogin(username, password);
 
-                // todo do stuff
 
 
 
