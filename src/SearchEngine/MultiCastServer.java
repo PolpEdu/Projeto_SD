@@ -48,14 +48,14 @@ class MultiCastServer extends Thread {
 
     public static void main(String[] args) {
         try {
-            InputStream input = new FileInputStream(new File("MulticastServer.properties"));
+            InputStream input = new FileInputStream(new File("src/MulticastServer.properties").getAbsoluteFile());
             Properties MulticastServer = new Properties();
             MulticastServer.load(input);
-            String tcpHost = MulticastServer.getProperty("tcpHost");
-            int tcpPort = Integer.parseInt(MulticastServer.getProperty("tcpPort"));
-            String multicastAddress = MulticastServer.getProperty("multicastAddress");
-            int sendPort = Integer.parseInt(MulticastServer.getProperty("multicastSendPort"));
-            int receivePort = Integer.parseInt(MulticastServer.getProperty("multicastReceivePort"));
+            String tcpHost = MulticastServer.getProperty("HOST");
+            int tcpPort = Integer.parseInt(MulticastServer.getProperty("PORT"));
+            String multicastAddress = MulticastServer.getProperty("MC_ADDR");
+            int sendPort = Integer.parseInt(MulticastServer.getProperty("MC_SEND_PORT"));
+            int receivePort = Integer.parseInt(MulticastServer.getProperty("MC_RECEIVE_PORT"));
 
 
             MultiCastServer multicastServer = new MultiCastServer(tcpHost, tcpPort, multicastAddress, sendPort, receivePort);
