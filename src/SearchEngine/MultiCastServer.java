@@ -83,8 +83,7 @@ class MultiCastServer extends Thread {
 
                 received = new String(receivePacket.getData(), 0, receivePacket.getLength());
                 System.out.println("[" + this.getName() + "] Received: " + received);
-
-
+                
             }
 
 

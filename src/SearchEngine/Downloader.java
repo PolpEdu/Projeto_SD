@@ -175,13 +175,17 @@ public class Downloader extends Thread {
     private void sendMessage(String send){
         try {
             this.conSem.acquire();
-            MulticastSocket socket = new MulticastSocket();
 
-            byte[] buffer = send.getBytes();
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.tcpPort);
-            socket.send(packet);
+            for(String address: this.onlinePorts.keySet()){
+                for(int port: this.onlinePorts.get(address)){
+                    if(!address.equals(this.tcpHost) || port!=this.tcpPort) {
+                        byte[] buffer = send.getBytes();
+                        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+                        this.receiveSocket.send(packet);
+                    }
+                }
+            }
 
-            socket.close();
             this.conSem.release();
         }
         catch (InterruptedException e){
