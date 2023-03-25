@@ -4,7 +4,6 @@ import Utility.Message;
 
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -14,7 +13,7 @@ class MultiCastServer extends Thread {
     private int serverNumber;
 
     // Object to store the server's data in files
-    private File fileManager;
+    private Database fileManager;
 
     // string representation of the multicast address
     private String MULTICAST_ADDRESS;
