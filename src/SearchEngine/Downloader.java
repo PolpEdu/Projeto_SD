@@ -30,7 +30,6 @@ public class Downloader extends Thread {
     private String tcpHost;
 
     public Downloader(UrlQueue urlQueue,MulticastSocket receiveSocket, InetAddress group, HashMap<String, HashSet<Integer>> onlinePorts, Semaphore conSem, int tcpPort, String tcpHost){
-
         this.urlQueue = urlQueue.getUrlQueue();
         this.receiveSocket = receiveSocket;
         this.group = group;
@@ -52,7 +51,6 @@ public class Downloader extends Thread {
             if(!ws.startsWith("http://") && !ws.startsWith("https://")){
                 ws = "http://".concat(ws);
             }
-
 
             Document doc = Jsoup.connect(ws).get();
 
@@ -126,6 +124,7 @@ public class Downloader extends Thread {
                     message.append(info.get(1));
                     message.append(";");
 
+
                     System.out.println(message);
 
                     //colocar os novos links na queue para continuar a ir buscar informação
@@ -180,6 +179,15 @@ public class Downloader extends Thread {
 
     }
 
+    private void sendMessage(String send){
+        try {
+            this.conSem.acquire();
+
+        }
+        catch (InterruptedException e){
+            System.out.println("IO: "+e.getMessage());
+        }
+    }
 
 }
 

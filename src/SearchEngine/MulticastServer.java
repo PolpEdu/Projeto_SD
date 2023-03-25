@@ -24,7 +24,7 @@ class MultiCastServer extends Thread {
     MulticastSocket receiveSocket;
     MulticastSocket sendSocket;
     InetAddress group;
-    LinkedList<String> receivedQueue;
+    LinkedList<Message> receivedQueue;
     Downloader downloader;
     //TCPServer tcpServer;
     //private Connection connection;
@@ -46,7 +46,20 @@ class MultiCastServer extends Thread {
 
     }
     public void run(){
-        this.downloader = new Downloader(this.urlQueue, this.receiveSocket,this.group, this.ports,this.conSem, this.tcpPort, this.tcpHost);
+        byte[] receivebuffer;
+        String received;
+        System.out.println(this.getName() + " is running...");
+        try{
+            this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
+            this.sendSocket = new MulticastSocket(MULTICAST_SEND_PORT);
+            this.group = InetAddress.getByName(MULTICAST_ADDRESS);
+            this.receiveSocket.joinGroup(this.group);// fds merda caralho
+            this.downloader = new Downloader(this.urlQueue, this.receiveSocket,this.group, this.ports,this.conSem, this.tcpPort, this.tcpHost);
+        }
+        catch (IOException e){
+            System.out.println("IO: " + e.getMessage());
+        }
+
     }
 
     public static void main(String[] args) {
