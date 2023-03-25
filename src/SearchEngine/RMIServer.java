@@ -116,7 +116,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
                 Registry r = LocateRegistry.createRegistry(rmiPort);
                 System.setProperty("java.rmi.server.hostname", rmiHost); // set the host name
                 r.rebind(rmiRegistryName, rmiServer);
-                System.out.println("[Server] Running on " + rmiHost+ ":" + rmiPort + "");
+                System.out.println("[SERVER] Running on " + rmiHost+ ":" + rmiPort + "");
 
                 // keep the server running
                 rmiServer.loop();
@@ -127,7 +127,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
                     Thread.sleep(1000);
                     rmiServer.hPrincipal = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
 
-                    // start backup server protocol
                     rmiServer.backUp(rmiPort, rmiHost, rmiRegistryName);
                 } catch (InterruptedException | NotBoundException ei) {
                     System.out.println("[EXCEPTION] InterruptedException | NotBoundException");
@@ -140,15 +139,14 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     public void backUp(int rmiPort, String rmiHost, String rmiRegistryName) throws NotBoundException, RemoteException, InterruptedException {
         while (true) {
-                Thread.sleep(1000);
-
+                Thread.sleep(await_time);
                 try {
                     // check if server is alive
                     if (this.hPrincipal.alive() == 1) {
                         System.out.println("Server is alive");
                     }
                 } catch (RemoteException e) {
-                    System.out.println("Server is dead");
+                    System.out.println("[SERVER] Getting connection...");
 
                     for (int i = 0; i < alive_checks; i++) {
                         try {
@@ -192,7 +190,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     public ArrayList<String> checkLogin(String username, String password) throws RemoteException {
         ArrayList<String> response = new ArrayList<>();
 
-        //todo...
 
         return response;
     }

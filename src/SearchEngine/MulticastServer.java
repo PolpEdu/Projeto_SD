@@ -7,13 +7,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.sql.Connection;
-import java.util.*;
-import java.util.concurrent.Semaphore;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 
 class MultiCastServer extends Thread {
 
     private int serverNumber;
+
+    // Object to store the server's data in files
+    private Database fileManager;
+
+    // string representation of the multicast address
     private String MULTICAST_ADDRESS;
     public int MULTICAST_SEND_PORT;
     public int MULTICAST_RECEIVE_PORT;
