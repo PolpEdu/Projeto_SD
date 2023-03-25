@@ -5,7 +5,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import javax.xml.crypto.Data;
 import java.io.*;
+import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.nio.charset.StandardCharsets;
@@ -91,6 +93,7 @@ public class Downloader extends Thread {
                 String link = this.urlQueue.take();
 
                 StringBuilder message = new StringBuilder();
+                String send;
                 ArrayList<String> links = new ArrayList<>();
                 ArrayList<String> listWords = new ArrayList<>();
                 ArrayList<String> info = new ArrayList<>();
@@ -124,8 +127,10 @@ public class Downloader extends Thread {
                     message.append(info.get(1));
                     message.append(";");
 
-
-                    System.out.println(message);
+                    send = message.toString();
+                    //System.out.println(send);
+                    this.sendMessage(send);
+                    //System.out.println(message);
 
                     //colocar os novos links na queue para continuar a ir buscar informação
                     for (String l: links){
@@ -182,9 +187,19 @@ public class Downloader extends Thread {
     private void sendMessage(String send){
         try {
             this.conSem.acquire();
+            MulticastSocket socket = new MulticastSocket();
 
+            byte[] buffer = send.getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.tcpPort);
+            socket.send(packet);
+
+            socket.close();
+            this.conSem.release();
         }
         catch (InterruptedException e){
+            System.out.println("IO: "+e.getMessage());
+        }
+        catch (IOException e){
             System.out.println("IO: "+e.getMessage());
         }
     }

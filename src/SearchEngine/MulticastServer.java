@@ -30,6 +30,8 @@ class MultiCastServer extends Thread {
     //private Connection connection;
     HashMap<String, HashSet<Integer>> ports;
     Semaphore conSem;
+    int messageSize = 1024*8;
+
     public MultiCastServer(String tcpHost, int tcpPort, String multicastAddress, int sendPort, int receivePort){
         this.receiveSocket = null;
         this.sendSocket = null;
@@ -53,9 +55,23 @@ class MultiCastServer extends Thread {
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.sendSocket = new MulticastSocket(MULTICAST_SEND_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
-            this.receiveSocket.joinGroup(this.group);// fds merda caralho
+            this.receiveSocket.joinGroup(this.group);
+            DatagramPacket receivePacket;
+
+            //initialize downloader
             this.downloader = new Downloader(this.urlQueue, this.receiveSocket,this.group, this.ports,this.conSem, this.tcpPort, this.tcpHost);
+
+            //for now receiving message
+            while(true){
+                receivebuffer = new byte[messageSize];
+                receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
+                this.receiveSocket.receive(receivePacket);
+
+                received = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                System.out.printf(received);
+            }
         }
+
         catch (IOException e){
             System.out.println("IO: " + e.getMessage());
         }
