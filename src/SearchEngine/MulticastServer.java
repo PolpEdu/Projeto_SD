@@ -2,59 +2,68 @@ package SearchEngine;
 
 import Utility.Message;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.sql.Connection;
+import java.util.*;
+import java.util.concurrent.Semaphore;
 
 class MultiCastServer extends Thread {
-    // current number of the server, serves as an identifier
+
     private int serverNumber;
-
-    // Object to store the server's data in files
-    private File fileManager;
-
-    // string representation of the multicast address
     private String MULTICAST_ADDRESS;
-
-    // port to send multicast packets to
     public int MULTICAST_SEND_PORT;
-
-    // port to receive multicast packets from
     public int MULTICAST_RECEIVE_PORT;
-
-    // port to receive TCP packets from
-    public int PORT;
-
-    // Address to receive TCP packets from
-    public String TCP_HOST;
-
-
-    // socket to receive multicast packets
+    public int tcpPort;
+    public String tcpHost;
     MulticastSocket receiveSocket;
-
-    // socket to send multicast packets
     MulticastSocket sendSocket;
-
-    // multicast group
     InetAddress group;
-
-
-    // queue of messages to be sent
     LinkedList<Message> receivedQueue;
-
-    // queue of messages to be sent
     Downloader downloader;
-
-    // Online Ports of the servers in the network
+    //TCPServer tcpServer;
+    private Connection connection;
     HashMap<String, HashSet<Integer>> ports;
+    Semaphore conSem;
+    public MultiCastServer(String tcpHost, int tcpPort, String multicastAddress, int sendPort, int receivePort){
+        this.receiveSocket = null;
+        this.sendSocket = null;
+        this.group = null;
+        this.tcpPort = tcpPort;
+        this.tcpHost = tcpHost;
+        this.MULTICAST_ADDRESS = multicastAddress;
+        this.MULTICAST_SEND_PORT = sendPort;
+        this.MULTICAST_RECEIVE_PORT = receivePort;
+        this.ports = new HashMap<>();
+        this.receivedQueue = new LinkedList<>();
+        this.conSem = new Semaphore(1);
+
+    }
+    public void run(){
+        this.downloader = new Downloader(this.receiveSocket,this.group, this.ports,this.conSem, this.tcpPort, this.tcpHost);
+        
+    }
 
     public static void main(String[] args) {
-        Downloader dl = new Downloader();
+        try {
+            InputStream input = new FileInputStream(new File("MulticastServer.properties"));
+            Properties MulticastServer = new Properties();
+            MulticastServer.load(input);
+            String tcpHost = MulticastServer.getProperty("tcpHost");
+            int tcpPort = Integer.parseInt(MulticastServer.getProperty("tcpPort"));
+            String multicastAddress = MulticastServer.getProperty("multicastAddress");
+            int sendPort = Integer.parseInt(MulticastServer.getProperty("multicastSendPort"));
+            int receivePort = Integer.parseInt(MulticastServer.getProperty("multicastReceivePort"));
 
-        dl.QueueInfo();
+
+            MulticastServer myServer = new MulticastServer(tcpHost,tcpPort,multicastAddress, sendPort,receivePort);
+            myServer.start();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
