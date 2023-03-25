@@ -1,7 +1,5 @@
 package SearchEngine;
 
-import Utility.Message;
-
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -24,7 +22,7 @@ class MultiCastServer extends Thread {
     MulticastSocket receiveSocket;
     MulticastSocket sendSocket;
     InetAddress group;
-    LinkedList<Message> receivedQueue;
+    LinkedList<String> receivedQueue;
     Downloader downloader;
     //TCPServer tcpServer;
     //private Connection connection;
