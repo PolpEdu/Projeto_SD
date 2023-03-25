@@ -32,6 +32,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
     }
 
     public static void main(String[] args) {
+        System.getProperties().put("java.security.policy", "policy.all");
         String rmiHost;
         int rmiPort;
 

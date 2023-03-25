@@ -47,7 +47,7 @@ public class Connection extends Thread {
                 for (String address: this.onlinePorts.keySet()) {
                     for (int port : this.onlinePorts.get(address)) {
                         if (!address.equals(this.tcpHost) || port!=this.tcpPort) {
-                            new TCPSender(port, address, this.tcpPort);
+                            // new TCPSender(port, address, this.tcpPort);
                         }
                     }
                 }
