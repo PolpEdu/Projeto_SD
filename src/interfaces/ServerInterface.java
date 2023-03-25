@@ -7,4 +7,6 @@ import Client.*;
 
 public interface ServerInterface extends Remote {
     int alive() throws RemoteException;
+    void updateClient(String username, Client client) throws RemoteException;
+    ArrayList<String> checkLogin(String username, String password) throws RemoteException;
 }

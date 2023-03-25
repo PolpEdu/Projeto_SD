@@ -14,6 +14,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Properties;
@@ -172,6 +173,28 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     public int alive() throws RemoteException {
         return 1;
+    }
+
+    @Override
+    public void updateClient(String username, Client client) throws RemoteException {
+        if (client == null) {
+            this.clients.remove(username);
+        } else {
+            if (this.clients.containsKey(username)) {
+                this.clients.replace(username, client);
+            } else {
+                this.clients.put(username, client);
+            }
+        }
+    }
+
+    @Override
+    public ArrayList<String> checkLogin(String username, String password) throws RemoteException {
+        ArrayList<String> response = new ArrayList<>();
+
+        //todo...
+
+        return response;
     }
 
     public static void loop() {
