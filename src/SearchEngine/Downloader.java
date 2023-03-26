@@ -31,7 +31,7 @@ public class Downloader extends Thread {
     private int tcpPort;
     private String tcpHost;
 
-    public Downloader(UrlQueue urlQueue, MulticastSocket receiveSocket, InetAddress group, HashMap<String, HashSet<Integer>> onlinePorts, Semaphore conSem, int tcpPort, String tcpHost) {
+    public Downloader(UrlQueue urlQueue, MulticastSocket receiveSocket,int MULTICAST_RECEIVE_PORT, InetAddress group, HashMap<String, HashSet<Integer>> onlinePorts, Semaphore conSem, int tcpPort, String tcpHost) {
         this.urlQueue = urlQueue.getUrlQueue();
         this.receiveSocket = receiveSocket;
         this.group = group;
@@ -39,6 +39,7 @@ public class Downloader extends Thread {
         this.conSem = conSem;
         this.tcpPort = tcpPort;
         this.tcpHost = tcpHost;
+        this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
         this.start();
     }
 
@@ -177,15 +178,10 @@ public class Downloader extends Thread {
         try {
             this.conSem.acquire();
 
-            for (String address : this.onlinePorts.keySet()) {
-                for (int port : this.onlinePorts.get(address)) {
-                    if (!address.equals(this.tcpHost) || port != this.tcpPort) {
-                        byte[] buffer = send.getBytes();
-                        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
-                        this.receiveSocket.send(packet);
-                    }
-                }
-            }
+            byte[] buffer = send.getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+            System.out.println(this.MULTICAST_RECEIVE_PORT);
+            this.receiveSocket.send(packet);
 
             this.conSem.release();
         } catch (InterruptedException | IOException e) {

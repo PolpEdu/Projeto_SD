@@ -70,7 +70,7 @@ class MultiCastServer extends Thread {
             DatagramPacket receivePacket;
 
             //initialize downloader
-            this.downloader = new Downloader(this.urlQueue, this.receiveSocket,this.group, this.ports,this.conSem, this.connection.getTcpPort(), this.tcpHost);
+            this.downloader = new Downloader(this.urlQueue, this.receiveSocket,this.MULTICAST_RECEIVE_PORT, this.group, this.ports,this.conSem, this.connection.getTcpPort(), this.tcpHost);
 
             try {
                 String id = UUID.randomUUID().toString();
@@ -130,7 +130,6 @@ class MultiCastServer extends Thread {
             String multicastAddress = MulticastServer.getProperty("MC_ADDR");
             int sendPort = Integer.parseInt(MulticastServer.getProperty("MC_SEND_PORT"));
             int receivePort = Integer.parseInt(MulticastServer.getProperty("MC_RECEIVE_PORT"));
-
 
             MultiCastServer multicastServer = new MultiCastServer(tcpHost, tcpPort, multicastAddress, sendPort, receivePort);
             multicastServer.start();
