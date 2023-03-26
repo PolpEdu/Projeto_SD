@@ -95,19 +95,19 @@ class MultiCastServer extends Thread {
                 String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
                 System.out.println("[" + this.getName() + "] Received: " + received);
 
-                String[] list = received.split("\\|");
-                System.out.println("[" + this.getName() + "] Received: " + list[0]);
-                String type = list[1].split(":")[1];
+//                String[] list = received.split("\\|");
+//                System.out.println("[" + this.getName() + "] Received: " + list[0]);
+//                String type = list[1].split(":")[1];
 
                 checked_msg = true;
 
-                if (type.equals("alive")) {
-                    Request req = new Request(this.messageSize, received, this.receivedQueue, this.MULTICAST_SEND_PORT, this.MULTICAST_RECEIVE_PORT, this.group, this.receiveSocket, this.sendSocket, this.serverNumber, this.fileManager, this.downloader, this.tcpHost, this.tcpServer, this.connection);
-                    System.out.println("[" + this.getName() + "] Starting request thread");
-                    req.start();
-                } else if (type.equals("downloader")) {
-                    //todo send message to downloader
-                }
+//                if (type.equals("alive")) {
+//                    Request req = new Request(this.messageSize, received, this.receivedQueue, this.MULTICAST_SEND_PORT, this.MULTICAST_RECEIVE_PORT, this.group, this.receiveSocket, this.sendSocket, this.serverNumber, this.fileManager, this.downloader, this.tcpHost, this.tcpServer, this.connection);
+//                    System.out.println("[" + this.getName() + "] Starting request thread");
+//                    req.start();
+//                } else if (type.equals("downloader")) {
+//                    //todo send message to downloader
+//                }
             }
 
         }
