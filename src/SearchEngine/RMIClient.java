@@ -86,7 +86,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
         switch (type) {
             case 0:
                 // Login or Register
-                System.out.print("\n### Login ###\n1.Search words\n2.Search Link\n  3.Login\n  4.Register\n   e.Exit\n --> Choice: ");
+                System.out.print("\n### Login Menu ###\n1.Search words\n2.Search Link\n  3.Login\n  4.Register\n  e.Exit\n --> Choice: ");
                 return;
             case 1:
                 // admin - main menu
@@ -94,7 +94,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
                 return;
             case 2:
                 // user - main menu
-                System.out.print("\n### User Panel ###\n1.Search words\n2.Search Link\n3.History\n  4.Logout\n   e.Exit\n --> Choice: ");
+                System.out.print("\n### User Panel ###\n1.Search words\n2.Search Link\n3.History\n  4.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 3:
                 System.out.print("\n### Admin Panel ###\n1.Top 10 pages\n2.Top 10 searches\n3.Multicast Servers\nb.Back\n  e.Exit\n --> Choice: ");
@@ -114,22 +114,25 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
         // create a new client object
         this.client = new Client("Anon", false);
 
-        while (true) {
-            // Anonymous user, not logged yet
-            if (this.client.username.equals("Anon")) {
-                // Login or Register
-                printMenus(0);
-                registerLogic(br);
+        try {
+            while (true) {
+                // Anonymous user, not logged yet
+                if (this.client.username.equals("Anon")) {
+                    // Login or Register
+                    printMenus(0);
+                    anonLogic(br);
 
-            } else {
-                // Admin - main menu
-                printMenus(1);
+                } else {
+                    // Admin - main menu
+                    printMenus(1);
+                }
             }
+        } catch (RemoteException e) {
+            serverErrorHandling();
         }
-
     }
 
-    private void registerLogic(BufferedReader br) {
+    private void anonLogic(BufferedReader br) throws RemoteException {
         String choice = "";
 
         try{
@@ -154,7 +157,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
                 break;
             case "4":
                 // Register
-                // register(br);
+                register(br);
                 break;
             case "e":
                 // Exit
@@ -202,18 +205,87 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
-    private void serverErrorHandling() {
-        System.out.println("[CLIENT] Server is down, trying to reconnect...");
+    private void register(BufferedReader br) throws RemoteException {
+        String username = "", password = "", firstName = "", lastName = "";
         while (true) {
             try {
+                System.out.print("\n###REGISTER###\n  Username: ");
+                username = br.readLine();
+                while (username.length() < 4 || username.length() > 20) {
+                    System.out.println("[CLIENT] Username must be between 4 and 20 characters\n\n  Username: ");
+                    username = br.readLine();
+                }
+
+                System.out.print("  Password: ");
+                password = br.readLine();
+                while(password.length() < 4 || password.length() > 20) {
+                    System.out.println("[CLIENT] Password must be between 4 and 20 characters\n\n  Password: ");
+                    password = br.readLine();
+                }
+
+                System.out.print("  First Name: ");
+                firstName = br.readLine();
+                while(firstName.length() < 1) {
+                    System.out.println("[CLIENT] First name must be at least 1 character\n\n  First Name: ");
+                    firstName = br.readLine();
+                }
+
+                System.out.print("  Last Name: ");
+                lastName = br.readLine();
+                while(lastName.length() < 1) {
+                    System.out.println("[CLIENT] Last name must be at least 1 character\n\n  Last Name: ");
+                    lastName = br.readLine();
+                }
+
+                ArrayList<String> res = this.sv.checkRegister(username, password, firstName, lastName);
+                if(res.get(0).equals("true")) {
+                    // register success
+                    System.out.println("[CLIENT] Registration success");
+                    if (res.get(1).equals("true")) {
+                        // admin
+                        this.client = new Client(username, true);
+                    } else {
+                        // user
+                        this.client = new Client(username, false);
+                    }
+                    this.sv.updateClient(this.client.username, this.client);
+                    System.out.println("[CLIENT] Logged in as " + this.client.username);
+                    return;
+                } else {
+                    System.out.println("[CLIENT] Registration failed: " + res.get(2));
+                    System.out.println("[CLIENT] Try again? (y/n)");
+                    String choice = br.readLine();
+                    while (!choice.equals("y") && !choice.equals("n")) {
+                        System.out.println("[CLIENT] Invalid choice");
+                        System.out.println("[CLIENT] Try again? (y/n)");
+                        choice = br.readLine();
+                    }
+                    if (choice.equals("n")) {
+                        return;
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("[EXCEPTION] IOException");
+                e.printStackTrace();
+                return;
+            }
+        }
+
+    }
+
+    private void serverErrorHandling() {
+        System.out.println("[EXCEPTION] Could not connect to server");
+        while (true) {
+            try {
+                System.out.println("[CLIENT] Trying to reconnect...");
                 Thread.sleep(keepAliveTime);
                 this.sv = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
                 this.sv.updateClient(this.client.username, this.client);
+
+                System.out.println("[CLIENT] Reconnected!");
                 break;
-            } catch (RemoteException | NotBoundException | InterruptedException e) {
-                System.out.println("[CLIENT] Server connection Failed... See error below:");
-                e.printStackTrace();
-                return;
+            } catch (RemoteException | NotBoundException | InterruptedException e1) {
+                System.out.println("[EXCEPTION] Could not connect to server: "+ e1.getMessage());
             }
         }
     }

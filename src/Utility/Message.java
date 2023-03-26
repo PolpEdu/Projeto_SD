@@ -9,4 +9,9 @@ public class Message {
         this.message = "id:"+id + "|" + message;
         this.id = id;
     }
+
+    public String getType() {
+        String[] parts = this.message.split("\\|");
+        return parts[0];
+    }
 }
