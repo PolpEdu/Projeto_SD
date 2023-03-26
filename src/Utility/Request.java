@@ -58,7 +58,7 @@ public class Request extends Thread {
         DatagramPacket sendPacket = null;
         Message msg = null;
         try {
-            // messages will be always composed by 3 parts initially: id | type:<type> | status:<status> | ...
+            // messages will be always composed by 3 parts initially: id|type:<type>|status:<status>|...
             String id = msgSplit[0].split(":")[1];
             String type = msgSplit[1].split(":")[1];
             String status = msgSplit[2].split(":")[1];
@@ -116,7 +116,7 @@ public class Request extends Thread {
         DatagramPacket receivePacket = new DatagramPacket(recieveBuffer, recieveBuffer.length);
         System.out.println("Sending info");
         try {
-            sendSocket.send(receivePacket); //todo this gives a stupid error Address not set in socket
+            sendSocket.send(sendPacket); //todo this gives a stupid error Address not set in socket
         } catch (IOException e) {
             System.out.println("[EXCEPTION] Couldn't send packet" + e.getMessage());
             e.printStackTrace();
@@ -129,35 +129,34 @@ public class Request extends Thread {
     private String parseMsg(String msg) {
         String[] msgSplit = msg.split("\\|");
         String type = msgSplit[1].split(":")[1];
-        switch (type) {
-            case "alive":
-                String address = msgSplit[3].split(":")[1];
-                int port = Integer.parseInt(msgSplit[4].split(":")[1]);
-                // update ports
-                // this.connection.updatePorts(address, port);
-                return "type:alive | status:ack | address:" + this.tcpHost + " | port:" + this.sv_port + " | destAddr:" + address + " | destPort:" + port;
+        //? System.out.println("msg-" + msg);
 
-            case "login":
-                String username = msgSplit[3].split(":")[1];
-                String password = msgSplit[4].split(":")[1];
-                HashMap<String, User> users = this.db.getUsers(); // TODO, not yet implemented
-                if (!users.containsKey(username)) {
-                    return "type:login | status:fail | msg: User not found";
-                }
+        if (type.equals("alive")) {
+            String address = msgSplit[3].split(":")[1];
+            int port = Integer.parseInt(msgSplit[4].split(":")[1]);
+            // update ports
+            this.connection.updatePorts(address, port);
+            return "type:alive|status:ack|address:" + this.tcpHost + "|port:" + this.sv_port + "|destAddr:" + address + "|destPort:" + port;
+        } else if (type.equals("login")) {
+            String username = msgSplit[3].split(":")[1];
+            String password = msgSplit[4].split(":")[1];
+            HashMap<String, User> users = this.db.getUsers(); // TODO, not yet implemented
+            if (!users.containsKey(username)) {
+                return "type:login|status:fail|msg: User not found";
+            }
 
-                User user = users.get(username);
-                if (user == null) {
-                    return "type:login | status:fail | msg: User not found";
-                }
+            User user = users.get(username);
+            if (user == null) {
+                return "type:login|status:fail|msg: User not found";
+            }
 
-                if (users.containsKey(username) && user.password.equals(password)) {
-                    return "type:login | status:ok | msg: Welcome "+ user.username +", you are logged In! | isAdmin:" + user.admin + " | notify:" + user.notify;
-                }
+            if (users.containsKey(username) && user.password.equals(password)) {
+                return "type:login|status:ok|msg: Welcome " + user.username + ", you are logged In!|isAdmin:" + user.admin + "|notify:" + user.notify;
+            }
 
-                return "type:login | status:fail | msg: Wrong password";
+            return "type:login|status:fail|msg: Wrong password";
 
-            default:
-                return "type:unknown";
         }
+        return "type:unknown";
     }
 }

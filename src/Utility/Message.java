@@ -6,7 +6,7 @@ public class Message {
     public String id;
 
     public Message(String message, String id) {
-        this.message = id + " | " + message;
+        this.message = "id:"+id + "|" + message;
         this.id = id;
     }
 }
