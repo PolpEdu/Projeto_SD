@@ -176,11 +176,11 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
 
         while (username.equals("") || password.equals("")) {
             try {
-                System.out.print("\n###LOGIN###\n  Username: ");
+                System.out.print("\n### LOGIN ###\n  Username: ");
                 username = br.readLine();
 
                 while (username.length() < 4 || username.length() > 20) {
-                    System.out.println("[CLIENT] Username must be between 4 and 20 characters\n\n  Username: ");
+                    System.out.print("[CLIENT] Username must be between 4 and 20 characters\n  Username: ");
                     username = br.readLine();
                 }
 
@@ -188,7 +188,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
                 password = br.readLine();
 
                 while(password.length() < 4 || password.length() > 20) {
-                    System.out.println("[CLIENT] Password must be between 4 and 20 characters\n\n  Password: ");
+                    System.out.print("[CLIENT] Password must be between 4 and 20 characters\n  Password: ");
                     password = br.readLine();
                 }
 
@@ -209,7 +209,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
         String username = "", password = "", firstName = "", lastName = "";
         while (true) {
             try {
-                System.out.print("\n###REGISTER###\n  Username: ");
+                System.out.print("\n### REGISTER ###\n  Username: ");
                 username = br.readLine();
                 while (username.length() < 4 || username.length() > 20) {
                     System.out.println("[CLIENT] Username must be between 4 and 20 characters\n\n  Username: ");
@@ -236,6 +236,8 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
                     System.out.println("[CLIENT] Last name must be at least 1 character\n\n  Last Name: ");
                     lastName = br.readLine();
                 }
+
+                // System.out.println("[CLIENT] Registering: " + username + " " + password + " " + firstName + " " + lastName + "");
 
                 ArrayList<String> res = this.sv.checkRegister(username, password, firstName, lastName);
                 if(res.get(0).equals("true")) {

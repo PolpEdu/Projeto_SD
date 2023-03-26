@@ -86,7 +86,7 @@ public class Request extends Thread {
                 // check if the message is not for this server
                 if (!(address.equals(this.tcpHost) && port == this.sv_port)) {
                     String send = parseMsg(this.msg);
-                    msg = new Message(send, id);
+                    msg = new Message(id, send);
                     byte[] sendbuffer = msg.message.getBytes();
                     sendPacket = new DatagramPacket(sendbuffer, sendbuffer.length, this.group, this.MCAST_RECEIVE_PORT);
                     sendSocket.send(sendPacket);
@@ -94,12 +94,13 @@ public class Request extends Thread {
             } else {
                 // if the message is not type alive, it is a request
                 String send = parseMsg(this.msg);
-                msg = new Message(send, id);
+                msg = new Message(id, send);
                 byte[] sendbuffer = msg.message.getBytes();
                 sendPacket = new DatagramPacket(sendbuffer, sendbuffer.length, this.group, this.MCAST_RECEIVE_PORT);
             }
 
-            if (sendPacket != null && msg != null) {
+            if (sendPacket != null) {
+                System.out.println("Sending info: "+ msg.message);
                 sendInfo(msg, this.sendSocket, sendPacket);
             }
 
@@ -107,20 +108,17 @@ public class Request extends Thread {
         } catch (Exception e) {
             System.out.println("[EXCEPTION] " + e.getMessage());
             e.printStackTrace();
-            return;
         }
     }
 
     private void sendInfo(Message msg, MulticastSocket sendSocket, DatagramPacket sendPacket) {
         byte[] recieveBuffer = new byte[this.msgSize * 2]; // should be enough
         DatagramPacket receivePacket = new DatagramPacket(recieveBuffer, recieveBuffer.length);
-        System.out.println("Sending info");
         try {
-            sendSocket.send(sendPacket); //todo this gives a stupid error Address not set in socket
+            sendSocket.send(sendPacket);
         } catch (IOException e) {
             System.out.println("[EXCEPTION] Couldn't send packet" + e.getMessage());
             e.printStackTrace();
-            return;
         }
 
 

@@ -193,8 +193,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     @Override
     public ArrayList<String> checkRegister(String username, String password, String firstName, String lastName) throws RemoteException {
         String id = UUID.randomUUID().toString();
-
-        Message msg = new Message("type:register|username:" + username + "|password:" + password + "|firstName:" + firstName + "|lastName:" + lastName, id);
+        Message msg = new Message(id, "type:register|username:" + username + "|password:" + password + "|firstName:" + firstName + "|lastName:" + lastName);
         this.m_Send.sendInfo(msg, this.sendQueue);
         String[] response = this.m_Receive.parseRecievedPacket(msg, this.sendQueue).split("\\|");
         this.sendQueue.remove(msg);
@@ -202,7 +201,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
         String status = response[2].split(":")[1];
         String message = response[3].split(":")[1];
 
-        Message msgRes = new Message("type:ack", id);
+        Message msgRes = new Message(id, "type:ack");
         this.m_Send.sendInfo(msgRes, this.sendQueue);
 
         if(status.equals("error")) {
@@ -308,7 +307,7 @@ class MulticastReceive extends Thread {
                     }
                     if (!checkInQueue) {
                         System.out.println("[RECEIVED] Received another ACK: "+ message);
-                        Message msgACK = new Message("type:ack", id);
+                        Message msgACK = new Message(id, "type:ack");
                         this.multicastSend.sendInfo(msgACK, sendQueue); // send again
                     } else {
                         buffer = new byte[messageSize];
@@ -318,7 +317,7 @@ class MulticastReceive extends Thread {
                     message = null;
                 }
             } catch (SocketTimeoutException e) {
-                System.out.println("[EXCEPTION] SocketTimeoutException: "+ e.getMessage());
+                System.out.println("[EXCEPTION] Couldn't connect to Multicast Server. SocketTimeoutException: "+ e.getMessage());
                 this.multicastSend.sendInfo(msg, sendQueue); // send again
                 return null;
             } catch (IOException e) {
