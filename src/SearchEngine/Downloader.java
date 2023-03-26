@@ -96,7 +96,7 @@ public class Downloader extends Thread {
                 }
                 String link = this.urlQueue.take();
 
-                StringBuilder message = new StringBuilder();
+                String message;
                 ArrayList<String> links = new ArrayList<>();
                 ArrayList<String> listWords = new ArrayList<>();
                 ArrayList<String> info = new ArrayList<>();
@@ -108,19 +108,19 @@ public class Downloader extends Thread {
                     for (String w : listWords) {
                         Matcher matcher = pattern.matcher(w);
                         if (matcher.matches()) {
-                            message.append("type:word|" + w + "|" + link + ";");
+                            message = "type:word|" + w + "|" + link + ";";
+                            this.sendMessage(message);
                         }
 
                     }
                     for (String l : links) {
-                        message.append("type:links|" + l + "|" + link + ";");
+                        message = "type:links|" + l + "|" + link + ";";
+                        this.sendMessage(message);
                     }
 
-                    message.append("type:siteinfo|" + info.get(0) + "|" + info.get(1) + ";");
+                    message = "type:siteinfo|" + info.get(0) + "|" + info.get(1) + ";";
 
-                    String send = message.toString();
-                    //System.out.println(send);
-                    this.sendMessage(send);
+                    this.sendMessage(message);
                     //System.out.println(message);
 
                     //colocar os novos links na queue para continuar a ir buscar informação
@@ -180,7 +180,6 @@ public class Downloader extends Thread {
 
             byte[] buffer = send.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
-            System.out.println(this.MULTICAST_RECEIVE_PORT);
             this.receiveSocket.send(packet);
 
             this.conSem.release();
