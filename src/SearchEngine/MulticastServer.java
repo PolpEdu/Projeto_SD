@@ -1,5 +1,9 @@
 package SearchEngine;
 
+import Utility.Connection;
+import Utility.Message;
+import Utility.Request;
+
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -17,7 +21,6 @@ class MultiCastServer extends Thread {
     public int MULTICAST_SEND_PORT;
     private String MULTICAST_ADDRESS;
     public int MULTICAST_RECEIVE_PORT;
-    public int tcpPort;
     public String tcpHost;
 
     public UrlQueue urlQueue;
@@ -26,30 +29,38 @@ class MultiCastServer extends Thread {
     InetAddress group;
     LinkedList<Message> receivedQueue;
     Downloader downloader;
-    //TCPServer tcpServer;
-    //private Connection connection;
+    TCPServer tcpServer;
+    private Connection connection;
+
     HashMap<String, HashSet<Integer>> ports;
     Semaphore conSem;
     int messageSize = 1024*8;
 
     public MultiCastServer(String tcpHost, int tcpPort, String multicastAddress, int sendPort, int receivePort){
-        this.tcpPort = tcpPort;
-        this.tcpHost = tcpHost;
         this.MULTICAST_ADDRESS = multicastAddress;
         this.MULTICAST_SEND_PORT = sendPort;
         this.MULTICAST_RECEIVE_PORT = receivePort;
-        this.ports = new HashMap<>();
-        this.receivedQueue = new LinkedList<>();
-        this.conSem = new Semaphore(1);
+
         this.urlQueue = new UrlQueue();
 
+        this.fileManager = new Database(this.serverNumber);
+
+        this.tcpHost = tcpHost;
+        this.tcpServer = new TCPServer(tcpPort, this.fileManager);
+
+
+        this.ports = new HashMap<>();
+        this.receivedQueue = new LinkedList<Message>();
         this.receiveSocket = null;
         this.sendSocket = null;
         this.group = null;
+
+        this.conSem = new Semaphore(1);
+        this.connection = new Connection(this.tcpHost, tcpPort, this.ports, this.conSem);
+
     }
     public void run(){
-        byte[] receivebuffer;
-        String received;
+        boolean checked_msg = false;
         System.out.println("[" + this.getName() + "] Running...");
         try{
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
@@ -59,11 +70,11 @@ class MultiCastServer extends Thread {
             DatagramPacket receivePacket;
 
             //initialize downloader
-            this.downloader = new Downloader(this.urlQueue, this.receiveSocket,this.group, this.ports,this.conSem, this.tcpPort, this.tcpHost);
+            this.downloader = new Downloader(this.urlQueue, this.receiveSocket,this.group, this.ports,this.conSem, this.connection.getTcpPort(), this.tcpHost);
 
             try {
                 String id = UUID.randomUUID().toString();
-                String msgAlive = "id:"+id+" | type:alive | status:online | address:"+this.tcpHost+" | port:"+this.tcpPort;
+                String msgAlive = "id:"+id+" | type:alive | status:online | address:"+this.tcpHost+" | port:"+this.connection.getTcpPort();
                 byte[] sendbuffer = msgAlive.getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(sendbuffer, sendbuffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
                 // print sent message
@@ -77,15 +88,26 @@ class MultiCastServer extends Thread {
 
             //for now receiving message, we are just recieving, we need to send a message to donwloaders first
             while(true){
-                receivebuffer = new byte[messageSize];
+                byte[] receivebuffer = new byte[messageSize];
                 receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
                 this.receiveSocket.receive(receivePacket);
 
-                received = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
                 System.out.println("[" + this.getName() + "] Received: " + received);
-                
-            }
 
+                String[] list = received.split(" \\| ");
+                String id = list[0].split(":")[1];
+                String type = list[1].split(":")[1];
+
+                checked_msg = true;
+
+                if (type.equals("alive")) {
+                    Request req = new Request(this.messageSize, received, this.receivedQueue, this.MULTICAST_SEND_PORT, this.MULTICAST_RECEIVE_PORT, this.group, this.receiveSocket, this.sendSocket, this.serverNumber, this.fileManager, this.downloader, this.tcpHost, this.tcpServer, this.connection);
+                    req.start();
+                } else if (type.equals("downloader")) {
+                    //todo send message to downloader
+                }
+            }
 
         }
 

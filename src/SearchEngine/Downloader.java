@@ -46,7 +46,7 @@ public class Downloader extends Thread {
         this.QueueInfo();
     }
 
-    boolean getInfoFromWebsite(String webs, ArrayList<String> Links, ArrayList<String> Words, ArrayList<String> SiteInfo) {
+    boolean getInfoFromWebsite(String webs, ArrayList<String> Links, ArrayList<String> wordL, ArrayList<String> SiteInfo) {
         String ws = webs;
         try {
             if (!ws.startsWith("http://") && !ws.startsWith("https://")) {
@@ -72,10 +72,14 @@ public class Downloader extends Thread {
             }
 
             String words = doc.text();
-            seperateWords(words, Words);
+            seperateWords(words, wordL);
 
+        } catch (org.jsoup.HttpStatusException e) {
+            System.out.println("[EXCEPTION] Getting info from website: " + ws);
+            // e.printStackTrace();
+            return false;
         } catch (IOException e) {
-            System.out.println("[EXCEPTION] getting info from website: " + ws + "... Continuing...");
+            System.out.println("[EXCEPTION] Getting info from website: " + ws);
             // e.printStackTrace();
             return false;
         }
@@ -83,17 +87,15 @@ public class Downloader extends Thread {
     }
 
     void QueueInfo() {
-
         while (true) {
             try {
 
                 while (urlQueue.isEmpty()) {
-                    sleep(1000);
+                    sleep(500);
                 }
                 String link = this.urlQueue.take();
 
                 StringBuilder message = new StringBuilder();
-                String send;
                 ArrayList<String> links = new ArrayList<>();
                 ArrayList<String> listWords = new ArrayList<>();
                 ArrayList<String> info = new ArrayList<>();
@@ -105,17 +107,17 @@ public class Downloader extends Thread {
                     for (String w : listWords) {
                         Matcher matcher = pattern.matcher(w);
                         if (matcher.matches()) {
-                            message.append("word|" + w + "|" + link + ";");
+                            message.append("type:word|" + w + "|" + link + ";");
                         }
 
                     }
                     for (String l : links) {
-                        message.append("link|" + l + "|" + link + ";");
+                        message.append("type:links|" + l + "|" + link + ";");
                     }
 
-                    message.append("siteinfo|" + info.get(0) + "|" + info.get(1) + ";");
+                    message.append("type:siteinfo|" + info.get(0) + "|" + info.get(1) + ";");
 
-                    send = message.toString();
+                    String send = message.toString();
                     //System.out.println(send);
                     this.sendMessage(send);
                     //System.out.println(message);
@@ -127,6 +129,8 @@ public class Downloader extends Thread {
                 }
             } catch (InterruptedException e) {
                 System.out.println("Failed to check the queue and get the link");
+                e.printStackTrace();
+
             }
         }
     }
@@ -135,7 +139,7 @@ public class Downloader extends Thread {
         this.urlQueue.offer(l);
     }
 
-    private static void seperateWords(String words, ArrayList<String> Words) {
+    private static void seperateWords(String words, ArrayList<String> wordList) {
         BufferedReader buffer = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(words.getBytes(StandardCharsets.UTF_8))));
         String line;
         String[] pois = {"de", "sobre", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem", "hei", "há", "havemos", "hão", "houve", "houvemos", "houveram", "houvera", "houvéramos", "haja", "hajamos", "hajam", "houvesse", "houvéssemos", "houvessem", "houver", "houvermos", "houverem", "houverei", "houverá", "houveremos", "houverão", "houveria", "houveríamos", "houveriam", "sou", "somos", "são", "era", "éramos", "eram", "fui", "foi", "fomos", "foram", "fora", "fôramos", "seja", "sejamos", "sejam", "fosse", "fôssemos", "fossem", "for", "formos", "forem", "serei", "será", "seremos", "serão", "seria", "seríamos", "seriam", "tenho", "tem", "temos", "tém", "tinha", "tínhamos", "tinham", "tive", "teve", "tivemos", "tiveram", "tivera", "tivéramos", "tenha", "tenhamos", "tenham", "tivesse", "tivéssemos", "tivessem", "tiver", "tivermos", "tiverem", "terei", "terá", "teremos", "terão", "teria", "teríamos", "teriam"};
@@ -151,11 +155,12 @@ public class Downloader extends Thread {
                 String[] splited = line.split("[ ,;:.?!“”(){}\\[\\]<>'\n]+");
                 for (String word : splited) {
                     word = word.toLowerCase();
-                    if (!Words.contains(word) && !"".equals(word) && !stopWords.contains(word)) {
-                        Words.add(word);
+                    if (!wordList.contains(word) && !"".equals(word) && !stopWords.contains(word)) {
+                        wordList.add(word);
                     }
                 }
             } catch (IOException e) {
+                System.out.println("[EXCPETION] " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -163,9 +168,9 @@ public class Downloader extends Thread {
         try {
             buffer.close();
         } catch (IOException e) {
+            System.out.println("[EXCPETION] " + e.getMessage());
             e.printStackTrace();
         }
-
     }
 
     private void sendMessage(String send) {
@@ -183,10 +188,8 @@ public class Downloader extends Thread {
             }
 
             this.conSem.release();
-        } catch (InterruptedException e) {
-            System.out.println("IO: " + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("IO: " + e.getMessage());
+        } catch (InterruptedException | IOException e) {
+            System.out.println("[EXCPETION] " + e.getMessage());
         }
     }
 

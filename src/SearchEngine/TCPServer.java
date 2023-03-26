@@ -17,7 +17,7 @@ public class TCPServer extends Thread{
         this.PORT = selectPort(port);
         this.fileManager = fileManager;
 
-        System.out.println("[TCPServer-" + this.getName() + "] Running on PORT:" + this.PORT + ".");
+        System.out.println("[TCPServer-" + this.getName() + "] Running on PORT " + this.PORT + ".");
         this.start();
     }
 

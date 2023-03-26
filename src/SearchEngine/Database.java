@@ -11,6 +11,7 @@ public class Database {
     private File linksInfoFile;
 
     private File usersFile;
+    private File wordCountFile;
 
     public void constructPaths(int n) {
         String usersPath = "src\\Users" + n + ".txt";
@@ -19,7 +20,8 @@ public class Database {
 
     }
 
-    public Database() {
+    public Database(int svID) {
+        setPath(svID);
 
 
     }
@@ -29,6 +31,26 @@ public class Database {
         synchronized (this) {
 
         }
+    }
+
+    public void setPath(int n) {
+        String linksPath = "src\\links" + n + ".txt";
+        String wordsPath = "src\\words" + n + ".txt";
+        String linksInfoPath = "src\\linksInfo" + n + ".txt";
+        String usersPath = "src\\users" + n + ".txt";
+        String wordCountPath = "src\\wordCount" + n + ".txt";
+
+        this.usersFile = new File(usersPath);
+        this.linksFile = new File(linksPath);
+        this.wordsFile = new File(wordsPath);
+        this.linksInfoFile = new File(linksInfoPath);
+        this.wordCountFile = new File(wordCountPath);
+    }
+
+    public HashMap<String, User> getUsers() {
+        //throw new Exception("Not implemented yet fdp.");
+        HashMap<String, User> users = new HashMap<>();
+        return users;
     }
 }
 
