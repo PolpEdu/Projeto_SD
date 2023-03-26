@@ -94,7 +94,8 @@ class MultiCastServer extends Thread {
 
                 String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
                 System.out.println("[" + this.getName() + "] Received: " + received);
-
+                Message message  = new Message(UUID.randomUUID().toString(), received);
+                receivedQueue.add(message);
 //                String[] list = received.split("\\|");
 //                System.out.println("[" + this.getName() + "] Received: " + list[0]);
 //                String type = list[1].split(":")[1];
