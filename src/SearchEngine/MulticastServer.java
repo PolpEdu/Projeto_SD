@@ -29,7 +29,7 @@ class MultiCastServer extends Thread {
     InetAddress group;
     LinkedList<Message> receivedQueue;
     Downloader downloader;
-    
+    Barrel barrel;
     TCPServer tcpServer;
     private Connection connection;
     HashMap<String, HashSet<Integer>> ports;
@@ -72,7 +72,7 @@ class MultiCastServer extends Thread {
 
             //initialize downloader
             this.downloader = new Downloader(this.urlQueue, this.receiveSocket, this.MULTICAST_RECEIVE_PORT, this.group, this.ports, this.conSem, this.connection.getTcpPort(), this.tcpHost);
-
+            this.barrel = new Barrel(this.MULTICAST_SEND_PORT, this.MULTICAST_ADDRESS, this.tcpHost, this.MULTICAST_SEND_PORT, this.sendSocket, this.group);
 
             try {
                 String id = UUID.randomUUID().toString();
@@ -111,6 +111,13 @@ class MultiCastServer extends Thread {
                 } else if (type.equals("links") || type.equals("siteinfo") || type.equals("word")) {
                     //downloader message. we need to send a message to the urlQueue
                     Message message = new Message(UUID.randomUUID().toString(), received);
+
+                    //enviar para os barris-------
+                    byte[] sendbuffer = message.message.getBytes();
+                    DatagramPacket sendPacket = new DatagramPacket(sendbuffer, sendbuffer.length, this.group, this.MULTICAST_SEND_PORT);
+
+                    this.sendSocket.send(sendPacket);
+                    //----------------------------
 
                     receivedQueue.add(message);
                 } else {
