@@ -29,9 +29,9 @@ class MultiCastServer extends Thread {
     InetAddress group;
     LinkedList<Message> receivedQueue;
     Downloader downloader;
+    
     TCPServer tcpServer;
     private Connection connection;
-
     HashMap<String, HashSet<Integer>> ports;
     Semaphore conSem;
     int messageSize = 1024 * 8;
@@ -73,6 +73,7 @@ class MultiCastServer extends Thread {
             //initialize downloader
             this.downloader = new Downloader(this.urlQueue, this.receiveSocket, this.MULTICAST_RECEIVE_PORT, this.group, this.ports, this.conSem, this.connection.getTcpPort(), this.tcpHost);
 
+
             try {
                 String id = UUID.randomUUID().toString();
                 String msgAlive = "id:" + id + "|type:alive|status:online|address:" + this.tcpHost + "|port:" + this.connection.getTcpPort();
@@ -110,6 +111,7 @@ class MultiCastServer extends Thread {
                 } else if (type.equals("links") || type.equals("siteinfo") || type.equals("word")) {
                     //downloader message. we need to send a message to the urlQueue
                     Message message = new Message(UUID.randomUUID().toString(), received);
+
                     receivedQueue.add(message);
                 } else {
                     // check if we have the message in our queue

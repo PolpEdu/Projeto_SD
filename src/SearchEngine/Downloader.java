@@ -1,5 +1,6 @@
 package SearchEngine;
 
+import Utility.Message;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -177,9 +178,9 @@ public class Downloader extends Thread {
     private void sendMessage(String send) {
         try {
             this.conSem.acquire();
-
             byte[] buffer = send.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+
             this.receiveSocket.send(packet);
 
             this.conSem.release();
