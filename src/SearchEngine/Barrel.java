@@ -4,23 +4,27 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.UUID;
 
 public class Barrel extends Thread{
     public int MULTICAST_SEND_PORT;
     private String MULTICAST_ADDRESS;
     private String tcpHost;
-    MulticastSocket sendSocket;// send socket do multicastserver
+    MulticastSocket receiveSocket;// send socket do multicastserver
+    MulticastSocket sendSocket; // receiveSocket do multicastserver
 
     InetAddress group;
     private int tcpPort;
 
+    private int MULTICAST_RECEIVE_PORT;//enviar
+
     int messageSize = 8*1024;
 
-    public Barrel(int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, String tcpHost, int tcpPort, MulticastSocket sendSocket, InetAddress group ){
-        this.MULTICAST_SEND_PORT = MULTICAST_SEND_PORT;
+    public Barrel(int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, String tcpHost, int tcpPort, MulticastSocket receiveSocket, InetAddress group){
+        this.MULTICAST_SEND_PORT = MULTICAST_SEND_PORT; // ouvir
         this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
         this.tcpHost = tcpHost;
-        this.sendSocket = sendSocket;
+        this.receiveSocket = receiveSocket;
         this.group = group;
         this.tcpPort = tcpPort;
         this.start();
@@ -32,15 +36,15 @@ public class Barrel extends Thread{
         try {
 
             while(true){
-                System.out.println("[BARREL] IM ALIVE");
+
                 byte[] receivebuffer = new byte[messageSize];
                 DatagramPacket receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
 
-                this.sendSocket.receive(receivePacket);
+                this.receiveSocket.receive(receivePacket);
 
                 String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                System.out.println("[BARREL] "+received);
+                System.out.println("[BARREL] " +received);
             }
 
         } catch (IOException e) {

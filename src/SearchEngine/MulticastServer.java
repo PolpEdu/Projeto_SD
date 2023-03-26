@@ -96,17 +96,17 @@ class MultiCastServer extends Thread {
 
                 String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                //? System.out.println("[" + this.getName() + "] Received: " + received);
+                    //? System.out.println("[" + this.getName() + "] Received: " + received);
 
-                String[] list = received.split("\\|");
-                String id = list[0].split(":")[1];
-                String type = list[1].split(":")[1];
+                    String[] list = received.split("\\|");
+                    String id = list[0].split(":")[1];
+                    String type = list[1].split(":")[1];
 
-                checked_msg = true;
+                    checked_msg = true;
 
-                if (type.equals("alive")) {
-                    // System.out.println("[" + this.getName() + "] Starting request thread");
-                    Request req = new Request(this.messageSize, received, this.receivedQueue, this.MULTICAST_SEND_PORT, this.MULTICAST_RECEIVE_PORT, this.group, this.receiveSocket, this.sendSocket, this.serverNumber, this.fileManager, this.downloader, this.tcpHost, this.tcpServer, this.connection);
+                    if (type.equals("alive")) {
+                        // System.out.println("[" + this.getName() + "] Starting request thread");
+                        Request req = new Request(this.messageSize, received, this.receivedQueue, this.MULTICAST_SEND_PORT, this.MULTICAST_RECEIVE_PORT, this.group, this.receiveSocket, this.sendSocket, this.serverNumber, this.fileManager, this.downloader, this.tcpHost, this.tcpServer, this.connection);
                     req.start();
                 } else if (type.equals("links") || type.equals("siteinfo") || type.equals("word")) {
                     //downloader message. we need to send a message to the urlQueue
