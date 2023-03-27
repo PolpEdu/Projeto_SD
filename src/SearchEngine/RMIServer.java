@@ -166,6 +166,25 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     }
 
     @Override
+    public String takeLink() throws RemoteException {
+
+        try {
+            return this.urlQueue.take();
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    @Override
+    public void offerLink(String link) throws RemoteException {
+        this.urlQueue.offer(link);
+    }
+    @Override
+    public boolean isempty() throws RemoteException {
+        return this.urlQueue.isEmpty();
+    }
+
+    @Override
     public void updateClient(String username, Client client) throws RemoteException {
         if (client == null) {
             this.clients.remove(username);

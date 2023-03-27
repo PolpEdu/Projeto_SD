@@ -11,4 +11,8 @@ public interface RMIServerInterface extends Remote {
 
     ArrayList<String> checkLogin(String username, String password) throws RemoteException;
     ArrayList<String> checkRegister(String username, String password, String firstName, String lastName) throws RemoteException;
+
+    String takeLink() throws RemoteException;
+    void offerLink(String link) throws RemoteException;
+    boolean isempty() throws RemoteException;
 }

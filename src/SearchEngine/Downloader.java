@@ -1,6 +1,6 @@
 package SearchEngine;
 
-import interfaces.RMIDownloaders;
+import interfaces.RMIServerInterface;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,6 +11,8 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.nio.charset.StandardCharsets;
+import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -22,7 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class Downloader extends Thread implements RMIDownloaders {
+public class Downloader extends Thread implements Remote {
 
     private MulticastSocket receiveSocket;
     private final int MULTICAST_RECEIVE_PORT;
@@ -32,13 +34,12 @@ public class Downloader extends Thread implements RMIDownloaders {
     private final  int rmiPort;
     private final String rmiHost;
     private final String rmiRegister;
-    private RMIDownloaders queue;
+    private RMIServerInterface server;
     private int id;
     private ArrayBlockingQueue<String> urlQueue;
 
 
-    public Downloader(int id,int MULTICAST_RECEIVE_PORT,String MULTICAST_ADDRESS, Semaphore conSem, int rmiPort, String rmiHost, String rmiRegister ) {
-        this.receiveSocket = null;
+    public Downloader(int id,int MULTICAST_RECEIVE_PORT,String MULTICAST_ADDRESS, Semaphore conSem, int rmiPort, String rmiHost, String rmiRegister, RMIServerInterface  server) {this.receiveSocket = null;
         this.group  = null;
         this.conSem = conSem;
         this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
@@ -47,7 +48,7 @@ public class Downloader extends Thread implements RMIDownloaders {
         this.rmiHost = rmiHost;
         this.rmiRegister = rmiRegister;
         this.id = id;
-        queue = null;
+        this.server = server;
 
     }
 
@@ -60,7 +61,6 @@ public class Downloader extends Thread implements RMIDownloaders {
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
             this.receiveSocket.joinGroup(this.group);
-
             this.QueueInfo();
 
         } catch (IOException e) {
@@ -75,18 +75,18 @@ public class Downloader extends Thread implements RMIDownloaders {
         System.getProperties().put("java.security.policy", "policy.all");
 
         try {
-            Properties barrelProp = new Properties();
-            barrelProp.load(new FileInputStream(new File("src/Barrel.properties").getAbsoluteFile()));
+            Properties Prop = new Properties();
+            Prop.load(new FileInputStream(new File("src/Barrel.properties").getAbsoluteFile()));
 
             Properties multicastServerProp = new Properties();
             multicastServerProp.load(new FileInputStream(new File("src/MulticastServer.properties").getAbsoluteFile()));
 
+            String rmiHost = Prop.getProperty("HOST");
+            String rmiRegister = Prop.getProperty("RMI_REGISTER");
+            int rmiPort = Integer.parseInt(Prop.getProperty("PORT"));
+            String rmiRegistryName = Prop.getProperty("RMI_REGISTRY_NAME");
 
-            String rmiHost = barrelProp.getProperty("HOST");
-            String rmiRegister = barrelProp.getProperty("RMI_REGISTER");
-            int rmiPort = Integer.parseInt(barrelProp.getProperty("PORT"));
-
-
+            RMIServerInterface server = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
 
@@ -99,13 +99,15 @@ public class Downloader extends Thread implements RMIDownloaders {
                     System.exit(1);
                 }
 
-                Downloader downloader = new Downloader(i, receivePort, multicastAddress, listsem, rmiPort, rmiHost, rmiRegister);
+                Downloader downloader = new Downloader(i, receivePort, multicastAddress, listsem, rmiPort, rmiHost, rmiRegister, server);
                 downloader.start();
             }
 
         } catch (IOException e) {
             System.out.println("[BARREL] Error reading properties file:");
             e.printStackTrace();
+        } catch (NotBoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -153,12 +155,12 @@ public class Downloader extends Thread implements RMIDownloaders {
         while (true) {
             try {
 
-                while (isempty()) {
+                while (server.isempty()) {
                     sleep(500);
                 }
 
                 conSem.acquire();
-                String link = this.takeLink();
+                String link = server.takeLink();
                 conSem.release();
 
                 String message;
@@ -190,7 +192,7 @@ public class Downloader extends Thread implements RMIDownloaders {
 
                     //colocar os novos links na queue para continuar a ir buscar informação
                     for (String l : links) {
-                        this.offerLink(l);
+                        server.offerLink(l);
                     }
                 }
             } catch (InterruptedException e) {
@@ -253,26 +255,7 @@ public class Downloader extends Thread implements RMIDownloaders {
         }
     }
 
-    @Override
-    public String takeLink() throws RemoteException {
 
-        try {
-            return this.urlQueue.take();
-
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void offerLink(String link) throws RemoteException {
-        this.urlQueue.offer(link);
-    }
-
-    @Override
-    public boolean isempty() throws RemoteException {
-        return this.urlQueue.isEmpty();
-    }
 }
 
 
