@@ -109,7 +109,7 @@ class Updates extends Thread {
 
         // update the data in the files
         this.updateUsers(users, fileUsers);
-        this.updateLinks(links, fileLinks);
+
         /*this.updateLinksInfo(linksInfo, fileLinksInfo);
         this.updateWords(words, fileWords);
         this.updateWordsCount(wordsCount, fileWordsCount);*/
@@ -124,20 +124,5 @@ class Updates extends Thread {
         // update the file
         this.fileManager.updateUsers(fileUsers);
     }
-
-    private void updateLinks(HashMap<String, ArrayList<String>> links, HashMap<String, ArrayList<String>> fileLinks) {
-        for (String link : links.keySet()) {
-            if (!fileLinks.containsKey(link)) {
-                fileLinks.put(link, new ArrayList<>());
-            }
-            // add the references
-            for (String ref : links.get(link)) {
-                fileLinks.get(link).add(ref);
-            }
-        }
-        // update the file
-        this.fileManager.updateLinks(fileLinks);
-    }
-
 
 }

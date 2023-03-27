@@ -5,6 +5,8 @@ import Client.User;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.concurrent.Semaphore;
 
 public class Database {
@@ -92,7 +94,7 @@ public class Database {
         }
     }
 
-    public void updateLinks(HashMap<String, ArrayList<String>> fileLinks) {
+    public void updateLinks(HashMap<String, HashSet<String>> fileLinks) {
         try {
             this.s_linksFile.acquire();
             if (!this.linksFile.exists()) {
