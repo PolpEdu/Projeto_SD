@@ -120,10 +120,10 @@ public class Database {
     }
     public void updateInfo(HashMap<String, ArrayList<String>> fileInfo, File infoFile) {
         try {
-
             if (!infoFile.exists()) {
                 infoFile.createNewFile();
             }
+            // escreve numa class "HashNap"
             FileOutputStream fos = new FileOutputStream(infoFile);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(fileInfo);

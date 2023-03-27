@@ -58,7 +58,7 @@ public class Barrel extends Thread {
         this.b = b;
 
         this.word_Links = new HashMap<>();
-        this.link_links = files.getLinks(this.linkfile);
+        this.link_links = new HashMap<>();//files.getLinks(this.linkfile);
         System.out.println(this.link_links.size());
         this.link_info = new HashMap<>();
     }
