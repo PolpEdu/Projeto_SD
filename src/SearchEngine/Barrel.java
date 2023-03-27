@@ -57,12 +57,28 @@ public class Barrel extends Thread{
 
                 if(id.equals("dwnl")){
                     if(type.equals("word")){
-                        if()
+                        if(!this.word_Links.containsKey(list[2])){
+                            this.word_Links.put(list[2], new HashSet<>());
+                        }
+                        this.word_Links.get(list[2]).add(list[3]);
+                        //System.out.println("test " + list[2] +" " +list[3]);
+                    }
+                    else if(type.equals("links")){
+                        if(!this.link_links.containsKey(list[2])){
+                            this.link_links.put(list[2], new HashSet<>());
+                        }
+                        this.link_links.get(list[2]).add(list[3]);
                         System.out.println("test " + list[2] +" " +list[3]);
                     }
+                    else if(type.equals("siteinfo")){
+                        if(!this.link_info.containsKey(list[2])){
+                            this.link_info.put(list[2], new ArrayList<>());
+                        }
+
+                        this.link_info.get(list[2]).add(list[3]);
+                        this.link_info.get(list[2]).add(list[4]);
+                    }
                 }
-
-
 
                 //System.out.println("[BARREL " + (this.id+1) + "]" + received);
             }
@@ -93,11 +109,6 @@ public class Barrel extends Thread{
         }
 
     }
-
-
-
-
-
 
 
 }

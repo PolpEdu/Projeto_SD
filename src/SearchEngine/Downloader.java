@@ -109,17 +109,17 @@ public class Downloader extends Thread {
                     for (String w : listWords) {
                         Matcher matcher = pattern.matcher(w);
                         if (matcher.matches()) {
-                            message = "id:dwnl|type:word|" + w + "|" + link + ";";
+                            message = "id:dwnl|type:word|" + w + "|" + link ;
                             this.sendMessage(message);
                         }
 
                     }
                     for (String l : links) {
-                        message = "id:dwnl|type:links|" + l + "|" + link + ";";
+                        message = "id:dwnl|type:links|" + l + "|" + link ;
                         this.sendMessage(message);
                     }
 
-                    message = "id:dwnl|type:siteinfo|" + info.get(0) + "|" + info.get(1) + ";";
+                    message = "id:dwnl|type:siteinfo|" + link + "|" + info.get(0) + "|" + info.get(1) ;
 
                     this.sendMessage(message);
                     //System.out.println(message);
