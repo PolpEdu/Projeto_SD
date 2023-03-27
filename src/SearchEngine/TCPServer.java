@@ -1,19 +1,21 @@
 package SearchEngine;
 
+import Client.User;
 import Utility.MessageUpdateInfo;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-public class TCPServer extends Thread{
+public class TCPServer extends Thread {
     private ServerSocket listenSocket;
     private int PORT;
     private Database fileManager;
 
-    public TCPServer(int port, Database fileManager){
+    public TCPServer(int port, Database fileManager) {
         this.PORT = selectPort(port);
         this.fileManager = fileManager;
 
@@ -42,14 +44,15 @@ public class TCPServer extends Thread{
         return PORT;
     }
 
-    public void run(){
-        try{
+    public void run() {
+        try {
             this.listenSocket = new ServerSocket(this.PORT);
-            while(true){
+            while (true) {
                 Socket clientSocket = this.listenSocket.accept();
-                new Updates(clientSocket, this.PORT, this.fileManager);
+                System.out.println("[TCPConnection-" + this.getName() + "] New connection from " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
+                new Updates(clientSocket, this.fileManager);
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             System.out.println("[EXCEPTION-" + this.getName() + "] Error: " + e.getMessage());
         }
     }
@@ -59,20 +62,16 @@ public class TCPServer extends Thread{
 class Updates extends Thread {
     private Socket clientSocket;
     private Database fileManager;
-    private int PORT;
 
     // use object streaming to receive the message
     private ObjectInputStream inp;
-    private DataOutputStream out;
 
-    public Updates(Socket clientSocket, int port ,Database fileManager){
+    public Updates(Socket clientSocket, Database fileManager) {
         this.clientSocket = clientSocket;
         this.fileManager = fileManager;
-        this.PORT = port;
 
         try {
             this.inp = new ObjectInputStream(this.clientSocket.getInputStream());
-            this.out = new DataOutputStream(this.clientSocket.getOutputStream());
         } catch (Exception e) {
             System.out.println("[EXCEPTION-" + this.getName() + "] Error: " + e.getMessage());
             return;
@@ -85,7 +84,6 @@ class Updates extends Thread {
         try {
             MessageUpdateInfo message = (MessageUpdateInfo) this.inp.readObject();
             System.out.println("[TCPConnection-" + this.getName() + "] Received message from " + message.PORT);
-
             this.handleData(message);
         } catch (IOException e) {
             e.printStackTrace();
@@ -96,7 +94,52 @@ class Updates extends Thread {
     }
 
     private void handleData(MessageUpdateInfo message) {
-        //todo: stuff with the data
+        HashMap<String, User> users = message.getUsers();
+        HashMap<String, User> fileUsers = this.fileManager.getUsers();
+
+        HashMap<String, ArrayList<String>> links = message.getLinks();
+        HashMap<String, ArrayList<String>> fileLinks = this.fileManager.getLinks();
+
+        HashMap<String, ArrayList<String>> linksInfo = message.getLinksInfo();
+        HashMap<String, ArrayList<String>> fileLinksInfo = this.fileManager.getLinksInfo();
+
+        HashMap<String, ArrayList<String>> words = message.getWords();
+        HashMap<String, ArrayList<String>> fileWords = this.fileManager.getWords();
+
+        HashMap<String, Integer> wordsCount = message.getWordsCount();
+        HashMap<String, Integer> fileWordsCount = this.fileManager.getWordsCount();
+
+        // update the data in the files
+        this.updateUsers(users, fileUsers);
+        this.updateLinks(links, fileLinks);
+        /*this.updateLinksInfo(linksInfo, fileLinksInfo);
+        this.updateWords(words, fileWords);
+        this.updateWordsCount(wordsCount, fileWordsCount);*/
+
+
     }
+
+    private void updateUsers(HashMap<String, User> users, HashMap<String, User> fileUsers) {
+        for (String username : users.keySet()) {
+            fileUsers.put(username, users.get(username));
+        }
+        // update the file
+        this.fileManager.updateUsers(fileUsers);
+    }
+
+    private void updateLinks(HashMap<String, ArrayList<String>> links, HashMap<String, ArrayList<String>> fileLinks) {
+        for (String link : links.keySet()) {
+            if (!fileLinks.containsKey(link)) {
+                fileLinks.put(link, new ArrayList<>());
+            }
+            // add the references
+            for (String ref : links.get(link)) {
+                fileLinks.get(link).add(ref);
+            }
+        }
+        // update the file
+        this.fileManager.updateLinks(fileLinks);
+    }
+
 
 }

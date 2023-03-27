@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.*;
 
 import java.rmi.NotBoundException;
+import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -42,13 +43,11 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     RMIServer(String multicastAddress, int multicastSendPort, int multicastReceivePort, ServerInterface hPrincipal) throws RemoteException {
         super();
 
+        this.m_Send = new MulticastSend(multicastAddress, multicastSendPort);
         this.m_Receive = new MulticastReceive(this.m_Send, multicastAddress, multicastReceivePort);
         this.m_Receive.start();
 
-        this.m_Send = new MulticastSend(multicastAddress, multicastSendPort);
-
         this.hPrincipal = hPrincipal;
-
         this.clients = new HashMap<>();
         this.sendQueue = new LinkedList<>();
     }
@@ -56,7 +55,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     public static void main(String[] args) throws RemoteException {
         System.getProperties().put("java.security.policy", "policy.all");
 
-        RMIServer rmiServer = null;
+        RMIServer rmiServer;
         Properties prop = new Properties();
 
 
@@ -69,12 +68,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
         int mcSendPort;
 
         String rmiRegistryName;
-
-        /*
-        System.getProperties().put("java.security.policy", "policy.all");
-        System.setSecurityManager(new RMISecurityManager());
-        */
-
 
         try {
             prop.load(new FileInputStream(SETTINGS_PATH));
@@ -120,7 +113,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
             } catch (RemoteException e) {
                 System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(await_time);
                     rmiServer.hPrincipal = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
 
                     rmiServer.backUp(rmiPort, rmiHost, rmiRegistryName);
@@ -135,7 +128,6 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
 
     public void backUp(int rmiPort, String rmiHost, String rmiRegistryName) throws NotBoundException, RemoteException, InterruptedException {
         while (true) {
-            Thread.sleep(await_time);
             try {
                 // check if server is alive
                 if (this.hPrincipal.alive() == 1) {
@@ -195,28 +187,35 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
         String id = UUID.randomUUID().toString();
         Message msg = new Message(id, "type:register|username:" + username + "|password:" + password + "|firstName:" + firstName + "|lastName:" + lastName);
         this.m_Send.sendInfo(msg, this.sendQueue);
-        String[] response = this.m_Receive.parseRecievedPacket(msg, this.sendQueue).split("\\|");
+        String response = this.m_Receive.parseRecievedPacket(msg, this.sendQueue);
         this.sendQueue.remove(msg);
+        try {
+            String[] responseArray = response.split("\\|");
+            String status = responseArray[2].split(":")[1];
+            String message = responseArray[3].split(":")[1];
+            Message msgRes = new Message(id, "type:ack");
+            this.m_Send.sendInfo(msgRes, this.sendQueue);
 
-        String status = response[2].split(":")[1];
-        String message = response[3].split(":")[1];
+            if (status.equals("error")) {
+                // register unsuccessful and not admin
+                return new ArrayList<String>(Arrays.asList("false", "false", message));
+            }
 
-        Message msgRes = new Message(id, "type:ack");
-        this.m_Send.sendInfo(msgRes, this.sendQueue);
+            String admin = responseArray[4].split(":")[1];
+            if (admin.equals("true")) {
+                // register successful and admin
+                return new ArrayList<String>(Arrays.asList("true", "true", message));
+            }
 
-        if(status.equals("error")) {
-            // register unsuccessful and not admin
-            return new ArrayList<String>(Arrays.asList("false", "false", message));
+            // register successful and not admin
+            return new ArrayList<String>(Arrays.asList("true", "false", message));
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("[EXCEPTION] ArrayIndexOutOfBoundsException");
+            System.out.println("[EXCEPTION] In response: " + response);
+            e.printStackTrace();
+            return new ArrayList<String>(Arrays.asList("false", "false", "Something went wrong"));
         }
 
-        String admin = response[4].split(":")[1];
-        if(admin.equals("true")) {
-            // register successful and admin
-            return new ArrayList<String>(Arrays.asList("true", "true", message));
-        }
-
-        // register successful and not admin
-        return new ArrayList<String>(Arrays.asList("true", "false", message));
     }
 
     public static void loop() {
@@ -260,11 +259,9 @@ class MulticastReceive extends Thread {
         } catch (UnknownHostException eu) {
             System.out.println("[EXCEPTION] UnknownHostException");
             eu.printStackTrace();
-            return;
         } catch (IOException ei) {
             System.out.println("[EXCEPTION] IOException");
             ei.printStackTrace();
-            return;
         }
     }
 
@@ -273,40 +270,44 @@ class MulticastReceive extends Thread {
             // wait for the socket to be ready
             this.socket.setSoTimeout(socketTimeout);
             this.socket.joinGroup(this.group);
-            while (true) {
-            }
-        } catch (IOException e) {
-            System.out.println("[EXCEPTION] SocketException | IOException");
+            while (true) { }
+        } catch (SocketException e) {
+            System.out.println("[EXCEPTION] SocketException");
             e.printStackTrace();
-            socket.close();
-            return;
+        } catch (IOException e) {
+            System.out.println("[EXCEPTION] IOException");
+            e.printStackTrace();
         }
+        socket.close();
+
     }
 
     public String parseRecievedPacket(Message msg, LinkedList<Message> sendQueue) {
         String message = null;
         boolean checkInQueue;
+        System.out.println("[RECEIVED] " + msg.message);
         while (message == null) {
             byte[] buffer = new byte[messageSize];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             try {
+                // print socket info
                 this.socket.receive(packet);
                 message = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("[RECEIVED] " + message);
                 String[] messageArray = message.split("\\|");
                 String id = messageArray[1].split(":")[1];
-                if(msg.id.equals(id)) {
-                    System.out.println("[RECEIVED] Received our first ACK: "+ message);
+                if (msg.id.equals(id)) {
+                    System.out.println("[RECEIVED] Received our first ACK: " + message);
                 } else {
                     checkInQueue = false;
                     for (Message m : sendQueue) {
                         if (m.id.equals(id)) {
-                            checkInQueue = true; //
+                            checkInQueue = true; // message is in queue
                             break;
                         }
                     }
                     if (!checkInQueue) {
-                        System.out.println("[RECEIVED] Received another ACK: "+ message);
+                        // this happens when the server sends a message to the client and the client sends an ACK to the server
+                        System.out.println("[RECEIVED] Received another ACK: " + message);
                         Message msgACK = new Message(id, "type:ack");
                         this.multicastSend.sendInfo(msgACK, sendQueue); // send again
                     } else {
@@ -317,18 +318,24 @@ class MulticastReceive extends Thread {
                     message = null;
                 }
             } catch (SocketTimeoutException e) {
-                System.out.println("[EXCEPTION] Couldn't connect to Multicast Server. SocketTimeoutException: "+ e.getMessage());
-                this.multicastSend.sendInfo(msg, sendQueue); // send again
-                return null;
-            } catch (IOException e) {
-                System.out.println("[EXCEPTION] IOException: "+ e.getMessage());
+                message = null;
+                System.out.println("[EXCEPTION] Couldn't connect to Multicast Server. SocketTimeoutException: " + e.getMessage());
                 e.printStackTrace();
-                return null;
+                this.multicastSend.sendInfo(msg, sendQueue); // send again
+            } catch (IOException e) {
+                System.out.println("[EXCEPTION] IOException: " + e.getMessage());
+                e.printStackTrace();
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.out.println("[EXCEPTION] ArrayIndexOutOfBoundsException: " + e.getMessage());
+                System.out.println("[EXCEPTION] Message: " + message);
+                e.printStackTrace();
+            } catch (Exception e) {
+                System.out.println("[EXCEPTION] Exception: " + e.getMessage());
+                e.printStackTrace();
             }
         }
         return message;
     }
-
 }
 
 class MulticastSend {
@@ -347,11 +354,9 @@ class MulticastSend {
         } catch (UnknownHostException eu) {
             System.out.println("[EXCEPTION] UnknownHostException");
             eu.printStackTrace();
-            return;
         } catch (IOException ei) {
             System.out.println("[EXCEPTION] IOException");
             ei.printStackTrace();
-            return;
         }
     }
 
@@ -371,7 +376,6 @@ class MulticastSend {
         } catch (IOException e) {
             System.out.println("[EXCEPTION] IOException");
             e.printStackTrace();
-            return;
         }
     }
 }

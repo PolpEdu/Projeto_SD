@@ -9,6 +9,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+import java.net.ConnectException;
+
 
 import Client.Client;
 
@@ -22,7 +24,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
     private final int rmiPort;
     private final String rmiRegistryName;
 
-    public RMIClient(ServerInterface svInterface, Client client, String rmiHost, int rmiPort, String rmiRegistryName) throws RemoteException{
+    public RMIClient(ServerInterface svInterface, Client client, String rmiHost, int rmiPort, String rmiRegistryName) throws RemoteException {
         super();
         this.sv = svInterface;
         this.client = client;
@@ -66,23 +68,19 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
             RMIClient rmi_client = new RMIClient(svInterface, client, rmiHost, rmiPort, rmiRegistryName);
             rmi_client.menu();
 
-        } catch (RemoteException e){
+        } catch (RemoteException e) {
             System.out.println("[CLIENT] RemoteException");
             e.printStackTrace();
-            return;
         } catch (IOException e) {
             System.out.println("[CLIENT] IOException");
             e.printStackTrace();
-            return;
         } catch (NotBoundException e) {
             System.out.println("[CLIENT] NotBoundException");
             e.printStackTrace();
-            return;
         }
     }
 
     private void printMenus(int type) {
-
         switch (type) {
             case 0:
                 // Login or Register
@@ -103,12 +101,11 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
                 System.out.println("[EXCEPTION] Invalid menu type");
                 // exit program
                 System.exit(1);
-                return;
         }
     }
 
     private void menu() {
-        InputStream in  = System.in;
+        InputStream in = System.in;
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
         // create a new client object
@@ -127,17 +124,24 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
                     printMenus(1);
                 }
             }
+        } catch (ConnectException e) {
+            System.out.println("[EXCEPTION] ConnectException: " + e.getMessage());
+            serverErrorHandling();
         } catch (RemoteException e) {
+            System.out.println("[EXCEPTION] RemoteException: " + e.getMessage());
+            serverErrorHandling();
+        } catch (IOException e) {
+            System.out.println("[EXCEPTION] IOException: " + e.getMessage());
             serverErrorHandling();
         }
     }
 
-    private void anonLogic(BufferedReader br) throws RemoteException {
+    private void anonLogic(BufferedReader br) throws IOException {
         String choice = "";
 
-        try{
+        try {
             choice = br.readLine();
-        } catch(IOException ei){
+        } catch (IOException ei) {
             System.out.println("EXCEPTION: IOException");
             return;
         }
@@ -187,14 +191,12 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
                 System.out.print("  Password: ");
                 password = br.readLine();
 
-                while(password.length() < 4 || password.length() > 20) {
+                while (password.length() < 4 || password.length() > 20) {
                     System.out.print("[CLIENT] Password must be between 4 and 20 characters\n  Password: ");
                     password = br.readLine();
                 }
 
                 ArrayList<String> checked = this.sv.checkLogin(username, password);
-
-
 
 
             } catch (IOException e) {
@@ -205,74 +207,67 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
         }
     }
 
-    private void register(BufferedReader br) throws RemoteException {
+    private void register(BufferedReader br) throws IOException {
         String username = "", password = "", firstName = "", lastName = "";
         while (true) {
-            try {
-                System.out.print("\n### REGISTER ###\n  Username: ");
+            System.out.print("\n### REGISTER ###\n  Username: ");
+            username = br.readLine();
+            while (username.length() < 4 || username.length() > 20) {
+                System.out.println("[CLIENT] Username must be between 4 and 20 characters\n\n  Username: ");
                 username = br.readLine();
-                while (username.length() < 4 || username.length() > 20) {
-                    System.out.println("[CLIENT] Username must be between 4 and 20 characters\n\n  Username: ");
-                    username = br.readLine();
-                }
+            }
 
-                System.out.print("  Password: ");
+            System.out.print("  Password: ");
+            password = br.readLine();
+            while (password.length() < 4 || password.length() > 20) {
+                System.out.println("[CLIENT] Password must be between 4 and 20 characters\n\n  Password: ");
                 password = br.readLine();
-                while(password.length() < 4 || password.length() > 20) {
-                    System.out.println("[CLIENT] Password must be between 4 and 20 characters\n\n  Password: ");
-                    password = br.readLine();
-                }
+            }
 
-                System.out.print("  First Name: ");
+            System.out.print("  First Name: ");
+            firstName = br.readLine();
+            while (firstName.length() < 1) {
+                System.out.println("[CLIENT] First name must be at least 1 character\n\n  First Name: ");
                 firstName = br.readLine();
-                while(firstName.length() < 1) {
-                    System.out.println("[CLIENT] First name must be at least 1 character\n\n  First Name: ");
-                    firstName = br.readLine();
-                }
+            }
 
-                System.out.print("  Last Name: ");
+            System.out.print("  Last Name: ");
+            lastName = br.readLine();
+            while (lastName.length() < 1) {
+                System.out.println("[CLIENT] Last name must be at least 1 character\n\n  Last Name: ");
                 lastName = br.readLine();
-                while(lastName.length() < 1) {
-                    System.out.println("[CLIENT] Last name must be at least 1 character\n\n  Last Name: ");
-                    lastName = br.readLine();
-                }
+            }
 
-                // System.out.println("[CLIENT] Registering: " + username + " " + password + " " + firstName + " " + lastName + "");
+            // System.out.println("[CLIENT] Registering: " + username + " " + password + " " + firstName + " " + lastName + "");
 
-                ArrayList<String> res = this.sv.checkRegister(username, password, firstName, lastName);
-                if(res.get(0).equals("true")) {
-                    // register success
-                    System.out.println("[CLIENT] Registration success");
-                    if (res.get(1).equals("true")) {
-                        // admin
-                        this.client = new Client(username, true);
-                    } else {
-                        // user
-                        this.client = new Client(username, false);
-                    }
-                    this.sv.updateClient(this.client.username, this.client);
-                    System.out.println("[CLIENT] Logged in as " + this.client.username);
-                    return;
+            ArrayList<String> res = this.sv.checkRegister(username, password, firstName, lastName);
+            if (res.get(0).equals("true")) {
+                // register success
+                System.out.println("[CLIENT] Registration success");
+                if (res.get(1).equals("true")) {
+                    // admin
+                    this.client = new Client(username, true);
                 } else {
-                    System.out.println("[CLIENT] Registration failed: " + res.get(2));
-                    System.out.println("[CLIENT] Try again? (y/n)");
-                    String choice = br.readLine();
-                    while (!choice.equals("y") && !choice.equals("n")) {
-                        System.out.println("[CLIENT] Invalid choice");
-                        System.out.println("[CLIENT] Try again? (y/n)");
-                        choice = br.readLine();
-                    }
-                    if (choice.equals("n")) {
-                        return;
-                    }
+                    // user
+                    this.client = new Client(username, false);
                 }
-            } catch (IOException e) {
-                System.out.println("[EXCEPTION] IOException");
-                e.printStackTrace();
+                this.sv.updateClient(this.client.username, this.client);
+                System.out.println("[CLIENT] Logged in as " + this.client.username);
                 return;
+            } else {
+                System.out.println("[CLIENT] Registration failed: " + res.get(2));
+                System.out.println("[CLIENT] Try again? (y/n)");
+                String choice = br.readLine();
+                while (!choice.equals("y") && !choice.equals("n")) {
+                    System.out.println("[CLIENT] Invalid choice");
+                    System.out.println("[CLIENT] Try again? (y/n)");
+                    choice = br.readLine();
+                }
+                if (choice.equals("n")) {
+                    return;
+                }
             }
         }
-
     }
 
     private void serverErrorHandling() {
@@ -285,9 +280,10 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
                 this.sv.updateClient(this.client.username, this.client);
 
                 System.out.println("[CLIENT] Reconnected!");
+                this.menu();
                 break;
             } catch (RemoteException | NotBoundException | InterruptedException e1) {
-                System.out.println("[EXCEPTION] Could not connect to server: "+ e1.getMessage());
+                System.out.println("[EXCEPTION] Could not connect to server: " + e1.getMessage());
             }
         }
     }
