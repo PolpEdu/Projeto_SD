@@ -70,7 +70,7 @@ class MultiCastServer extends Thread {
             DatagramPacket receivePacket;
 
             //initialize downloader
-            this.downloader = new Downloader(this.urlQueue, this.receiveSocket, this.MULTICAST_RECEIVE_PORT, this.group, this.ports, this.conSem, this.connection.getTcpPort(), this.tcpHost);
+            //this.downloader = new Downloader( this.receiveSocket, this.MULTICAST_RECEIVE_PORT, this.group,  this.conSem, this.connection.getTcpPort(), this.tcpHost);
 
 
         } catch (IOException e) {

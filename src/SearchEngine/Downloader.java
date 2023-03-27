@@ -1,22 +1,22 @@
 package SearchEngine;
 
-import Utility.Message;
 import interfaces.RMIDownloaders;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.*;
 
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,30 +24,89 @@ import java.util.regex.Pattern;
 
 public class Downloader extends Thread implements RMIDownloaders {
 
-    private LinkedBlockingQueue<String> urlQueue;
     private MulticastSocket receiveSocket;
-    private int MULTICAST_RECEIVE_PORT;
+    private final int MULTICAST_RECEIVE_PORT;
+    private final String MULTICAST_ADDRESS;
     private InetAddress group;
-    private HashMap<String, HashSet<Integer>> onlinePorts;
+    private final Semaphore conSem;
+    private final  int rmiPort;
+    private final String rmiHost;
+    private final String rmiRegister;
+    private RMIDownloaders queue;
+    private int id;
+    private ArrayBlockingQueue<String> urlQueue;
 
-    private Semaphore conSem;
-    private int tcpPort;
-    private String tcpHost;
 
-    public Downloader(UrlQueue urlQueue, MulticastSocket receiveSocket,int MULTICAST_RECEIVE_PORT, InetAddress group, HashMap<String, HashSet<Integer>> onlinePorts, Semaphore conSem, int tcpPort, String tcpHost) {
-        this.urlQueue = urlQueue.getUrlQueue();
-        this.receiveSocket = receiveSocket;
-        this.group = group;
-        this.onlinePorts = onlinePorts;
+    public Downloader(int id,int MULTICAST_RECEIVE_PORT,String MULTICAST_ADDRESS, Semaphore conSem, int rmiPort, String rmiHost, String rmiRegister ) {
+        this.receiveSocket = null;
+        this.group  = null;
         this.conSem = conSem;
-        this.tcpPort = tcpPort;
-        this.tcpHost = tcpHost;
         this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
-        this.start();
+        this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
+        this.rmiPort = rmiPort;
+        this.rmiHost = rmiHost;
+        this.rmiRegister = rmiRegister;
+        this.id = id;
+        queue = null;
+
     }
 
     public void run() {
-        this.QueueInfo();
+        try {
+            Registry r = LocateRegistry.createRegistry(rmiPort);
+            System.setProperty("java.rmi.server.hostname", rmiHost);
+            r.rebind(rmiRegister, this);
+
+            this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
+            this.group = InetAddress.getByName(MULTICAST_ADDRESS);
+            this.receiveSocket.joinGroup(this.group);
+
+            this.QueueInfo();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+
+    }
+
+    public static void main(String[] args) {
+        System.getProperties().put("java.security.policy", "policy.all");
+
+        try {
+            Properties barrelProp = new Properties();
+            barrelProp.load(new FileInputStream(new File("src/Barrel.properties").getAbsoluteFile()));
+
+            Properties multicastServerProp = new Properties();
+            multicastServerProp.load(new FileInputStream(new File("src/MulticastServer.properties").getAbsoluteFile()));
+
+
+            String rmiHost = barrelProp.getProperty("HOST");
+            String rmiRegister = barrelProp.getProperty("RMI_REGISTER");
+            int rmiPort = Integer.parseInt(barrelProp.getProperty("PORT"));
+
+
+            String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
+            int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
+
+            Semaphore listsem = new Semaphore(1);
+            
+            for (int i = 0; i < 1; i++) {
+
+                if (rmiHost == null || rmiPort == 0 || multicastAddress == null || receivePort == 0) {
+                    System.out.println("[DOWNLOADER" + i + "] Error reading properties file");
+                    System.exit(1);
+                }
+
+                Downloader downloader = new Downloader(i, receivePort, multicastAddress, listsem, rmiPort, rmiHost, rmiRegister);
+                downloader.start();
+            }
+
+        } catch (IOException e) {
+            System.out.println("[BARREL] Error reading properties file:");
+            e.printStackTrace();
+        }
     }
 
     boolean getInfoFromWebsite(String webs, ArrayList<String> Links, ArrayList<String> wordL, ArrayList<String> SiteInfo) {
@@ -94,12 +153,12 @@ public class Downloader extends Thread implements RMIDownloaders {
         while (true) {
             try {
 
-                while (urlQueue.isEmpty()) {
+                while (isempty()) {
                     sleep(500);
                 }
 
                 conSem.acquire();
-                String link = this.urlQueue.take();
+                String link = this.takeLink();
                 conSem.release();
 
                 String message;
@@ -131,13 +190,15 @@ public class Downloader extends Thread implements RMIDownloaders {
 
                     //colocar os novos links na queue para continuar a ir buscar informação
                     for (String l : links) {
-                        this.urlQueue.offer(l);
+                        this.offerLink(l);
                     }
                 }
             } catch (InterruptedException e) {
                 System.out.println("Failed to check the queue and get the link");
                 e.printStackTrace();
 
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
             }
         }
     }
@@ -206,6 +267,11 @@ public class Downloader extends Thread implements RMIDownloaders {
     @Override
     public void offerLink(String link) throws RemoteException {
         this.urlQueue.offer(link);
+    }
+
+    @Override
+    public boolean isempty() throws RemoteException {
+        return this.urlQueue.isEmpty();
     }
 }
 

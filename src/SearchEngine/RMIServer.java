@@ -15,6 +15,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 public class RMIServer extends UnicastRemoteObject implements RMIServerInterface {
@@ -23,6 +24,8 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
     // time to wait between checks in milliseconds, if server is alive
     static final int await_time = 1000;
+
+    private final LinkedBlockingQueue<String> urlQueue;
 
     // HashMap of clients connected to server
     HashMap<String, Client> clients;
@@ -39,7 +42,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     // this is the multicast that will send the messages
     MulticastSend m_Send;
 
-    RMIServer(String multicastAddress, int multicastSendPort, int multicastReceivePort, RMIServerInterface hPrincipal) throws RemoteException {
+    public RMIServer(LinkedBlockingQueue urlQueue, String multicastAddress, int multicastSendPort, int multicastReceivePort, RMIServerInterface hPrincipal) throws RemoteException {
         super();
 
         this.m_Send = new MulticastSend(multicastAddress, multicastSendPort);
@@ -49,6 +52,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         this.hPrincipal = hPrincipal;
         this.clients = new HashMap<>();
         this.sendQueue = new LinkedList<>();
+        this.urlQueue = urlQueue;
     }
 
     public static void main(String[] args) throws RemoteException {
@@ -87,7 +91,8 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 return;
             }
 
-            rmiServer = new RMIServer(mcAddress, mcSendPort, Integer.parseInt(mcRecievePort), null);
+            UrlQueue urlQueue = new UrlQueue();
+            rmiServer = new RMIServer(urlQueue.getUrlQueue(), mcAddress, mcSendPort, Integer.parseInt(mcRecievePort), null);
 
         } catch (RemoteException er) {
             System.out.println("[EXCEPTION] RemoteException");
