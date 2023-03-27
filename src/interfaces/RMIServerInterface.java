@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import Client.*;
 
-public interface ServerInterface extends Remote {
+public interface RMIServerInterface extends Remote {
     int alive() throws RemoteException;
     void updateClient(String username, Client client) throws RemoteException;
 

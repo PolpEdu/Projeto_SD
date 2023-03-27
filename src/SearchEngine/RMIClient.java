@@ -1,7 +1,7 @@
 package SearchEngine;
 
-import interfaces.ClientInterface;
-import interfaces.ServerInterface;
+import interfaces.RMIClientInterface;
+import interfaces.RMIServerInterface;
 
 import java.io.*;
 import java.rmi.NotBoundException;
@@ -14,17 +14,17 @@ import java.net.ConnectException;
 
 import Client.Client;
 
-class RMIClient extends UnicastRemoteObject implements ClientInterface {
+class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
     static final int keepAliveTime = 5000;
 
-    private ServerInterface sv;
+    private RMIServerInterface sv;
     private Client client;
 
     private final String rmiHost;
     private final int rmiPort;
     private final String rmiRegistryName;
 
-    public RMIClient(ServerInterface svInterface, Client client, String rmiHost, int rmiPort, String rmiRegistryName) throws RemoteException {
+    public RMIClient(RMIServerInterface svInterface, Client client, String rmiHost, int rmiPort, String rmiRegistryName) throws RemoteException {
         super();
         this.sv = svInterface;
         this.client = client;
@@ -61,7 +61,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
 
 
             // GET SERVER INTERFACE USING REGISTRY
-            ServerInterface svInterface = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
+            RMIServerInterface svInterface = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
 
 
             Client client = new Client("Anon", false);
@@ -276,7 +276,7 @@ class RMIClient extends UnicastRemoteObject implements ClientInterface {
             try {
                 System.out.println("[CLIENT] Trying to reconnect...");
                 Thread.sleep(keepAliveTime);
-                this.sv = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
+                this.sv = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
                 this.sv.updateClient(this.client.username, this.client);
 
                 System.out.println("[CLIENT] Reconnected!");

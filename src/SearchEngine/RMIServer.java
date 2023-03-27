@@ -2,7 +2,7 @@ package SearchEngine;
 
 import Client.Client;
 import Utility.Message;
-import interfaces.ServerInterface;
+import interfaces.RMIServerInterface;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.*;
 
 import java.rmi.NotBoundException;
-import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -18,7 +17,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
-public class RMIServer extends UnicastRemoteObject implements ServerInterface {
+public class RMIServer extends UnicastRemoteObject implements RMIServerInterface {
     // number of times to check if server is alive
     static final int alive_checks = 5;
 
@@ -32,7 +31,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     LinkedList<Message> sendQueue;
 
     // Interface for the server that will receive the messages (this class)
-    ServerInterface hPrincipal;
+    RMIServerInterface hPrincipal;
 
     // this is the multicast that will receive the messages
     MulticastReceive m_Receive;
@@ -40,7 +39,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
     // this is the multicast that will send the messages
     MulticastSend m_Send;
 
-    RMIServer(String multicastAddress, int multicastSendPort, int multicastReceivePort, ServerInterface hPrincipal) throws RemoteException {
+    RMIServer(String multicastAddress, int multicastSendPort, int multicastReceivePort, RMIServerInterface hPrincipal) throws RemoteException {
         super();
 
         this.m_Send = new MulticastSend(multicastAddress, multicastSendPort);
@@ -108,14 +107,13 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
                 System.out.println("[SERVER] Running on " + rmiHost + ":" + rmiPort + "");
 
                 // keep the server running
-                rmiServer.loop();
+                loop();
 
             } catch (RemoteException e) {
                 System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
                 try {
                     Thread.sleep(await_time);
-                    rmiServer.hPrincipal = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
-
+                    rmiServer.hPrincipal = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
                     rmiServer.backUp(rmiPort, rmiHost, rmiRegistryName);
                 } catch (InterruptedException | NotBoundException ei) {
                     System.out.println("[EXCEPTION] InterruptedException | NotBoundException");
@@ -139,7 +137,7 @@ public class RMIServer extends UnicastRemoteObject implements ServerInterface {
                 for (int i = 0; i < alive_checks; i++) {
                     try {
                         Thread.sleep(await_time);
-                        this.hPrincipal = (ServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
+                        this.hPrincipal = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
                     } catch (RemoteException er) {
                         System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
                         this.hPrincipal = null;
