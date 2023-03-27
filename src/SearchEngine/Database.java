@@ -18,9 +18,6 @@ public class Database {
     private File usersFile;
     Semaphore s_usersFile = new Semaphore(1);
 
-    private File wordCountFile;
-    Semaphore s_wordCountFile = new Semaphore(1);
-
 
     public void constructPaths(int n) {
         String usersPath = "src\\Users" + n + ".txt";
@@ -35,7 +32,6 @@ public class Database {
         this.s_linksFile = new Semaphore(1);
         this.s_linksInfoFile = new Semaphore(1);
         this.s_wordsFile = new Semaphore(1);
-        this.s_wordCountFile = new Semaphore(1);
     }
 
     public void postUser(HashMap<String, User> users) {
@@ -52,7 +48,6 @@ public class Database {
         this.linksFile = new File(linksPath);
         this.wordsFile = new File(wordsPath);
         this.linksInfoFile = new File(linksInfoPath);
-        this.wordCountFile = new File(wordCountPath);
     }
 
     public HashMap<String, User> getUsers() {
@@ -131,12 +126,6 @@ public class Database {
         HashMap<String, ArrayList<String>> words = new HashMap<>();
         return words;
     }
-
-    public HashMap<String, Integer> getWordsCount() {
-        HashMap<String, Integer> wordsCount = new HashMap<>();
-        return wordsCount;
-    }
-
 
 }
 
