@@ -1,6 +1,7 @@
 package SearchEngine;
 
 import Utility.Message;
+import interfaces.RMIDownloaders;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -12,6 +13,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.nio.charset.StandardCharsets;
+import java.rmi.RemoteException;
 import java.util.*;
 
 import java.util.concurrent.LinkedBlockingQueue;
@@ -20,7 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class Downloader extends Thread {
+public class Downloader extends Thread implements RMIDownloaders {
 
     private LinkedBlockingQueue<String> urlQueue;
     private MulticastSocket receiveSocket;
@@ -129,7 +131,7 @@ public class Downloader extends Thread {
 
                     //colocar os novos links na queue para continuar a ir buscar informação
                     for (String l : links) {
-                        this.addUrl(l);
+                        this.urlQueue.offer(l);
                     }
                 }
             } catch (InterruptedException e) {
@@ -140,9 +142,7 @@ public class Downloader extends Thread {
         }
     }
 
-    void addUrl(String l) {
-        this.urlQueue.offer(l);
-    }
+
 
     private static void seperateWords(String words, ArrayList<String> wordList) {
         BufferedReader buffer = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(words.getBytes(StandardCharsets.UTF_8))));
@@ -192,6 +192,21 @@ public class Downloader extends Thread {
         }
     }
 
+    @Override
+    public String takeLink() throws RemoteException {
+
+        try {
+            return this.urlQueue.take();
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void offerLink(String link) throws RemoteException {
+        this.urlQueue.offer(link);
+    }
 }
 
 
