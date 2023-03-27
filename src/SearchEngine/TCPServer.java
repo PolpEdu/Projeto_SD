@@ -109,7 +109,7 @@ class Updates extends Thread {
 
         // update the data in the files
         this.updateUsers(users, fileUsers);
-        this.updateLinks(links, fileLinks);
+
         /*this.updateLinksInfo(linksInfo, fileLinksInfo);
         this.updateWords(words, fileWords);
         this.updateWordsCount(wordsCount, fileWordsCount);*/
@@ -124,7 +124,5 @@ class Updates extends Thread {
         // update the file
         this.fileManager.updateUsers(fileUsers);
     }
-
-
 
 }
