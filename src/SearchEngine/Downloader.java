@@ -95,7 +95,10 @@ public class Downloader extends Thread {
                 while (urlQueue.isEmpty()) {
                     sleep(500);
                 }
+
+                conSem.acquire();
                 String link = this.urlQueue.take();
+                conSem.release();
 
                 String message;
                 ArrayList<String> links = new ArrayList<>();
