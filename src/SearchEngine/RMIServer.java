@@ -6,9 +6,7 @@ import interfaces.RMIServerInterface;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-
 import java.net.*;
-
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -129,11 +127,16 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
     }
 
+    public static void loop() {
+        while (true) {
+        }
+    }
+
     public void backUp(int rmiPort, String rmiHost, String rmiRegistryName) throws NotBoundException, RemoteException, InterruptedException {
         while (true) {
             try {
                 // check if server is alive
-                if (this.hPrincipal.alive() == 1) {
+                if (this.hPrincipal.alive()) {
                     System.out.println("[BARREL] Barrel is alive.");
                 }
             } catch (RemoteException e) {
@@ -161,8 +164,8 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
     }
 
-    public int alive() throws RemoteException {
-        return 1;
+    public boolean alive() throws RemoteException {
+        return true;
     }
 
     @Override
@@ -175,10 +178,12 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             throw new RuntimeException(e);
         }
     }
+
     @Override
     public void offerLink(String link) throws RemoteException {
         this.urlQueue.offer(link);
     }
+
     @Override
     public boolean isempty() throws RemoteException {
         return this.urlQueue.isEmpty();
@@ -240,34 +245,23 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
 
     }
-
-    public static void loop() {
-        while (true) {
-        }
-    }
 }
 
 
 class MulticastReceive extends Thread {
-    // this is the multicast that will receive the messages
-    private String MULTICAST_ADDRESS;
-
-    // this is the port that will receive the messages
-    private int PORT;
-
     // size of the message in bytes
     int messageSize = 1024 * 8;
-
     // socket Timeout
     int socketTimeout = 1500;
-
     // this is the group that will receive the messages
     InetAddress group;
-
     MulticastSend multicastSend;
     MulticastSocket socket;
-
     Semaphore sem;
+    // this is the multicast that will receive the messages
+    private String MULTICAST_ADDRESS;
+    // this is the port that will receive the messages
+    private int PORT;
 
 
     public MulticastReceive(MulticastSend multicastSend, String multicastAddress, int receivePort) {
@@ -293,7 +287,8 @@ class MulticastReceive extends Thread {
             // wait for the socket to be ready
             this.socket.setSoTimeout(socketTimeout);
             this.socket.joinGroup(this.group);
-            while (true) { }
+            while (true) {
+            }
         } catch (SocketException e) {
             System.out.println("[EXCEPTION] SocketException");
             e.printStackTrace();
@@ -362,11 +357,10 @@ class MulticastReceive extends Thread {
 }
 
 class MulticastSend {
-    private String MULTICAST_ADDRESS;
-    private int PORT;
-
     MulticastSocket socket;
     InetAddress group;
+    private String MULTICAST_ADDRESS;
+    private int PORT;
 
     public MulticastSend(String multicastAddress, int sendPort) {
         try {

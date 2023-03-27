@@ -67,7 +67,6 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
             Client client = new Client("Anon", false);
             RMIClient rmi_client = new RMIClient(svInterface, client, rmiHost, rmiPort, rmiRegistryName);
             rmi_client.menu();
-
         } catch (RemoteException e) {
             System.out.println("[CLIENT] RemoteException");
             e.printStackTrace();

@@ -1,6 +1,6 @@
 package SearchEngine;
 
-import interfaces.RMIBarrelInterface;
+import interfaces.RMIServerInterface;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,15 +27,17 @@ public class Barrel extends Thread implements RMIBarrelInterface {
     private final HashMap<String, HashSet<String>> word_Links;
     private final HashMap<String, HashSet<String>> link_links;
     private final HashMap<String, ArrayList<String>> link_info;
+
+    private RMIServerInterface b;
     private final int rmiPort;
     private final String rmiHost;
     private final String rmiRegister;
-    RMIBarrelInterface b;
+
     int messageSize = 8 * 1024;
     private InetAddress group;
     private MulticastSocket receiveSocket;// send socket do multicastserver
 
-    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister) {
+    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, RMIServerInterface b) {
         this.id = id;
         this.receiveSocket = null;
         this.group = null;
@@ -46,7 +48,7 @@ public class Barrel extends Thread implements RMIBarrelInterface {
         this.rmiPort = rmiPort;
         this.rmiHost = rmiHost;
         this.rmiRegister = rmiRegister;
-        this.b = null;
+        this.b = b;
 
         this.word_Links = new HashMap<>();
         this.link_links = new HashMap<>();
@@ -72,6 +74,7 @@ public class Barrel extends Thread implements RMIBarrelInterface {
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
 
+            RMIServerInterface b = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
 
             for (int i = 0; i < 1; i++) {
 
@@ -80,12 +83,12 @@ public class Barrel extends Thread implements RMIBarrelInterface {
                     System.exit(1);
                 }
 
-                Barrel barrel = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister);
+                Barrel barrel = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, );
                 barrel.start();
             }
 
-        } catch (IOException e) {
-            System.out.println("[BARREL] Error reading properties file:");
+        } catch (IOException | NotBoundException e) {
+            System.out.println("[BARREL] Error reading properties file: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -130,9 +133,6 @@ public class Barrel extends Thread implements RMIBarrelInterface {
         System.out.println("[BARREL" + this.id + "] Barrel running...");
 
         try {
-            Registry r = LocateRegistry.createRegistry(rmiPort);
-            System.setProperty("java.rmi.server.hostname", rmiHost);
-            r.rebind(rmiRegister, this);
 
             System.out.println("[BARREL " + this.id + "] Ready.");
 
@@ -147,12 +147,11 @@ public class Barrel extends Thread implements RMIBarrelInterface {
 
             try {
                 Thread.sleep(await_time);
-                this.b = (RMIBarrelInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
+                this.b = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
                 this.backUp(rmiPort, rmiHost, rmiRegister);
             } catch (InterruptedException | NotBoundException | RemoteException ei) {
                 System.out.println("[EXCEPTION] InterruptedException | NotBoundException | RemoteException");
                 ei.printStackTrace();
-                return;
             }
 
         } catch (UnknownHostException e) {
@@ -174,7 +173,7 @@ public class Barrel extends Thread implements RMIBarrelInterface {
                 for (int i = 0; i < alive_checks; i++) {
                     try {
                         Thread.sleep(await_time);
-                        this.b = (RMIBarrelInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
+                        this.b = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
                     } catch (RemoteException er) {
                         System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in " + +await_time / 1000 + " second(s)...");
                         this.b = null;
