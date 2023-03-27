@@ -1,28 +1,25 @@
 package SearchEngine;
 
+import Client.Client;
 import interfaces.RMIClientInterface;
 import interfaces.RMIServerInterface;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.*;
-import java.net.ConnectException;
-
-
-import Client.Client;
+import java.util.ArrayList;
+import java.util.Properties;
 
 class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
     static final int keepAliveTime = 5000;
-
-    private RMIServerInterface sv;
-    private Client client;
-
     private final String rmiHost;
     private final int rmiPort;
     private final String rmiRegistryName;
+    private RMIServerInterface sv;
+    private Client client;
 
     public RMIClient(RMIServerInterface svInterface, Client client, String rmiHost, int rmiPort, String rmiRegistryName) throws RemoteException {
         super();
@@ -128,6 +125,7 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
             serverErrorHandling();
         } catch (RemoteException e) {
             System.out.println("[EXCEPTION] RemoteException: " + e.getMessage());
+            // e.printStackTrace();
             serverErrorHandling();
         } catch (IOException e) {
             System.out.println("[EXCEPTION] IOException: " + e.getMessage());
@@ -243,13 +241,10 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
             if (res.get(0).equals("true")) {
                 // register success
                 System.out.println("[CLIENT] Registration success");
-                if (res.get(1).equals("true")) {
-                    // admin
-                    this.client = new Client(username, true);
-                } else {
-                    // user
-                    this.client = new Client(username, false);
-                }
+
+                // admin or not
+                this.client = new Client(username, res.get(1).equals("true"));
+
                 this.sv.updateClient(this.client.username, this.client);
                 System.out.println("[CLIENT] Logged in as " + this.client.username);
                 return;
