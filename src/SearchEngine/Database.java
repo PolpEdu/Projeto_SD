@@ -31,24 +31,14 @@ public class Database {
     public Database(int svID) {
         setPath(svID);
         this.s_usersFile = new Semaphore(1);
-        this.s_linksFile = new Semaphore(1);
-        this.s_linksInfoFile = new Semaphore(1);
-        this.s_wordsFile = new Semaphore(1);
     }
 
     public void postUser(HashMap<String, User> users) {
     }
 
     public void setPath(int n) {
-        String linksPath = "src\\links" + n + ".txt";
-        String wordsPath = "src\\words" + n + ".txt";
-        String linksInfoPath = "src\\linksInfo" + n + ".txt";
         String usersPath = "src\\users" + n + ".txt";
-
         this.usersFile = new File(usersPath);
-        this.linksFile = new File(linksPath);
-        this.wordsFile = new File(wordsPath);
-        this.linksInfoFile = new File(linksInfoPath);
     }
 
     public HashMap<String, User> getUsers() {
@@ -93,31 +83,84 @@ public class Database {
             e.printStackTrace();
         }
     }
-    public void updateLinks(HashMap<String, HashSet<String>> fileLinks) {
+    public void updateLinks(HashMap<String, HashSet<String>> fileLinks, File linksFile) {
         try {
-            this.s_linksFile.acquire();
-            if (!this.linksFile.exists()) {
-                this.linksFile.createNewFile();
+
+            if (!linksFile.exists()) {
+                linksFile.createNewFile();
             }
-            FileOutputStream fos = new FileOutputStream(this.linksFile);
+            FileOutputStream fos = new FileOutputStream(linksFile);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(fileLinks);
             oos.close();
             fos.close();
-            this.s_linksFile.release();
-        } catch (InterruptedException | IOException e) {
+
+        } catch (IOException e) {
             System.out.println("[EXCEPTION] While updating links: "+ e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public HashMap<String, ArrayList<String>> getLinks() {
-        HashMap<String, ArrayList<String>> links = new HashMap<>();
+    public void updateWords(HashMap<String, HashSet<String>> fileWords, File wordsFile) {
+        try {
+
+            if (!wordsFile.exists()) {
+                wordsFile.createNewFile();
+            }
+            FileOutputStream fos = new FileOutputStream(wordsFile);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(fileWords);
+            oos.close();
+            fos.close();
+
+        } catch (IOException e) {
+            System.out.println("[EXCEPTION] While updating links: "+ e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    public void updateInfo(HashMap<String, ArrayList<String>> fileInfo, File infoFile) {
+        try {
+
+            if (!infoFile.exists()) {
+                infoFile.createNewFile();
+            }
+            FileOutputStream fos = new FileOutputStream(infoFile);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(fileInfo);
+            oos.close();
+            fos.close();
+
+        } catch (IOException e) {
+            System.out.println("[EXCEPTION] While updating links: "+ e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    public HashMap<String, HashSet<String>> getLinks(File linksFile) {
+        HashMap<String, HashSet<String>> links = new HashMap<>();
+        try {
+
+            if (!linksFile.exists()) {
+                return links;
+            }
+
+            FileInputStream fis = new FileInputStream(linksFile);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+
+            links = (HashMap<String, HashSet<String>>) ois.readObject();
+            ois.close();
+            fis.close();
+
+        } catch (IOException |  ClassNotFoundException e) {
+            System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
+            e.printStackTrace();
+        }
         return links;
     }
 
-    public HashMap<String, ArrayList<String>> getLinksInfo() {
-        HashMap<String, ArrayList<String>> linksInfo = new HashMap<>();
+    public HashMap<String, HashSet<String>> getLinksInfo() {
+        HashMap<String, HashSet<String>> linksInfo = new HashMap<>();
         return linksInfo;
     }
 

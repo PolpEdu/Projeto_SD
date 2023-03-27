@@ -34,12 +34,20 @@ public class Barrel extends Thread {
     private InetAddress group;
     private MulticastSocket receiveSocket;// send socket do multicastserver
 
-    private File barrelfile;
+    private final File linkfile;
+    private final File wordfile;
+    private final File infofile;
 
-    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, RMIServerInterface b) {
+    Database files;
+
+    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, RMIServerInterface b, File linkfile, File wordfile, File infofile, Database files) {
         this.id = id;
         this.receiveSocket = null;
         this.group = null;
+        this.linkfile = linkfile;
+        this.wordfile = wordfile;
+        this.infofile = infofile;
+        this.files = files;
 
         this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
         this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
@@ -50,7 +58,8 @@ public class Barrel extends Thread {
         this.b = b;
 
         this.word_Links = new HashMap<>();
-        this.link_links = new HashMap<>();
+        this.link_links = files.getLinks(this.linkfile);
+        System.out.println(this.link_links.size());
         this.link_info = new HashMap<>();
     }
 
@@ -82,7 +91,11 @@ public class Barrel extends Thread {
                     System.exit(1);
                 }
 
-                Barrel barrel = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, b);
+                File linkfile = new File("src\\links-" + i);
+                File wordfile = new File("src\\words-" + i);
+                File infofile = new File("src\\info-" + i);
+                Database files= new Database(i);
+                Barrel barrel = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, b, linkfile, wordfile, infofile, files);
                 barrel.start();
             }
 
@@ -127,7 +140,11 @@ public class Barrel extends Thread {
                     this.link_info.get(list[2]).add(list[3]);
                     this.link_info.get(list[2]).add(list[4]);
                 }
+
             }
+            this.files.updateLinks(link_links, linkfile);
+            this.files.updateWords(word_Links, wordfile);
+            this.files.updateInfo(link_info,infofile);
             System.out.println("[BARREL " + this.id + "] " + received);
         }
     }

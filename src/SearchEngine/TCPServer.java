@@ -84,7 +84,7 @@ class Updates extends Thread {
         try {
             MessageUpdateInfo message = (MessageUpdateInfo) this.inp.readObject();
             System.out.println("[TCPConnection-" + this.getName() + "] Received message from " + message.PORT);
-            this.handleData(message);
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -93,29 +93,6 @@ class Updates extends Thread {
         }
     }
 
-    private void handleData(MessageUpdateInfo message) {
-        HashMap<String, User> users = message.getUsers();
-        HashMap<String, User> fileUsers = this.fileManager.getUsers();
-
-        HashMap<String, ArrayList<String>> links = message.getLinks();
-        HashMap<String, ArrayList<String>> fileLinks = this.fileManager.getLinks();
-
-        HashMap<String, ArrayList<String>> linksInfo = message.getLinksInfo();
-        HashMap<String, ArrayList<String>> fileLinksInfo = this.fileManager.getLinksInfo();
-
-        HashMap<String, ArrayList<String>> words = message.getWords();
-        HashMap<String, ArrayList<String>> fileWords = this.fileManager.getWords();
-
-
-        // update the data in the files
-        this.updateUsers(users, fileUsers);
-
-        /*this.updateLinksInfo(linksInfo, fileLinksInfo);
-        this.updateWords(words, fileWords);
-        this.updateWordsCount(wordsCount, fileWordsCount);*/
-
-
-    }
 
     private void updateUsers(HashMap<String, User> users, HashMap<String, User> fileUsers) {
         for (String username : users.keySet()) {
