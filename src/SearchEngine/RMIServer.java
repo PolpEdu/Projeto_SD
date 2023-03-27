@@ -129,15 +129,16 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             try {
                 // check if server is alive
                 if (this.hPrincipal.alive() == 1) {
-                    System.out.println("Server is alive");
+                    System.out.println("[BARREL] Barrel is alive.");
                 }
             } catch (RemoteException e) {
-                System.out.println("[SERVER] Getting connection...");
+                System.out.println("[BARREL] Getting connection...");
 
                 for (int i = 0; i < alive_checks; i++) {
                     try {
                         Thread.sleep(await_time);
                         this.hPrincipal = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
+                        break;
                     } catch (RemoteException er) {
                         System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
                         this.hPrincipal = null;
