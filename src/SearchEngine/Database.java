@@ -93,14 +93,12 @@ public class Database {
             e.printStackTrace();
         }
     }
-
     public void updateLinks(HashMap<String, HashSet<String>> fileLinks) {
         try {
             this.s_linksFile.acquire();
             if (!this.linksFile.exists()) {
                 this.linksFile.createNewFile();
             }
-
             FileOutputStream fos = new FileOutputStream(this.linksFile);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(fileLinks);

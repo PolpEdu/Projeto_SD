@@ -34,6 +34,8 @@ public class Barrel extends Thread {
     private InetAddress group;
     private MulticastSocket receiveSocket;// send socket do multicastserver
 
+    private File barrelfile;
+
     public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, RMIServerInterface b) {
         this.id = id;
         this.receiveSocket = null;
