@@ -53,18 +53,15 @@ public class Downloader extends Thread implements Remote {
     }
 
     public void run() {
+        System.out.println("[DOWNLOADER " + this.id + "] is running ...");
         try {
-            Registry r = LocateRegistry.createRegistry(rmiPort);
-            System.setProperty("java.rmi.server.hostname", rmiHost);
-            r.rebind(rmiRegister, this);
-
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
             this.receiveSocket.joinGroup(this.group);
-            this.QueueInfo();
 
+            this.QueueInfo();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("DA LHE PUTO");
         }
 
 
@@ -84,15 +81,15 @@ public class Downloader extends Thread implements Remote {
             String rmiHost = Prop.getProperty("HOST");
             String rmiRegister = Prop.getProperty("RMI_REGISTER");
             int rmiPort = Integer.parseInt(Prop.getProperty("PORT"));
-            String rmiRegistryName = Prop.getProperty("RMI_REGISTRY_NAME");
 
-            RMIServerInterface server = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
+            RMIServerInterface server = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
+
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
 
             Semaphore listsem = new Semaphore(1);
             
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < 2; i++) {
 
                 if (rmiHost == null || rmiPort == 0 || multicastAddress == null || receivePort == 0) {
                     System.out.println("[DOWNLOADER" + i + "] Error reading properties file");
@@ -152,16 +149,15 @@ public class Downloader extends Thread implements Remote {
     }
 
     void QueueInfo() {
+
         while (true) {
             try {
+//
+//                while (server.isempty()) {
+//                    sleep(1000);
+//                }
 
-                while (server.isempty()) {
-                    sleep(500);
-                }
-
-                conSem.acquire();
                 String link = server.takeLink();
-                conSem.release();
 
                 String message;
                 ArrayList<String> links = new ArrayList<>();
@@ -191,14 +187,11 @@ public class Downloader extends Thread implements Remote {
                     //System.out.println(message);
 
                     //colocar os novos links na queue para continuar a ir buscar informação
+
                     for (String l : links) {
                         server.offerLink(l);
                     }
                 }
-            } catch (InterruptedException e) {
-                System.out.println("Failed to check the queue and get the link");
-                e.printStackTrace();
-
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
@@ -250,6 +243,7 @@ public class Downloader extends Thread implements Remote {
             this.receiveSocket.send(packet);
 
             this.conSem.release();
+
         } catch (InterruptedException | IOException e) {
             System.out.println("[EXCPETION] " + e.getMessage());
         }

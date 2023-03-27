@@ -76,10 +76,10 @@ public class Barrel extends Thread  {
 
             RMIServerInterface b = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
 
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < 2; i++) {
 
                 if (rmiHost == null || rmiPort == 0 || multicastAddress == null || receivePort == 0) {
-                    System.out.println("[BARREL" + i + "] Error reading properties file");
+                    System.out.println("[BARREL " + i + "] Error reading properties file");
                     System.exit(1);
                 }
 
@@ -119,7 +119,7 @@ public class Barrel extends Thread  {
                         this.link_links.put(list[2], new HashSet<>());
                     }
                     this.link_links.get(list[2]).add(list[3]);
-                    System.out.println("test " + list[2] + " " + list[3]);
+                    //System.out.println("test " + list[2] + " " + list[3]);
                 } else if (type.equals("siteinfo")) {
                     if (!this.link_info.containsKey(list[2])) {
                         this.link_info.put(list[2], new ArrayList<>());
@@ -129,11 +129,12 @@ public class Barrel extends Thread  {
                     this.link_info.get(list[2]).add(list[4]);
                 }
             }
+            System.out.println("[BARREL " + this.id + "] "+ received);
         }
     }
 
     public void run() {
-        System.out.println("[BARREL" + this.id + "] Barrel running...");
+        System.out.println("[BARREL " + this.id + "] Barrel running...");
 
         try {
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
