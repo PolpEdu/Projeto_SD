@@ -215,6 +215,8 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         String id = UUID.randomUUID().toString();
         Message msg = new Message(id, "type:register|username:" + username + "|password:" + password + "|firstName:" + firstName + "|lastName:" + lastName);
         this.m_Send.sendInfo(msg, this.sendQueue);
+
+
         String response = this.m_Receive.parseRecievedPacket(msg, this.sendQueue);
         this.sendQueue.remove(msg);
         try {

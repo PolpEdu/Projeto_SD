@@ -12,13 +12,12 @@ import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
 
-public class Barrel extends Thread  {
+public class Barrel extends Thread {
     static final int alive_checks = 5;
     static final int await_time = 2000;
     private final String MULTICAST_ADDRESS;
@@ -27,13 +26,11 @@ public class Barrel extends Thread  {
     private final HashMap<String, HashSet<String>> word_Links;
     private final HashMap<String, HashSet<String>> link_links;
     private final HashMap<String, ArrayList<String>> link_info;
-
-    private RMIServerInterface b;
     private final int rmiPort;
     private final String rmiHost;
     private final String rmiRegister;
-
     int messageSize = 8 * 1024;
+    private RMIServerInterface b;
     private InetAddress group;
     private MulticastSocket receiveSocket;// send socket do multicastserver
 
@@ -129,7 +126,7 @@ public class Barrel extends Thread  {
                     this.link_info.get(list[2]).add(list[4]);
                 }
             }
-            System.out.println("[BARREL " + this.id + "] "+ received);
+            System.out.println("[BARREL " + this.id + "] " + received);
         }
     }
 
