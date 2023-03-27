@@ -106,8 +106,6 @@ class Updates extends Thread {
         HashMap<String, ArrayList<String>> words = message.getWords();
         HashMap<String, ArrayList<String>> fileWords = this.fileManager.getWords();
 
-        HashMap<String, Integer> wordsCount = message.getWordsCount();
-        HashMap<String, Integer> fileWordsCount = this.fileManager.getWordsCount();
 
         // update the data in the files
         this.updateUsers(users, fileUsers);

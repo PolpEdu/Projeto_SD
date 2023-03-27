@@ -42,7 +42,6 @@ public class Database {
         String wordsPath = "src\\words" + n + ".txt";
         String linksInfoPath = "src\\linksInfo" + n + ".txt";
         String usersPath = "src\\users" + n + ".txt";
-        String wordCountPath = "src\\wordCount" + n + ".txt";
 
         this.usersFile = new File(usersPath);
         this.linksFile = new File(linksPath);
