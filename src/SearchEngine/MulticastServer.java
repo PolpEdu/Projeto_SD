@@ -29,7 +29,6 @@ class MultiCastServer extends Thread {
     InetAddress group;
     LinkedList<Message> receivedQueue;
     Downloader downloader;
-    Barrel barrel;
     TCPServer tcpServer;
     private Connection connection;
     HashMap<String, HashSet<Integer>> ports;
@@ -62,7 +61,7 @@ class MultiCastServer extends Thread {
 
     public void run() {
         boolean checked_msg = false;
-        System.out.println("[" + this.getName() + "] Running...");
+        System.out.println("[MULTICAST_SERVER] Running...");
         try {
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.sendSocket = new MulticastSocket(MULTICAST_SEND_PORT);

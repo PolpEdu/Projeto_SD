@@ -40,6 +40,7 @@ public class Barrel extends Thread{
 
 
     public void run(){
+        System.out.println("[BARREL" + this.id + "] Barrel running...");
         try {
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
