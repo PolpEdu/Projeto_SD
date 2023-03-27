@@ -153,12 +153,14 @@ public class Downloader extends Thread implements Remote {
         while (true) {
             try {
 //
-//                while (server.isempty()) {
-//                    sleep(1000);
-//                }
 
                 String link = server.takeLink();
 
+                if(link == null){
+                    while (server.isempty()) {
+                        sleep(1000);
+                    }
+                }
                 String message;
                 ArrayList<String> links = new ArrayList<>();
                 ArrayList<String> listWords = new ArrayList<>();
@@ -188,11 +190,14 @@ public class Downloader extends Thread implements Remote {
 
                     //colocar os novos links na queue para continuar a ir buscar informação
 
+
                     for (String l : links) {
                         server.offerLink(l);
                     }
                 }
             } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
