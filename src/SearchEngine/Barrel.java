@@ -12,15 +12,15 @@ import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
 
-public class Barrel extends Thread implements RMIBarrelInterface {
+public class Barrel extends Thread  {
     static final int alive_checks = 5;
-    static final int await_time = 5000;
+    static final int await_time = 2000;
     private final String MULTICAST_ADDRESS;
     private final int MULTICAST_RECEIVE_PORT;
     private final int id;
@@ -83,12 +83,15 @@ public class Barrel extends Thread implements RMIBarrelInterface {
                     System.exit(1);
                 }
 
-                Barrel barrel = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, );
+                Barrel barrel = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, b);
                 barrel.start();
             }
 
-        } catch (IOException | NotBoundException e) {
+        } catch (IOException e) {
             System.out.println("[BARREL] Error reading properties file: " + e.getMessage());
+            e.printStackTrace();
+        } catch (NotBoundException e) {
+            System.out.println("[BARREL] Error connecting to RMI server: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -133,9 +136,6 @@ public class Barrel extends Thread implements RMIBarrelInterface {
         System.out.println("[BARREL" + this.id + "] Barrel running...");
 
         try {
-
-            System.out.println("[BARREL " + this.id + "] Ready.");
-
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
             this.receiveSocket.joinGroup(this.group);
@@ -166,7 +166,8 @@ public class Barrel extends Thread implements RMIBarrelInterface {
         while (true) {
             try {
                 if (this.b.alive()) {
-
+                    System.out.println("[BARREL " + this.id + "] Connection to RMI server reestablished");
+                    break;
                 }
             } catch (RemoteException e) {
                 System.out.println("[BARREL " + this.id + "] RemoteException, Getting connection, retrying in " + await_time / 1000 + " second(s)...");
@@ -189,10 +190,5 @@ public class Barrel extends Thread implements RMIBarrelInterface {
                 }
             }
         }
-    }
-
-    @Override
-    public boolean alive() throws RemoteException {
-        return true;
     }
 }
