@@ -116,8 +116,10 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
                     anonLogic(br);
 
                 } else {
-                    // Admin - main menu
+                    // Logged in Menu
                     printMenus(1);
+
+
                 }
             }
         } catch (ConnectException e) {
@@ -146,11 +148,11 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
         switch (choice.toLowerCase()) {
             case "1":
                 // Search words
-                // searchWords(br);
+                searchWords(br);
                 break;
             case "2":
                 // Search Link
-                // searchLink(br);
+                searchLink(br);
                 break;
             case "3":
                 // Login
@@ -171,7 +173,73 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
         }
     }
 
-    private void login(BufferedReader br) {
+    private void searchWords(BufferedReader br) throws RemoteException {
+        System.out.print("\nSearch Word: ");
+        String word = "";
+
+        while (true) {
+            try {
+                word = br.readLine();
+                if (word.contains(":") || word.contains("|")) {
+                    System.out.print("[CLIENT] Word cannot contain ':' or '|'\nWord: ");
+                    continue;
+                }
+                break;
+            } catch (IOException e) {
+                System.out.println("[EXCEPTION] IOException");
+                e.printStackTrace();
+            }
+        }
+
+        ArrayList<String> links = this.sv.searchWord(word);
+        if (links.size() == 0) {
+            System.out.println("[CLIENT] No links found");
+            return;
+        }
+        printLinks("LINKS", links, true);
+    }
+
+    private void searchLink(BufferedReader br) throws RemoteException {
+        System.out.print("\nLink: ");
+        String link = "";
+
+        while (true) {
+            try {
+                link = br.readLine();
+                if (link.contains(":") || link.contains("|")) {
+                    System.out.print("[CLIENT] Link cannot contain ':' or '|'\nLink: ");
+                    continue;
+                }
+                break;
+            } catch (IOException e) {
+                System.out.println("[EXCEPTION] IOException");
+                e.printStackTrace();
+            }
+        }
+
+        ArrayList<String> links = this.sv.searchLink(link);
+        if (links.size() == 0) {
+            System.out.println("[CLIENT] No links found");
+            return;
+        }
+        printLinks("LINKS", links, true);
+    }
+
+    private void printLinks(String title, ArrayList<String> links, boolean titledesc) {
+        System.out.println("\n### "+title+" ###");
+        if (titledesc) {
+            for (int i = 0; i < links.size(); i += 3) {
+                System.out.println("  " + links.get(i) + " - " + links.get(i + 1) + " " + links.get(i + 2));
+            }
+            return;
+        }
+
+        for (String link : links) {
+            System.out.println(" " + link);
+        }
+    }
+
+    private void login(BufferedReader br) throws RemoteException {
         String username = "";
         String password = "";
 
@@ -192,52 +260,57 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
                     System.out.print("[CLIENT] Password must be between 4 and 20 characters\n  Password: ");
                     password = br.readLine();
                 }
+            } catch (IOException e) {
+                System.out.println("[EXCEPTION] IOException");
+                e.printStackTrace();
+            }
 
-                ArrayList<String> checked = this.sv.checkLogin(username, password);
+            ArrayList<String> checked = this.sv.checkLogin(username, password);
 
+        }
+    }
+
+    private void register(BufferedReader br) throws RemoteException {
+        String username = "", password = "", firstName = "", lastName = "";
+        while (true) {
+            try {
+                System.out.print("\n### REGISTER ###\n  Username: ");
+                username = br.readLine();
+                while (username.length() < 4 || username.length() > 20) {
+                    System.out.println("[CLIENT] Username must be between 4 and 20 characters\n\n  Username: ");
+                    username = br.readLine();
+                }
+
+                System.out.print("  Password: ");
+                password = br.readLine();
+                while (password.length() < 4 || password.length() > 20) {
+                    System.out.println("[CLIENT] Password must be between 4 and 20 characters\n\n  Password: ");
+                    password = br.readLine();
+                }
+
+                System.out.print("  First Name: ");
+                firstName = br.readLine();
+                while (firstName.length() < 1) {
+                    System.out.println("[CLIENT] First name must be at least 1 character\n\n  First Name: ");
+                    firstName = br.readLine();
+                }
+
+                System.out.print("  Last Name: ");
+                lastName = br.readLine();
+                while (lastName.length() < 1) {
+                    System.out.println("[CLIENT] Last name must be at least 1 character\n\n  Last Name: ");
+                    lastName = br.readLine();
+                }
 
             } catch (IOException e) {
                 System.out.println("[EXCEPTION] IOException");
                 e.printStackTrace();
-                return;
-            }
-        }
-    }
-
-    private void register(BufferedReader br) throws IOException {
-        String username = "", password = "", firstName = "", lastName = "";
-        while (true) {
-            System.out.print("\n### REGISTER ###\n  Username: ");
-            username = br.readLine();
-            while (username.length() < 4 || username.length() > 20) {
-                System.out.println("[CLIENT] Username must be between 4 and 20 characters\n\n  Username: ");
-                username = br.readLine();
-            }
-
-            System.out.print("  Password: ");
-            password = br.readLine();
-            while (password.length() < 4 || password.length() > 20) {
-                System.out.println("[CLIENT] Password must be between 4 and 20 characters\n\n  Password: ");
-                password = br.readLine();
-            }
-
-            System.out.print("  First Name: ");
-            firstName = br.readLine();
-            while (firstName.length() < 1) {
-                System.out.println("[CLIENT] First name must be at least 1 character\n\n  First Name: ");
-                firstName = br.readLine();
-            }
-
-            System.out.print("  Last Name: ");
-            lastName = br.readLine();
-            while (lastName.length() < 1) {
-                System.out.println("[CLIENT] Last name must be at least 1 character\n\n  Last Name: ");
-                lastName = br.readLine();
             }
 
             // System.out.println("[CLIENT] Registering: " + username + " " + password + " " + firstName + " " + lastName + "");
 
             ArrayList<String> res = this.sv.checkRegister(username, password, firstName, lastName);
+
             if (res.get(0).equals("true")) {
                 // register success
                 System.out.println("[CLIENT] Registration success");
@@ -251,14 +324,19 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
             } else {
                 System.out.println("[CLIENT] Registration failed: " + res.get(2));
                 System.out.println("[CLIENT] Try again? (y/n)");
-                String choice = br.readLine();
-                while (!choice.equals("y") && !choice.equals("n")) {
-                    System.out.println("[CLIENT] Invalid choice");
-                    System.out.println("[CLIENT] Try again? (y/n)");
-                    choice = br.readLine();
-                }
-                if (choice.equals("n")) {
-                    return;
+                try {
+                    String choice = br.readLine();
+                    while (!choice.equals("y") && !choice.equals("n")) {
+                        System.out.println("[CLIENT] Invalid choice");
+                        System.out.println("[CLIENT] Try again? (y/n)");
+                        choice = br.readLine();
+                    }
+                    if (choice.equals("n")) {
+                        return;
+                    }
+                } catch (IOException e) {
+                    System.out.println("[EXCEPTION] IOException");
+                    e.printStackTrace();
                 }
             }
         }

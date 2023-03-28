@@ -15,4 +15,7 @@ public interface RMIServerInterface extends Remote {
     String takeLink() throws RemoteException;
     void offerLink(String link) throws RemoteException;
     boolean isempty() throws RemoteException;
+
+    ArrayList<String> searchLink(String link) throws RemoteException;
+    ArrayList<String> searchWord(String word) throws RemoteException;
 }

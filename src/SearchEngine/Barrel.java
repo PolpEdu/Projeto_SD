@@ -1,5 +1,6 @@
 package SearchEngine;
 
+import Client.User;
 import interfaces.RMIServerInterface;
 
 import java.io.File;
@@ -23,30 +24,36 @@ public class Barrel extends Thread {
     private final String MULTICAST_ADDRESS;
     private final int MULTICAST_RECEIVE_PORT;
     private final int id;
+
     private final HashMap<String, HashSet<String>> word_Links;
     private final HashMap<String, HashSet<String>> link_links;
     private final HashMap<String, ArrayList<String>> link_info;
+    private final HashMap<String, HashSet<String>> users;
+
     private final int rmiPort;
     private final String rmiHost;
     private final String rmiRegister;
-    int messageSize = 8 * 1024;
-    private RMIServerInterface b;
-    private InetAddress group;
-    private MulticastSocket receiveSocket;// send socket do multicastserver
 
     private final File linkfile;
     private final File wordfile;
     private final File infofile;
+    private final File usersfile;
 
+    int messageSize = 8 * 1024;
     Database files;
+    private RMIServerInterface b;
+    private InetAddress group;
+    private MulticastSocket receiveSocket;// send socket do multicastserver
 
-    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, RMIServerInterface b, File linkfile, File wordfile, File infofile, Database files) {
+    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, RMIServerInterface b, File linkfile, File wordfile, File infofile, File usersfile, Database files) {
         this.id = id;
         this.receiveSocket = null;
         this.group = null;
         this.linkfile = linkfile;
         this.wordfile = wordfile;
         this.infofile = infofile;
+        this.usersfile = usersfile;
+
         this.files = files;
 
         this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
@@ -59,8 +66,8 @@ public class Barrel extends Thread {
 
         this.word_Links = new HashMap<>();
         this.link_links = new HashMap<>();//files.getLinks(this.linkfile);
-        System.out.println(this.link_links.size());
         this.link_info = new HashMap<>();
+        this.users = new HashMap<>();
     }
 
     public static void main(String[] args) {
@@ -94,8 +101,10 @@ public class Barrel extends Thread {
                 File linkfile = new File("src\\links-" + i);
                 File wordfile = new File("src\\words-" + i);
                 File infofile = new File("src\\info-" + i);
-                Database files= new Database(i);
-                Barrel barrel = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, b, linkfile, wordfile, infofile, files);
+                File usersfile = new File("src\\users-" + i);
+
+                Database files = new Database(i);
+                Barrel barrel = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, b, linkfile, wordfile, infofile, usersfile, files);
                 barrel.start();
             }
 
@@ -140,14 +149,38 @@ public class Barrel extends Thread {
                     this.link_info.get(list[2]).add(list[3]);
                     this.link_info.get(list[2]).add(list[4]);
                 }
+            } else if (id.equals("register")) {
+                System.out.println("[BARREL " + this.id + "] " + received);
+                HashMap<String, User>  currentUsers = this.files.getUsers();
 
+                // type:register|username:" + username + "|password:" + password + "|firstName:" + firstName + "|lastName:" + lastName);
+                String username =  list[1].split(":")[1];
+
+                // get the current users
+                if (currentUsers.containsKey(username)) {
+                    // update the user
+
+                } else {
+                    // add the user
+                    
+                }
+            } else {
+                System.out.println("[BARREL " + this.id + "] " + received);
             }
+
             this.files.updateLinks(link_links, linkfile);
             this.files.updateWords(word_Links, wordfile);
-            this.files.updateInfo(link_info,infofile);
-            System.out.println("[BARREL " + this.id + "] " + received);
+            this.files.updateInfo(link_info, infofile);
+            // this.files.updateUsers(users, userfile);
         }
     }
+
+    public void sendResponse(String response) throws IOException {
+        byte[] sendbuffer = response.getBytes();
+        DatagramPacket sendPacket = new DatagramPacket(sendbuffer, sendbuffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+        this.receiveSocket.send(sendPacket);
+    }
+
 
     public void run() {
         System.out.println("[BARREL " + this.id + "] Barrel running...");

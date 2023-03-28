@@ -34,18 +34,16 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     // Interface for the server that will receive the messages (this class)
     RMIServerInterface hPrincipal;
 
-    // this is the multicast that will receive the messages
-    MulticastReceive m_Receive;
-
     // this is the multicast that will send the messages
     MulticastSend m_Send;
+
+    MulticastReceive m_Receive;
 
     public RMIServer(LinkedBlockingQueue urlQueue, String multicastAddress, int multicastSendPort, int multicastReceivePort, RMIServerInterface hPrincipal) throws RemoteException {
         super();
 
         this.m_Send = new MulticastSend(multicastAddress, multicastSendPort);
         this.m_Receive = new MulticastReceive(this.m_Send, multicastAddress, multicastReceivePort);
-        this.m_Receive.start();
 
         this.hPrincipal = hPrincipal;
         this.clients = new HashMap<>();
@@ -202,6 +200,17 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
     }
 
+    public ArrayList<String> searchLink(String link) throws RemoteException {
+        ArrayList<String> response = new ArrayList<>();
+
+        return response;
+    }
+
+    @Override
+    public ArrayList<String> searchWord(String word) throws RemoteException {
+        return null;
+    }
+
     @Override
     public ArrayList<String> checkLogin(String username, String password) throws RemoteException {
         ArrayList<String> response = new ArrayList<>();
@@ -216,9 +225,9 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         Message msg = new Message(id, "type:register|username:" + username + "|password:" + password + "|firstName:" + firstName + "|lastName:" + lastName);
         this.m_Send.sendInfo(msg, this.sendQueue);
 
-
         String response = this.m_Receive.parseRecievedPacket(msg, this.sendQueue);
         this.sendQueue.remove(msg);
+
         try {
             String[] responseArray = response.split("\\|");
             String status = responseArray[2].split(":")[1];
@@ -365,9 +374,10 @@ class MulticastSend {
     private int PORT;
 
     public MulticastSend(String multicastAddress, int sendPort) {
+        this.PORT = sendPort;
+        this.MULTICAST_ADDRESS = multicastAddress;
+
         try {
-            this.PORT = sendPort;
-            this.MULTICAST_ADDRESS = multicastAddress;
             this.socket = new MulticastSocket(this.PORT);
             this.group = InetAddress.getByName(this.MULTICAST_ADDRESS);
         } catch (UnknownHostException eu) {
@@ -385,7 +395,6 @@ class MulticastSend {
         byte[] buffer = m.message.getBytes();
 
         if (!type.equals("ack")) {
-            // add message to send queue
             sendQueue.offer(m);
         }
 

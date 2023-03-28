@@ -15,9 +15,9 @@ import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
@@ -26,21 +26,22 @@ import java.util.regex.Pattern;
 
 public class Downloader extends Thread implements Remote {
 
-    private MulticastSocket receiveSocket;
     private final int MULTICAST_RECEIVE_PORT;
     private final String MULTICAST_ADDRESS;
-    private InetAddress group;
     private final Semaphore conSem;
-    private final  int rmiPort;
+    private final int rmiPort;
     private final String rmiHost;
     private final String rmiRegister;
+    private MulticastSocket receiveSocket;
+    private InetAddress group;
     private RMIServerInterface server;
     private int id;
     private ArrayBlockingQueue<String> urlQueue;
 
 
-    public Downloader(int id,int MULTICAST_RECEIVE_PORT,String MULTICAST_ADDRESS, Semaphore conSem, int rmiPort, String rmiHost, String rmiRegister, RMIServerInterface  server) {this.receiveSocket = null;
-        this.group  = null;
+    public Downloader(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, Semaphore conSem, int rmiPort, String rmiHost, String rmiRegister, RMIServerInterface server) {
+        this.receiveSocket = null;
+        this.group = null;
         this.conSem = conSem;
         this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
         this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
@@ -49,22 +50,6 @@ public class Downloader extends Thread implements Remote {
         this.rmiRegister = rmiRegister;
         this.id = id;
         this.server = server;
-
-    }
-
-    public void run() {
-        System.out.println("[DOWNLOADER " + this.id + "] is running ...");
-        try {
-            this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
-            this.group = InetAddress.getByName(MULTICAST_ADDRESS);
-            this.receiveSocket.joinGroup(this.group);
-
-            this.QueueInfo();
-        } catch (IOException e) {
-            System.out.println("DA LHE PUTO");
-        }
-
-
 
     }
 
@@ -88,7 +73,7 @@ public class Downloader extends Thread implements Remote {
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
 
             Semaphore listsem = new Semaphore(1);
-            
+
             for (int i = 0; i < 2; i++) {
 
                 if (rmiHost == null || rmiPort == 0 || multicastAddress == null || receivePort == 0) {
@@ -105,6 +90,53 @@ public class Downloader extends Thread implements Remote {
             e.printStackTrace();
         } catch (NotBoundException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void seperateWords(String words, ArrayList<String> wordList) {
+        BufferedReader buffer = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(words.getBytes(StandardCharsets.UTF_8))));
+        String line;
+        String[] pois = {"de", "sobre", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem", "hei", "há", "havemos", "hão", "houve", "houvemos", "houveram", "houvera", "houvéramos", "haja", "hajamos", "hajam", "houvesse", "houvéssemos", "houvessem", "houver", "houvermos", "houverem", "houverei", "houverá", "houveremos", "houverão", "houveria", "houveríamos", "houveriam", "sou", "somos", "são", "era", "éramos", "eram", "fui", "foi", "fomos", "foram", "fora", "fôramos", "seja", "sejamos", "sejam", "fosse", "fôssemos", "fossem", "for", "formos", "forem", "serei", "será", "seremos", "serão", "seria", "seríamos", "seriam", "tenho", "tem", "temos", "tém", "tinha", "tínhamos", "tinham", "tive", "teve", "tivemos", "tiveram", "tivera", "tivéramos", "tenha", "tenhamos", "tenham", "tivesse", "tivéssemos", "tivessem", "tiver", "tivermos", "tiverem", "terei", "terá", "teremos", "terão", "teria", "teríamos", "teriam"};
+        ArrayList<String> stopWords = new ArrayList<>(Arrays.asList(pois));
+
+        while (true) {
+
+            try {
+                line = buffer.readLine();
+                if (line == null) {
+                    break;
+                }
+                String[] splited = line.split("[ ,;:.?!“”(){}\\[\\]<>'\n]+");
+                for (String word : splited) {
+                    word = word.toLowerCase();
+                    if (!wordList.contains(word) && !"".equals(word) && !stopWords.contains(word)) {
+                        wordList.add(word);
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("[EXCPETION] " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            buffer.close();
+        } catch (IOException e) {
+            System.out.println("[EXCPETION] " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void run() {
+        System.out.println("[DOWNLOADER " + this.id + "] is running ...");
+        try {
+            this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
+            this.group = InetAddress.getByName(MULTICAST_ADDRESS);
+            this.receiveSocket.joinGroup(this.group);
+
+            this.QueueInfo();
+        } catch (IOException e) {
+            System.out.println("DA LHE PUTO");
         }
     }
 
@@ -156,7 +188,7 @@ public class Downloader extends Thread implements Remote {
 
                 String link = server.takeLink();
 
-                if(link == null){
+                if (link == null) {
                     while (server.isempty()) {
                         sleep(1000);
                     }
@@ -173,17 +205,17 @@ public class Downloader extends Thread implements Remote {
                     for (String w : listWords) {
                         Matcher matcher = pattern.matcher(w);
                         if (matcher.matches()) {
-                            message = "id:dwnl|type:word|" + w + "|" + link ;
+                            message = "id:dwnl|type:word|" + w + "|" + link;
                             this.sendMessage(message);
                         }
 
                     }
                     for (String l : links) {
-                        message = "id:dwnl|type:links|" + l + "|" + link ;
+                        message = "id:dwnl|type:links|" + l + "|" + link;
                         this.sendMessage(message);
                     }
 
-                    message = "id:dwnl|type:siteinfo|" + link + "|" + info.get(0) + "|" + info.get(1) ;
+                    message = "id:dwnl|type:siteinfo|" + link + "|" + info.get(0) + "|" + info.get(1);
 
                     this.sendMessage(message);
                     //System.out.println(message);
@@ -200,42 +232,6 @@ public class Downloader extends Thread implements Remote {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-        }
-    }
-
-
-
-    private static void seperateWords(String words, ArrayList<String> wordList) {
-        BufferedReader buffer = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(words.getBytes(StandardCharsets.UTF_8))));
-        String line;
-        String[] pois = {"de", "sobre", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem", "hei", "há", "havemos", "hão", "houve", "houvemos", "houveram", "houvera", "houvéramos", "haja", "hajamos", "hajam", "houvesse", "houvéssemos", "houvessem", "houver", "houvermos", "houverem", "houverei", "houverá", "houveremos", "houverão", "houveria", "houveríamos", "houveriam", "sou", "somos", "são", "era", "éramos", "eram", "fui", "foi", "fomos", "foram", "fora", "fôramos", "seja", "sejamos", "sejam", "fosse", "fôssemos", "fossem", "for", "formos", "forem", "serei", "será", "seremos", "serão", "seria", "seríamos", "seriam", "tenho", "tem", "temos", "tém", "tinha", "tínhamos", "tinham", "tive", "teve", "tivemos", "tiveram", "tivera", "tivéramos", "tenha", "tenhamos", "tenham", "tivesse", "tivéssemos", "tivessem", "tiver", "tivermos", "tiverem", "terei", "terá", "teremos", "terão", "teria", "teríamos", "teriam"};
-        ArrayList<String> stopWords = new ArrayList<>(Arrays.asList(pois));
-
-        while (true) {
-
-            try {
-                line = buffer.readLine();
-                if (line == null) {
-                    break;
-                }
-                String[] splited = line.split("[ ,;:.?!“”(){}\\[\\]<>'\n]+");
-                for (String word : splited) {
-                    word = word.toLowerCase();
-                    if (!wordList.contains(word) && !"".equals(word) && !stopWords.contains(word)) {
-                        wordList.add(word);
-                    }
-                }
-            } catch (IOException e) {
-                System.out.println("[EXCPETION] " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            buffer.close();
-        } catch (IOException e) {
-            System.out.println("[EXCPETION] " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
