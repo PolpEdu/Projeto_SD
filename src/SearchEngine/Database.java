@@ -23,9 +23,6 @@ public class Database implements Serializable {
         this.s_usersFile = new Semaphore(1);
     }
 
-    public void postUser(HashMap<String, User> users) {
-    }
-
     public void setPath(int n) {
         String usersPath = "src\\users";
         this.usersFile = new File(usersPath);
@@ -150,7 +147,7 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("links: " + links);
+        // System.out.println("links: " + links);
         return links;
     }
 
@@ -179,7 +176,7 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("words: " + linksInfo);
+        // System.out.println("words: " + linksInfo);
         return linksInfo;
     }
 
@@ -208,7 +205,7 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("words: " + words);
+        // System.out.println("words: " + words);
         return words;
     }
 

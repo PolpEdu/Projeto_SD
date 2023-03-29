@@ -82,11 +82,11 @@ class RMIClient extends UnicastRemoteObject {
                 return;
             case 1:
                 // admin - main menu
-                System.out.print("\n### Admin User Panel ###\n1.Search words\n2.Search Link\n3.Index new URL\n4.User List\n5.Give admin Perms\n6.History\n7.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### Admin User Panel ###\n1.Search words\n2.Search Link\n3.Index new URL\n4.User List\n5.Give admin Perms\n6.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 2:
                 // user - main menu
-                System.out.print("\n### User Panel ###\n1.Search words\n2.Search Link\n3.History\n  4.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### User Panel ###\n1.Search words\n2.Search Link\n  3.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 3:
                 System.out.print("\n### Admin Panel ###\n1.Top 10 pages\n2.Top 10 searches\n3.Multicast Servers\nb.Back\n  e.Exit\n --> Choice: ");
@@ -117,19 +117,19 @@ class RMIClient extends UnicastRemoteObject {
                         System.exit(0);
                     }
 
-                } else  {
+                } else {
                     if (this.client.admin) {
                         // Admin user
                         printMenus(1);
                         boolean shouldstop = adminLoggedLogic(br);
-                        if (shouldstop) {
+                        if (!shouldstop) {
                             return;
                         }
                     } else {
                         // Normal user
                         printMenus(2);
                         boolean shouldstop = loggedLogic(br);
-                        if (shouldstop) {
+                        if (!shouldstop) {
                             return;
                         }
                     }
@@ -170,12 +170,7 @@ class RMIClient extends UnicastRemoteObject {
                 searchLink(br);
                 break;
             case "3":
-                // History
-                // history();
-                break;
-            case "4":
-                // Logout
-                // logout();
+                logout();
                 break;
             case "e":
                 // Exit
@@ -221,12 +216,8 @@ class RMIClient extends UnicastRemoteObject {
                 // giveAdminPerms(br);
                 break;
             case "6":
-                // History
-                // history();
-                break;
-            case "7":
                 // Logout
-                // logout();
+                logout();
                 break;
             case "e":
                 // Exit
@@ -332,7 +323,7 @@ class RMIClient extends UnicastRemoteObject {
     }
 
     private void printLinks(String title, ArrayList<String> links, boolean titledesc) {
-        System.out.println("\n### "+title+" ###");
+        System.out.println("\n### " + title + " ###");
         if (titledesc) {
             for (int i = 0; i < links.size(); i += 3) {
                 System.out.println("  " + links.get(i) + " - " + links.get(i + 1) + " " + links.get(i + 2));
@@ -372,25 +363,52 @@ class RMIClient extends UnicastRemoteObject {
             }
 
             ArrayList<String> checked = this.sv.checkLogin(username, password);
+            if (checked.get(0).equals("true")) {
+                boolean admin = Boolean.getBoolean(checked.get(1));
+                this.client = new Client(username, Boolean.getBoolean(checked.get(1)));
 
+                if (admin) {
+                    System.out.println("[CLIENT] Login successful as admin");
+                } else {
+                    System.out.println("[CLIENT] Login successful");
+                }
+
+                return;
+            } else {
+                System.out.println("[CLIENT] Login failed: "+ checked.get(2));
+                String choice = "";
+                while (!choice.equals("y") && !choice.equals("n")) {
+                    System.out.print("[CLIENT] Try again? (y/n): ");
+                    try {
+                        choice = br.readLine();
+                    } catch (IOException e) {
+                        System.out.println("[EXCEPTION] IOException");
+                        e.printStackTrace();
+                    }
+                }
+                if (choice.equals("n")) {
+                    return;
+                }
+            }
         }
     }
 
     private void register(BufferedReader br) throws RemoteException {
         String username = "", password = "", firstName = "", lastName = "";
         while (true) {
+            // get username and password
             try {
                 System.out.print("\n### REGISTER ###\n  Username: ");
                 username = br.readLine();
                 while (username.length() < 4 || username.length() > 20 || username.equals("Anon")) {
-                    System.out.println("[CLIENT] Username must be between 4 and 20 characters and it can't be Anon\n\n  Username: ");
+                    System.out.print("[CLIENT] Username must be between 4 and 20 characters and it can't be Anon\n  Username: ");
                     username = br.readLine();
                 }
 
                 System.out.print("  Password: ");
                 password = br.readLine();
                 while (password.length() < 4 || password.length() > 20) {
-                    System.out.println("[CLIENT] Password must be between 4 and 20 characters\n\n  Password: ");
+                    System.out.print("[CLIENT] Password must be between 4 and 20 characters\n  Password: ");
                     password = br.readLine();
                 }
 
@@ -423,17 +441,19 @@ class RMIClient extends UnicastRemoteObject {
 
                 // admin or not
                 this.client = new Client(username, res.get(1).equals("true"));
+                this.sv.updateClient(this.client.username, this.client);
+
 
                 System.out.println("[CLIENT] Logged in as " + this.client.username);
                 return;
             } else {
                 System.out.println("[ERROR] Registration failed: " + res.get(2));
-                System.out.println("[CLIENT] Try again? (y/n)");
+                System.out.print("[CLIENT] Try again? (y/n): ");
                 try {
                     String choice = br.readLine();
                     while (!choice.equals("y") && !choice.equals("n")) {
                         System.out.println("[CLIENT] Invalid choice");
-                        System.out.println("[CLIENT] Try again? (y/n)");
+                        System.out.print("[CLIENT] Try again? (y/n): ");
                         choice = br.readLine();
                     }
                     if (choice.equals("n")) {
@@ -445,6 +465,12 @@ class RMIClient extends UnicastRemoteObject {
                 }
             }
         }
+    }
+
+    private void logout() throws RemoteException {
+        this.sv.updateClient(this.client.username, null);
+        this.client = new Client("Anon", false);
+        System.out.println("[CLIENT] Logged out");
     }
 
     private void serverErrorHandling() {

@@ -99,12 +99,6 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         }
     }
 
-    public ArrayList<String> registerUser(String username, String password) throws RemoteException {
-        ArrayList<String> response = new ArrayList<>();
-
-        return response;
-    }
-
     private void backUp(int rmiPort, String rmiHost, String rmiRegister) throws RemoteException {
         while (true) {
             try {
@@ -170,6 +164,49 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         users.put(username, new User(username, password, false, firstName, lastName));
         barrel.files.updateUsers(users);
         return new ArrayList<>(Arrays.asList("success", "User registered", "false"));
+    }
+
+    public ArrayList<String> verifyUser(String username, String password) throws RemoteException {
+        // get the barrel to register the user
+        Barrel barrel = this.selectBarrelToExcute();
+        if (barrel == null) {
+            // "status:failure | message:No barrels available"
+            return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
+        }
+
+        HashMap<String, User> users = barrel.files.getUsers();
+        if (!users.containsKey(username)) {
+            // "status:failure | message:User does not exist"
+            return new ArrayList<>(Arrays.asList("failure", "User does not exist"));
+        }
+
+        User user = users.get(username);
+        if (!user.password.equals(password)) {
+            // "status:failure | message:Wrong password"
+            return new ArrayList<>(Arrays.asList("failure", "Wrong password"));
+        }
+
+        // "status:success | message:User verified"
+        return new ArrayList<>(Arrays.asList("success", "User verified", Boolean.toString(user.admin)));
+    }
+
+    @Override
+    public ArrayList<String> searchLink(String link) throws RemoteException {
+        Barrel barrel = this.selectBarrelToExcute();
+        if (barrel == null) {
+            // "status:failure | message:No barrels available"
+            return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
+        }
+
+        // HashMap<String, HashMap<String>> links = barrel.files.getLinks();
+
+
+
+    }
+
+    @Override
+    public ArrayList<String> searchWord(String word) throws RemoteException {
+        return null;
     }
 
     private Barrel selectBarrelToExcute() {
