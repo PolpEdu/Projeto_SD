@@ -31,7 +31,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         this.barrels_threads = new ArrayList<>();
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
 
         try {

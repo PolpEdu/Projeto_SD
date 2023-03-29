@@ -419,7 +419,7 @@ class RMIClient extends UnicastRemoteObject {
 
             if (res.get(0).equals("true")) {
                 // register success
-                System.out.println("[CLIENT] Registration success!");
+                System.out.println("\n[CLIENT] Registration success!");
 
                 // admin or not
                 this.client = new Client(username, res.get(1).equals("true"));

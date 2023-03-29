@@ -243,6 +243,7 @@ public class Downloader extends Thread implements Remote {
                     }
                 }
             } catch (RemoteException e) {
+                // todo: stay in a loop and try to reconnect
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
