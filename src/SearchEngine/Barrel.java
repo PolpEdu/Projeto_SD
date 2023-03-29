@@ -109,7 +109,7 @@ class Barrel extends Thread implements Serializable {
                 String splitid;
 
                 for(String str: queuelist){
-                    System.out.println(str);
+                    
                    split =  str.split("\\|");
                    splitid = split[0].split(":")[1];
                    splittype = split[1].split(":")[1];
