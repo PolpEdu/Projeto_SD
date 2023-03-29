@@ -128,7 +128,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 r.rebind(rmiRegistryName, rmiServer);
                 System.out.println("[SERVER] Running on " + rmiHost + ":" + rmiPort + "->" + rmiRegistryName);
 
-
                 while (true) {
                     try {
                         rmiServer.b = (RMIBarrelInterface) LocateRegistry.getRegistry(bRmiHost, bRmiPort).lookup(bRmiRegistryName);

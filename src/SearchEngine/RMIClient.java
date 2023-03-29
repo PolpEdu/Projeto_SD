@@ -43,8 +43,8 @@ class RMIClient extends UnicastRemoteObject {
             Properties prop = new Properties();
             prop.load(config);
 
-            rmiHost = prop.getProperty("HOST");
-            rmiPort = Integer.parseInt(prop.getProperty("PORT"));
+            rmiHost = prop.getProperty("RMI_HOST");
+            rmiPort = Integer.parseInt(prop.getProperty("RMI_PORT"));
             rmiRegistryName = prop.getProperty("RMI_REGISTRY_NAME");
 
             if (rmiHost == null || rmiPort == 0 || rmiRegistryName == null) {
@@ -53,11 +53,10 @@ class RMIClient extends UnicastRemoteObject {
                 return;
             }
 
-            System.out.println("[CLIENT] Running on " + rmiHost + ":" + rmiPort);
-
-
             // GET SERVER INTERFACE USING REGISTRY
             RMIServerInterface svInterface = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
+
+            System.out.println("[CLIENT] Connected to server: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName + "");
 
 
             Client client = new Client("Anon", false);
@@ -112,12 +111,28 @@ class RMIClient extends UnicastRemoteObject {
                 if (this.client.username.equals("Anon")) {
                     // Login or Register
                     printMenus(0);
-                    anonLogic(br);
+                    boolean shouldstop = anonLogic(br);
+                    if (!shouldstop) {
+                        System.out.println("[CLIENT] Exiting...");
+                        System.exit(0);
+                    }
 
-                } else {
-                    // Logged in Menu
-                    printMenus(1);
-
+                } else  {
+                    if (this.client.admin) {
+                        // Admin user
+                        printMenus(1);
+                        boolean shouldstop = adminLoggedLogic(br);
+                        if (shouldstop) {
+                            return;
+                        }
+                    } else {
+                        // Normal user
+                        printMenus(2);
+                        boolean shouldstop = loggedLogic(br);
+                        if (shouldstop) {
+                            return;
+                        }
+                    }
 
                 }
             }
@@ -134,14 +149,105 @@ class RMIClient extends UnicastRemoteObject {
         }
     }
 
-    private void anonLogic(BufferedReader br) throws IOException {
+    private boolean loggedLogic(BufferedReader br) throws IOException {
         String choice = "";
 
         try {
             choice = br.readLine();
         } catch (IOException ei) {
             System.out.println("EXCEPTION: IOException");
-            return;
+            return false;
+        }
+
+
+        switch (choice.toLowerCase()) {
+            case "1":
+                // Search words
+                searchWords(br);
+                break;
+            case "2":
+                // Search Link
+                searchLink(br);
+                break;
+            case "3":
+                // History
+                // history();
+                break;
+            case "4":
+                // Logout
+                // logout();
+                break;
+            case "e":
+                // Exit
+                System.out.println("[CLIENT] Exiting...");
+                System.exit(0);
+                break;
+            default:
+                System.out.println("[CLIENT] Invalid choice");
+                break;
+        }
+        return true;
+    }
+
+    private boolean adminLoggedLogic(BufferedReader br) throws IOException {
+        String choice = "";
+
+        try {
+            choice = br.readLine();
+        } catch (IOException ei) {
+            System.out.println("EXCEPTION: IOException");
+            return false;
+        }
+
+        switch (choice.toLowerCase()) {
+            case "1":
+                // Search words
+                searchWords(br);
+                break;
+            case "2":
+                // Search Link
+                searchLink(br);
+                break;
+            case "3":
+                // Index new URL
+                // indexNewURL(br);
+                break;
+            case "4":
+                // User List
+                // userList();
+                break;
+            case "5":
+                // Give admin perms
+                // giveAdminPerms(br);
+                break;
+            case "6":
+                // History
+                // history();
+                break;
+            case "7":
+                // Logout
+                // logout();
+                break;
+            case "e":
+                // Exit
+                System.out.println("[CLIENT] Exiting...");
+                System.exit(0);
+                break;
+            default:
+                System.out.println("[CLIENT] Invalid choice");
+                break;
+        }
+        return true;
+    }
+
+    private Boolean anonLogic(BufferedReader br) throws IOException {
+        String choice = "";
+
+        try {
+            choice = br.readLine();
+        } catch (IOException ei) {
+            System.out.println("EXCEPTION: IOException");
+            return false;
         }
 
         switch (choice.toLowerCase()) {
@@ -170,6 +276,7 @@ class RMIClient extends UnicastRemoteObject {
                 System.out.println("[CLIENT] Invalid choice");
                 break;
         }
+        return true;
     }
 
     private void searchWords(BufferedReader br) throws RemoteException {
@@ -275,8 +382,8 @@ class RMIClient extends UnicastRemoteObject {
             try {
                 System.out.print("\n### REGISTER ###\n  Username: ");
                 username = br.readLine();
-                while (username.length() < 4 || username.length() > 20) {
-                    System.out.println("[CLIENT] Username must be between 4 and 20 characters\n\n  Username: ");
+                while (username.length() < 4 || username.length() > 20 || username.equals("Anon")) {
+                    System.out.println("[CLIENT] Username must be between 4 and 20 characters and it can't be Anon\n\n  Username: ");
                     username = br.readLine();
                 }
 
@@ -312,12 +419,11 @@ class RMIClient extends UnicastRemoteObject {
 
             if (res.get(0).equals("true")) {
                 // register success
-                System.out.println("[CLIENT] Registration success");
+                System.out.println("[CLIENT] Registration success!");
 
                 // admin or not
                 this.client = new Client(username, res.get(1).equals("true"));
 
-                this.sv.updateClient(this.client.username, this.client);
                 System.out.println("[CLIENT] Logged in as " + this.client.username);
                 return;
             } else {

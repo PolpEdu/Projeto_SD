@@ -21,13 +21,6 @@ public class Database implements Serializable {
     Semaphore s_usersFile = new Semaphore(1);
 
 
-    public void constructPaths(int n) {
-        String usersPath = "src\\Users" + n + ".txt";
-
-        this.usersFile = new File(usersPath);
-
-    }
-
     public Database(int svID) {
         setPath(svID);
         this.s_usersFile = new Semaphore(1);
@@ -47,16 +40,16 @@ public class Database implements Serializable {
             this.s_usersFile.acquire();
             if (!this.usersFile.exists()) {
                 this.usersFile.createNewFile();
-                this.s_usersFile.release(); // stop semaphore to update file with no users
-                updateUsers(users); // empty
-                this.s_usersFile.acquire(); // start semaphore again
+                this.s_usersFile.release();
+                updateUsers(new HashMap<String,User>());
+                this.s_usersFile.acquire();
             }
-
-            FileInputStream fis = new FileInputStream(this.usersFile);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            users = (HashMap<String, User>) ois.readObject();
-            ois.close();
-            fis.close();
+            else {
+                FileInputStream fis = new FileInputStream(this.usersFile);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                users = (HashMap<String,User>) ois.readObject();
+                ois.close();
+            }
             this.s_usersFile.release();
         } catch (IOException | InterruptedException | ClassNotFoundException e) {
             System.out.println("[EXCEPTION] While getting users: "+ e.getMessage());
