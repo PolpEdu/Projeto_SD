@@ -6,6 +6,7 @@ import interfaces.RMIBarrelInterface;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -17,7 +18,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
-class Barrel extends Thread {
+class Barrel extends Thread implements Serializable {
     static final int alive_checks = 5;
     static final int await_time = 2000;
 
@@ -69,9 +70,9 @@ class Barrel extends Thread {
         this.rmiRegister = rmiRegister;
         this.b = barrelInterface;
 
-        this.word_Links = new HashMap<>();
-        this.link_links = new HashMap<>();
-        this.link_info = new HashMap<>();
+        this.word_Links = files.getWords(wordfile);
+        this.link_links = files.getLinks(linkfile);
+        this.link_info = files.getLinksInfo(infofile);
         this.users = new HashMap<>();
 
     }

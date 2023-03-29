@@ -74,7 +74,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
                 }
             }
 
-            for (int i = 1; i < 3; i++) {
+            for (int i = 1; i < 2; i++) {
 
                 if (rmiHost == null || rmiPort == 0 || rmiRegister == null || multicastAddress == null || receivePort == 0) {
                     System.out.println("[BARREL " + i + "] Error reading properties file");

@@ -152,13 +152,47 @@ public class Database implements Serializable {
         return links;
     }
 
-    public HashMap<String, HashSet<String>> getLinksInfo() {
-        HashMap<String, HashSet<String>> linksInfo = new HashMap<>();
+    public HashMap<String, ArrayList<String>> getLinksInfo(File infofile) {
+        HashMap<String, ArrayList<String>> linksInfo = new HashMap<>();
+        try {
+
+            if (!infofile.exists()) {
+                return linksInfo;
+            }
+
+            FileInputStream fis = new FileInputStream(infofile);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+
+            linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
+            ois.close();
+            fis.close();
+
+        } catch (IOException |  ClassNotFoundException e) {
+            System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
+            e.printStackTrace();
+        }
         return linksInfo;
     }
 
-    public HashMap<String, ArrayList<String>> getWords() {
-        HashMap<String, ArrayList<String>> words = new HashMap<>();
+    public HashMap<String, HashSet<String>> getWords(File wordsfile) {
+        HashMap<String, HashSet<String>> words = new HashMap<>();
+        try {
+
+            if (!wordsfile.exists()) {
+                return words;
+            }
+
+            FileInputStream fis = new FileInputStream(wordsfile);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+
+            words = (HashMap<String, HashSet<String>>) ois.readObject();
+            ois.close();
+            fis.close();
+
+        } catch (IOException |  ClassNotFoundException e) {
+            System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
+            e.printStackTrace();
+        }
         return words;
     }
 
