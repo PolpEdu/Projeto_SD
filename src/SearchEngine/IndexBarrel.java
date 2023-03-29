@@ -77,7 +77,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             }
 
             Semaphore ackSem = new Semaphore(1);
-            for (int i = 1; i < 2; i++) {
+            for (int i = 1; i < 4; i++) {
 
                 if (rmiHost == null || rmiPort == 0 || rmiRegister == null || multicastAddress == null || receivePort == 0) {
                     System.out.println("[BARREL " + i + "] Error reading properties file");

@@ -70,7 +70,8 @@ public class Database implements Serializable {
             e.printStackTrace();
         }
     }
-    public void updateLinks(HashMap<String, HashSet<String>> fileLinks, File linksFile) {
+    public void updateLinks(HashMap<String, HashSet<String>> fileLinks, File linksFile, File backup) {
+        HashMap<String, HashSet<String>> links;
         try {
             if (!linksFile.exists()) {
                 linksFile.createNewFile();
@@ -81,13 +82,34 @@ public class Database implements Serializable {
             oos.close();
             fos.close();
 
+            FileInputStream fis = new FileInputStream(linksFile);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+
+            links = (HashMap<String, HashSet<String>>) ois.readObject();
+
+            if (!backup.exists()){
+                backup.createNewFile();
+            }
+            if(links.size() != 0){
+                fos = new FileOutputStream(backup);
+                oos = new ObjectOutputStream(fos);
+                oos.writeObject(links);
+                oos.close();
+                fos.close();
+            }
+
+            ois.close();
+
         } catch (IOException e) {
             System.out.println("[EXCEPTION] While updating links: "+ e.getMessage());
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public void updateWords(HashMap<String, HashSet<String>> fileWords, File wordsFile) {
+    public void updateWords(HashMap<String, HashSet<String>> fileWords, File wordsFile, File backup) {
+        HashMap<String, HashSet<String>> words;
         try {
             if (!wordsFile.exists()) {
                 wordsFile.createNewFile();
@@ -98,12 +120,34 @@ public class Database implements Serializable {
             oos.close();
             fos.close();
 
+            FileInputStream fis = new FileInputStream(wordsFile);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+
+            words = (HashMap<String, HashSet<String>>) ois.readObject();
+
+            if (!backup.exists()){
+                backup.createNewFile();
+            }
+
+            if(words.size() != 0){
+                fos = new FileOutputStream(backup);
+                oos = new ObjectOutputStream(fos);
+                oos.writeObject(words);
+                oos.close();
+                fos.close();
+            }
+
+            ois.close();
+
         } catch (IOException e) {
             System.out.println("[EXCEPTION] While updating links: "+ e.getMessage());
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
-    public void updateInfo(HashMap<String, ArrayList<String>> fileInfo, File infoFile) {
+    public void updateInfo(HashMap<String, ArrayList<String>> fileInfo, File infoFile, File backup) {
+        HashMap<String, ArrayList<String>> info;
         try {
             if (!infoFile.exists()) {
                 infoFile.createNewFile();
@@ -115,20 +159,40 @@ public class Database implements Serializable {
             oos.close();
             fos.close();
 
+            FileInputStream fis = new FileInputStream(infoFile);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+
+            info = (HashMap<String, ArrayList<String>>) ois.readObject();
+
+            if (!backup.exists()){
+                backup.createNewFile();
+            }
+            if(info.size() != 0){
+                fos = new FileOutputStream(backup);
+                oos = new ObjectOutputStream(fos);
+                oos.writeObject(info);
+                oos.close();
+                fos.close();
+            }
+
+            ois.close();
+
         } catch (IOException e) {
             System.out.println("[EXCEPTION] While updating links: "+ e.getMessage());
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public HashMap<String, HashSet<String>> getLinks(File linksFile) {
+    public HashMap<String, HashSet<String>> getLinks(File linksFile, File backup) {
         HashMap<String, HashSet<String>> links = new HashMap<>();
         try {
             this.s_linksFile.acquire();
             if (!linksFile.exists()) {
                 linksFile.createNewFile();
                 this.s_linksFile.release();
-                updateLinks(new HashMap<String,HashSet<String>>(), linksFile);
+                updateLinks(new HashMap<String,HashSet<String>>(), linksFile, backup);
                 this.s_linksFile.acquire();
             } else {
 
@@ -136,6 +200,12 @@ public class Database implements Serializable {
                 ObjectInputStream ois = new ObjectInputStream(fis);
 
                 links = (HashMap<String, HashSet<String>>) ois.readObject();
+                if(links.size() == 0){
+                    fis = new FileInputStream(backup);
+                    ois = new ObjectInputStream(fis);
+                    links = (HashMap<String, HashSet<String>>) ois.readObject();
+                    ois.close();
+                }
                 ois.close();
             }
             this.s_linksFile.release();
@@ -151,20 +221,26 @@ public class Database implements Serializable {
         return links;
     }
 
-    public HashMap<String, ArrayList<String>> getLinksInfo(File infofile) {
+    public HashMap<String, ArrayList<String>> getLinksInfo(File infofile, File backup) {
         HashMap<String, ArrayList<String>> linksInfo = new HashMap<>();
         try {
             this.s_linksFile.acquire();
             if (!infofile.exists()) {
                 infofile.createNewFile();
                 this.s_linksFile.release();
-                updateInfo(new HashMap<String,ArrayList<String>>(), infofile);
+                updateInfo(new HashMap<String,ArrayList<String>>(), infofile, backup);
                 this.s_linksFile.acquire();
             } else {
                 FileInputStream fis = new FileInputStream(infofile);
                 ObjectInputStream ois = new ObjectInputStream(fis);
 
                 linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
+                if(linksInfo.size() == 0){
+                    fis = new FileInputStream(backup);
+                    ois = new ObjectInputStream(fis);
+                    linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
+                    ois.close();
+                }
                 ois.close();
             }
             this.s_linksFile.release();
@@ -180,7 +256,7 @@ public class Database implements Serializable {
         return linksInfo;
     }
 
-    public HashMap<String, HashSet<String>> getWords(File wordsfile) {
+    public HashMap<String, HashSet<String>> getWords(File wordsfile, File backup) {
         HashMap<String, HashSet<String>> words = new HashMap<>();
         try {
             this.s_wordsFile.acquire();
@@ -188,13 +264,19 @@ public class Database implements Serializable {
             if (!wordsfile.exists()) {
                 wordsfile.createNewFile();
                 this.s_wordsFile.release();
-                updateWords(new HashMap<String,HashSet<String>>(), wordsfile);
+                updateWords(new HashMap<String,HashSet<String>>(), wordsfile, backup);
                 this.s_wordsFile.acquire();
             } else {
                 FileInputStream fis = new FileInputStream(wordsfile);
                 ObjectInputStream ois = new ObjectInputStream(fis);
 
                 words = (HashMap<String, HashSet<String>>) ois.readObject();
+                if(words.size() == 0){
+                    fis = new FileInputStream(backup);
+                    ois = new ObjectInputStream(fis);
+                    words = (HashMap<String, HashSet<String>>) ois.readObject();
+                    ois.close();
+                }
                 ois.close();
             }
             this.s_wordsFile.release();

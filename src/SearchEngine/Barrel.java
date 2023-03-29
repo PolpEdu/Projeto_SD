@@ -39,6 +39,10 @@ class Barrel extends Thread implements Serializable {
     private final File linkfile;
     private final File wordfile;
     private final File infofile;
+
+    private final File linkfileb;
+    private final File wordfileb;
+    private final File infofileb;
     private final File usersfile;
 
     int messageSize = 8 * 1024;
@@ -64,6 +68,9 @@ class Barrel extends Thread implements Serializable {
         this.wordfile = wordfile;
         this.infofile = infofile;
         this.usersfile = usersfile;
+        this.linkfileb = new File("link-" + this.id + "-backup");
+        this.wordfileb = new File("words-" + this.id + "-backup");
+        this.infofileb = new File("info-" + this.id + "-backup");
 
         this.files = files;
 
@@ -76,10 +83,10 @@ class Barrel extends Thread implements Serializable {
         this.rmiRegister = rmiRegister;
         this.b = barrelInterface;
 
-        this.word_Links = files.getWords(wordfile);
-        this.link_links = files.getLinks(linkfile);
-        this.link_info = files.getLinksInfo(infofile);
-        System.out.println(link_info.size());
+        this.word_Links = files.getWords(wordfile, this.wordfileb);
+        this.link_links = files.getLinks(linkfile, this.linkfileb);
+        this.link_info = files.getLinksInfo(infofile, this.infofileb);
+
         this.users = new HashMap<>();
 
     }
@@ -105,7 +112,6 @@ class Barrel extends Thread implements Serializable {
                 type = list[1].split(":")[1];
             }
 
-
             String send;
 
 
@@ -118,7 +124,7 @@ class Barrel extends Thread implements Serializable {
                     this.word_Links.get(list[2]).add(list[3]);
                     send = list[4] + "|" + type;
                     this.sendMessage(send);
-                    this.files.updateWords(word_Links, wordfile);
+                    this.files.updateWords(word_Links, wordfile, this.wordfileb);
                     //System.out.println("test " + list[2] +" " +list[3]);
                 } else if (type.equals("links")) {
                     if (!this.link_links.containsKey(list[2])) {
@@ -128,7 +134,7 @@ class Barrel extends Thread implements Serializable {
                     send = list[4] + "|" + type;
                     this.sendMessage(send);
 
-                    this.files.updateLinks(link_links, linkfile);
+                    this.files.updateLinks(link_links, linkfile,this.linkfileb);
                     //System.out.println("test " + list[2] + " " + list[3]);
                 } else if (type.equals("siteinfo")) {
                     if (!this.link_info.containsKey(list[2])) {
@@ -139,11 +145,12 @@ class Barrel extends Thread implements Serializable {
                     this.link_info.get(list[2]).add(list[4]);
                     send = list[5] + "|" + type;
                     this.sendMessage(send);
-                    this.files.updateInfo(link_info, infofile);
+                    this.files.updateInfo(link_info, infofile, this.infofileb);
                 }
-            } else{
-                System.out.println("[BARREL " + this.id + "] " + received);
             }
+//            else{
+//                System.out.println("[BARREL " + this.id + "] " + received);
+//            }
 
         }
     }
