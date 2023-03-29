@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.concurrent.Semaphore;
 
-public class Database {
+public class Database implements Serializable {
     private File linksFile;
     Semaphore s_linksFile = new Semaphore(1);
     private File linksInfoFile;

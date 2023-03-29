@@ -102,11 +102,13 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             if (rmiHost == null || mcAddress == null || mcSendPort == 0 || rmiPort == 0 || rmiRegistryName == null || bRmiHost == null || bRmiPort == 0 || bRmiRegistryName == null) {
                 System.out.println("[EXCEPTION] Properties file is missing some properties");
                 System.out.println("Current config: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName);
+                System.out.println("Current config: " + mcAddress + ":" + mcSendPort);
+                System.out.println("Current config: " + bRmiHost + ":" + bRmiPort + " " + bRmiRegistryName);
                 return;
             }
 
             UrlQueue urlQueue = new UrlQueue();
-            rmiServer = new RMIServer(urlQueue.getUrlQueue(), mcAddress, mcSendPort,  null, bRmiRegistryName, bRmiHost, bRmiPort);
+            rmiServer = new RMIServer(urlQueue.getUrlQueue(), mcAddress, mcSendPort, null, bRmiRegistryName, bRmiHost, bRmiPort);
 
         } catch (RemoteException er) {
             System.out.println("[EXCEPTION] RemoteException");
@@ -124,19 +126,24 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 Registry r = LocateRegistry.createRegistry(rmiPort);
                 System.setProperty("java.rmi.server.hostname", rmiHost); // set the host name
                 r.rebind(rmiRegistryName, rmiServer);
-                System.out.println("[SERVER] Running on " + rmiHost + ":" + rmiPort + "");
+                System.out.println("[SERVER] Running on " + rmiHost + ":" + rmiPort + "->" + rmiRegistryName);
 
-                try {
-                    rmiServer.b = (RMIBarrelInterface) LocateRegistry.getRegistry(bRmiHost, bRmiPort).lookup(bRmiRegistryName);
-                } catch (NotBoundException | RemoteException e1) {
-                    System.out.println("[EXCEPTION] NotBoundException | RemoteException, could not get barrel Registry: "+ e1.getMessage());
-                    e1.printStackTrace();
-                    return;
+
+                while (true) {
+                    try {
+                        rmiServer.b = (RMIBarrelInterface) LocateRegistry.getRegistry(bRmiHost, bRmiPort).lookup(bRmiRegistryName);
+                        System.out.println("[SERVER] Got barrel registry on " + bRmiHost + ":" + bRmiPort + "->" + bRmiRegistryName);
+                        break;
+                    } catch (NotBoundException | RemoteException e1) {
+                        Thread.sleep(await_time);
+                        System.out.println("[EXCEPTION] NotBoundException | RemoteException, could not get barrel Registry: " + e1.getMessage());
+                        System.out.println("Current barrel config: " + bRmiHost + ":" + bRmiPort + " " + bRmiRegistryName);
+                    }
                 }
 
                 // keep the server running
                 loop();
-            } catch (RemoteException e) {
+            } catch (RemoteException | InterruptedException e) {
                 System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
                 try {
                     Thread.sleep(await_time);
@@ -250,20 +257,13 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         ArrayList<String> res = this.b.checkUserRegistration(username, password, firstName, lastName);
         System.out.println("[SERVER] Barrel RMI Response: " + res);
 
-        String message = res.get(2);
-
-        if (res.get(1).equals("failure")) {
+        String message = res.get(1);
+        if (res.get(0).equals("failure")) {
             // register unsuccessful and not admin
             return new ArrayList<String>(Arrays.asList("false", "false", message));
         }
-
-        String admin = res.get(3);
-        if (admin.equals("true")) {
-            // register successful and admin
-            return new ArrayList<String>(Arrays.asList("true", "true", message));
-        }
-
+        String admin = res.get(2);
         // register successful and not admin
-        return new ArrayList<String>(Arrays.asList("true", "false", message));
+        return new ArrayList<String>(Arrays.asList("true", admin, message));
     }
 }

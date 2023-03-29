@@ -58,16 +58,31 @@ public class Downloader extends Thread implements Remote {
 
         try {
             Properties Prop = new Properties();
-            Prop.load(new FileInputStream(new File("src/Barrel.properties").getAbsoluteFile()));
+            Prop.load(new FileInputStream(new File("src/Downloader.properties").getAbsoluteFile()));
 
             Properties multicastServerProp = new Properties();
             multicastServerProp.load(new FileInputStream(new File("src/MulticastServer.properties").getAbsoluteFile()));
 
-            String rmiHost = Prop.getProperty("HOST");
+            String rmiHost = Prop.getProperty("RMI_HOST");
             String rmiRegister = Prop.getProperty("RMI_REGISTER");
-            int rmiPort = Integer.parseInt(Prop.getProperty("PORT"));
+            int rmiPort = Integer.parseInt(Prop.getProperty("RMI_PORT"));
 
-            RMIServerInterface server = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
+            if (rmiHost == null || rmiPort == 0 || rmiRegister == null) {
+                System.out.println("[DOWNLOADER] Error reading RMI config");
+                System.out.println("[DOWNLOADER] Config: " + rmiHost + ":" + rmiPort + "/" + rmiRegister);
+                return;
+            }
+
+            RMIServerInterface server = null;
+            try {
+                server = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
+
+            } catch (RemoteException e) {
+                System.out.println("[DOWNLOADER] Error connecting to RMI server:");
+                System.out.println("[DOWNLOADER] Config: " + rmiHost + ":" + rmiPort + "/" + rmiRegister);
+                e.printStackTrace();
+                return;
+            }
 
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
@@ -76,7 +91,7 @@ public class Downloader extends Thread implements Remote {
 
             for (int i = 0; i < 2; i++) {
 
-                if (rmiHost == null || rmiPort == 0 || multicastAddress == null || receivePort == 0) {
+                if (multicastAddress == null || receivePort == 0) {
                     System.out.println("[DOWNLOADER" + i + "] Error reading properties file");
                     System.exit(1);
                 }
