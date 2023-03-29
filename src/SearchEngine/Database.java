@@ -10,11 +10,8 @@ import java.util.Hashtable;
 import java.util.concurrent.Semaphore;
 
 public class Database implements Serializable {
-    private File linksFile;
     Semaphore s_linksFile = new Semaphore(1);
-    private File linksInfoFile;
     Semaphore s_linksInfoFile = new Semaphore(1);
-    private File wordsFile;
     Semaphore s_wordsFile = new Semaphore(1);
 
     private File usersFile;
@@ -78,7 +75,6 @@ public class Database implements Serializable {
     }
     public void updateLinks(HashMap<String, HashSet<String>> fileLinks, File linksFile) {
         try {
-
             if (!linksFile.exists()) {
                 linksFile.createNewFile();
             }
@@ -96,7 +92,6 @@ public class Database implements Serializable {
 
     public void updateWords(HashMap<String, HashSet<String>> fileWords, File wordsFile) {
         try {
-            this.s_wordsFile.acquire();
             if (!wordsFile.exists()) {
                 wordsFile.createNewFile();
             }
@@ -106,7 +101,7 @@ public class Database implements Serializable {
             oos.close();
             fos.close();
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             System.out.println("[EXCEPTION] While updating links: "+ e.getMessage());
             e.printStackTrace();
         }
@@ -134,7 +129,7 @@ public class Database implements Serializable {
         try {
             this.s_linksFile.acquire();
             if (!linksFile.exists()) {
-                this.linksInfoFile.createNewFile();
+                linksFile.createNewFile();
                 this.s_linksFile.release();
                 updateLinks(new HashMap<String,HashSet<String>>(), linksFile);
                 this.s_linksFile.acquire();
@@ -146,11 +141,12 @@ public class Database implements Serializable {
                 links = (HashMap<String, HashSet<String>>) ois.readObject();
                 ois.close();
             }
-
+            this.s_linksFile.release();
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
+        System.out.println("links: " + links);
         return links;
     }
 
@@ -159,7 +155,7 @@ public class Database implements Serializable {
         try {
             this.s_linksFile.acquire();
             if (!infofile.exists()) {
-                this.linksInfoFile.createNewFile();
+                infofile.createNewFile();
                 this.s_linksFile.release();
                 updateInfo(new HashMap<String,ArrayList<String>>(), infofile);
                 this.s_linksFile.acquire();
@@ -175,6 +171,7 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
+        System.out.println("words: " + linksInfo);
         return linksInfo;
     }
 
@@ -184,7 +181,7 @@ public class Database implements Serializable {
             this.s_wordsFile.acquire();
 
             if (!wordsfile.exists()) {
-                this.wordsFile.createNewFile();
+                wordsfile.createNewFile();
                 this.s_wordsFile.release();
                 updateWords(new HashMap<String,HashSet<String>>(), wordsfile);
                 this.s_wordsFile.acquire();
