@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.concurrent.Semaphore;
 
 // needs to be serializable to be sent through rmi
 public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterface {
@@ -75,6 +76,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
                 }
             }
 
+            Semaphore ackSem = new Semaphore(1);
             for (int i = 1; i < 2; i++) {
 
                 if (rmiHost == null || rmiPort == 0 || rmiRegister == null || multicastAddress == null || receivePort == 0) {
@@ -88,7 +90,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
                 File usersfile = new File("src\\users-" + i);
 
                 Database files = new Database(i);
-                Barrel barrel_t = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, linkfile, wordfile, infofile, usersfile, mainBarrel.b, files, sendPort);
+                Barrel barrel_t = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, linkfile, wordfile, infofile, usersfile, mainBarrel.b, files, sendPort, ackSem);
                 mainBarrel.barrels_threads.add(barrel_t);
                 barrel_t.start();
             }

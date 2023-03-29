@@ -12,6 +12,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 
 class Barrel extends Thread implements Serializable {
     static final int alive_checks = 5;
@@ -43,6 +44,8 @@ class Barrel extends Thread implements Serializable {
     int messageSize = 8 * 1024;
     Database files;
 
+    private final Semaphore ackSem;
+
     private InetAddress group;
     private RMIBarrelInterface b;
     private MulticastSocket receiveSocket;
@@ -50,11 +53,12 @@ class Barrel extends Thread implements Serializable {
 
 
 
-    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, File linkfile, File wordfile, File infofile, File usersfile, RMIBarrelInterface barrelInterface, Database files, int MULTICAST_SEND_PORT) {
+    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, File linkfile, File wordfile, File infofile, File usersfile, RMIBarrelInterface barrelInterface, Database files, int MULTICAST_SEND_PORT, Semaphore ackSem) {
         this.id = id;
         this.receiveSocket = null;
         this.sendSocket = null;
         this.group = null;
+        this.ackSem = ackSem;
 
         this.linkfile = linkfile;
         this.wordfile = wordfile;
@@ -75,6 +79,7 @@ class Barrel extends Thread implements Serializable {
         this.word_Links = files.getWords(wordfile);
         this.link_links = files.getLinks(linkfile);
         this.link_info = files.getLinksInfo(infofile);
+        System.out.println(link_info.size());
         this.users = new HashMap<>();
 
     }
@@ -112,11 +117,7 @@ class Barrel extends Thread implements Serializable {
                     }
                     this.word_Links.get(list[2]).add(list[3]);
                     send = list[4] + "|" + type;
-                    byte[] buffer = send.getBytes();
-                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
-
-                    this.receiveSocket.send(packet);
-
+                    this.sendMessage(send);
                     this.files.updateWords(word_Links, wordfile);
                     //System.out.println("test " + list[2] +" " +list[3]);
                 } else if (type.equals("links")) {
@@ -125,10 +126,7 @@ class Barrel extends Thread implements Serializable {
                     }
                     this.link_links.get(list[2]).add(list[3]);
                     send = list[4] + "|" + type;
-                    byte[] buffer = send.getBytes();
-                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
-
-                    this.receiveSocket.send(packet);
+                    this.sendMessage(send);
 
                     this.files.updateLinks(link_links, linkfile);
                     //System.out.println("test " + list[2] + " " + list[3]);
@@ -140,11 +138,7 @@ class Barrel extends Thread implements Serializable {
                     this.link_info.get(list[2]).add(list[3]);
                     this.link_info.get(list[2]).add(list[4]);
                     send = list[5] + "|" + type;
-                    byte[] buffer = send.getBytes();
-                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
-
-                    this.receiveSocket.send(packet);
-
+                    this.sendMessage(send);
                     this.files.updateInfo(link_info, infofile);
                 }
             } else{
@@ -172,5 +166,20 @@ class Barrel extends Thread implements Serializable {
             e.printStackTrace();
         }
     }
+    private void sendMessage(String send) {
+        try {
+            this.ackSem.acquire();
+            byte[] buffer = send.getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+
+            this.sendSocket.send(packet);
+
+            this.ackSem.release();
+
+        } catch (InterruptedException | IOException e) {
+            System.out.println("[EXCPETION] " + e.getMessage());
+        }
+    }
+
 
 }

@@ -31,6 +31,7 @@ public class Downloader extends Thread implements Remote {
     private final int MULTICAST_RECEIVE_PORT; //receber dos barrels
     private final String MULTICAST_ADDRESS;
     private final Semaphore conSem;
+    private final Semaphore ackSem;
     private final int rmiPort;
     private final String rmiHost;
     private final String rmiRegister;
@@ -40,11 +41,12 @@ public class Downloader extends Thread implements Remote {
     private int id;
     private MulticastSocket receiveSocket;
 
-    public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem, int rmiPort, String rmiHost, String rmiRegister, RMIServerInterface server, int MULTICAST_RECEIVE_PORT) {
+    public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem, Semaphore ackSem, int rmiPort, String rmiHost, String rmiRegister, RMIServerInterface server, int MULTICAST_RECEIVE_PORT) {
         this.sendSocket = null;
         this.receiveSocket = null;
         this.group = null;
         this.conSem = conSem;
+        this.ackSem = ackSem;
         this.MULTICAST_SEND_PORT = MULTICAST_SEND_PORT;
         this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
         this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
@@ -92,15 +94,16 @@ public class Downloader extends Thread implements Remote {
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_SEND_PORT"));//recebe dos barrels
 
             Semaphore listsem = new Semaphore(1);
+            Semaphore ackSem = new Semaphore(1);
 
-            for (int i = 1; i < 11; i++) {
+            for (int i = 1; i < 3; i++) {
 
                 if (multicastAddress == null || sendPort == 0) {
                     System.out.println("[DOWNLOADER" + i + "] Error reading properties file");
                     System.exit(1);
                 }
 
-                Downloader downloader = new Downloader(i, sendPort, multicastAddress, listsem, rmiPort, rmiHost, rmiRegister, server, receivePort);
+                Downloader downloader = new Downloader(i, sendPort, multicastAddress, listsem, ackSem, rmiPort, rmiHost, rmiRegister, server, receivePort);
                 downloader.start();
             }
 
@@ -226,37 +229,32 @@ public class Downloader extends Thread implements Remote {
                         Matcher matcher = pattern.matcher(w);
                         if (matcher.matches()) {
                             wo = "id:dwnl|type:word|" + w + "|" + link + "|" +  this.id;
-                            this.sendMessage(wo);
-
-                            while(true) {
+                            boolean quit = false;
+                            while(!quit) {
+                                this.sendMessage(wo);
                                 long tempoinicial = System.currentTimeMillis();
-                                ArrayList<String> ackword = new ArrayList<>();
                                 int messageSize = 8 * 1024;
                                 byte[] receivebuffer = new byte[messageSize];
                                 DatagramPacket receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
-
                                 while (System.currentTimeMillis() < (tempoinicial + 1000)) {
                                     this.sendSocket.receive(receivePacket);
                                     String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                                    ackword.add(received);
                                     if(received.equals(this.id + "|" + "word") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                        quit = true;
                                         break;
                                     }
                                 }
-
-                                if (ackword.contains(this.id + "|" + "word")) {
-                                    break;
-                                }
-                                this.sendMessage(wo);
                             }
                         }
                     }
                     for (String l : links) {
                         li = "id:dwnl|type:links|" + l + "|" + link+ "|" + this.id;
                         this.sendMessage(li);
-                        while(true) {
+                        boolean quit = false;
+                        while(!quit) {
+                            this.sendMessage(li);
                             long tempoinicial = System.currentTimeMillis();
-                            ArrayList<String> acklink = new ArrayList<>();
+
                             int messageSize = 8 * 1024;
                             byte[] receivebuffer = new byte[messageSize];
                             DatagramPacket receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
@@ -264,22 +262,21 @@ public class Downloader extends Thread implements Remote {
                             while (System.currentTimeMillis() < (tempoinicial + 1000)) {
                                 this.sendSocket.receive(receivePacket);
                                 String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                                acklink.add(received);
+
                                 if(received.equals(this.id + "|" + "links") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                    quit = true;
                                     break;
                                 }
                             }
 
-                            if (acklink.contains(this.id + "|" + "links")) {
-                                break;
-                            }
-                            this.sendMessage(li);
                         }
                     }
 
                     i = "id:dwnl|type:siteinfo|" + link + "|" + info.get(0) + "|" + info.get(1)+ "|" + this.id;
                     this.sendMessage(i);
-                    while(true) {
+                    boolean quit = false;
+                    while(!quit) {
+                        this.sendMessage(i);
                         long tempoinicial = System.currentTimeMillis();
                         ArrayList<String> ackinfo = new ArrayList<>();
                         int messageSize = 8 * 1024;
@@ -289,16 +286,14 @@ public class Downloader extends Thread implements Remote {
                         while (System.currentTimeMillis() < (tempoinicial + 1000)) {
                             this.sendSocket.receive(receivePacket);
                             String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                            ackinfo.add(received);
+
                             if(received.equals(this.id + "|" + "siteinfo") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                quit = true;
                                 break;
                             }
                         }
 
-                        if (ackinfo.contains(this.id + "|" + "siteinfo")) {
-                            break;
-                        }
-                        this.sendMessage(i);
+
                     }
 
                     System.out.println("[DOWNLOADER " + this.id + "] ALL INFO SENDED");
