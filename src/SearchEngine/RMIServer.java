@@ -245,10 +245,17 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
     @Override
     public ArrayList<String> checkLogin(String username, String password) throws RemoteException {
-        ArrayList<String> response = new ArrayList<>();
+        ArrayList<String> res = this.b.verifyUser(username, password);
 
+        String message = res.get(1);
 
-        return response;
+        if (res.get(0).equals("failure")) {
+            // login unsuccessful and not admin
+            return new ArrayList<String>(Arrays.asList("false", "false", message));
+        }
+        String admin = res.get(2);
+        // login successful and not admin
+        return new ArrayList<String>(Arrays.asList("true", admin, message));
     }
 
     @Override
