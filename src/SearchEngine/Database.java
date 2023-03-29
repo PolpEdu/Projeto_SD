@@ -142,7 +142,11 @@ public class Database implements Serializable {
                 ois.close();
             }
             this.s_linksFile.release();
-        } catch (IOException | ClassNotFoundException | InterruptedException e) {
+        }catch (StreamCorruptedException e) {
+            System.out.println("[EXCEPTION] EOF Error, corrupted file: "+ e.getMessage());
+            e.printStackTrace();
+        }
+        catch (IOException | ClassNotFoundException | InterruptedException e) {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
@@ -167,7 +171,11 @@ public class Database implements Serializable {
                 ois.close();
             }
             this.s_linksFile.release();
-        } catch (IOException | ClassNotFoundException | InterruptedException e) {
+        }catch (StreamCorruptedException e) {
+            System.out.println("[EXCEPTION] EOF Error, corrupted file: "+ e.getMessage());
+            e.printStackTrace();
+        }
+        catch (IOException | ClassNotFoundException | InterruptedException e) {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
@@ -193,6 +201,9 @@ public class Database implements Serializable {
                 ois.close();
             }
             this.s_wordsFile.release();
+        } catch (StreamCorruptedException e) {
+            System.out.println("[EXCEPTION] EOF Error, corrupted file: "+ e.getMessage());
+            e.printStackTrace();
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
