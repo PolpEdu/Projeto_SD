@@ -2,11 +2,12 @@ package SearchEngine;
 
 import Client.Client;
 import Utility.Message;
+import Utility.MulticastSend;
+import interfaces.RMIBarrelInterface;
 import interfaces.RMIServerInterface;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -14,7 +15,6 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
 
 public class RMIServer extends UnicastRemoteObject implements RMIServerInterface {
     // number of times to check if server is alive
@@ -22,6 +22,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
     // time to wait between checks in milliseconds, if server is alive
     static final int await_time = 1000;
+
 
     private final LinkedBlockingQueue<String> urlQueue;
 
@@ -34,18 +35,27 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     // Interface for the server that will receive the messages (this class)
     RMIServerInterface hPrincipal;
 
+    // Interface for the barrels
+    RMIBarrelInterface b;
+
     // this is the multicast that will send the messages
     MulticastSend m_Send;
 
-    MulticastReceive m_Receive;
+    String bRMIregistry;
+    String bRMIhost;
+    int bRMIport;
 
-    public RMIServer(LinkedBlockingQueue urlQueue, String multicastAddress, int multicastSendPort, int multicastReceivePort, RMIServerInterface hPrincipal) throws RemoteException {
+    public RMIServer(LinkedBlockingQueue urlQueue, String multicastAddress, int multicastSendPort, RMIServerInterface hPrincipal, String bRMIregistry, String bRMIhost, int bRMIport) throws RemoteException {
         super();
 
         this.m_Send = new MulticastSend(multicastAddress, multicastSendPort);
-        this.m_Receive = new MulticastReceive(this.m_Send, multicastAddress, multicastReceivePort);
 
         this.hPrincipal = hPrincipal;
+
+        this.bRMIregistry = bRMIregistry;
+        this.bRMIhost = bRMIhost;
+        this.bRMIport = bRMIport;
+
         this.clients = new HashMap<>();
         this.sendQueue = new LinkedList<>();
         this.urlQueue = urlQueue;
@@ -54,41 +64,49 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     public static void main(String[] args) throws RemoteException {
         System.getProperties().put("java.security.policy", "policy.all");
 
-        RMIServer rmiServer;
         Properties prop = new Properties();
 
-
         String SETTINGS_PATH = "src\\RMIServer.properties";
-        String rmiHost;
-        int rmiPort;
-
-        String mcAddress;
-        String mcRecievePort;
-        int mcSendPort;
 
         String rmiRegistryName;
+        String rmiHost;
+        int rmiPort;
+        RMIServer rmiServer;
+
+        String bRmiRegistryName;
+        String bRmiHost;
+        int bRmiPort;
+
+
+        String mcAddress;
+        int mcSendPort;
+
 
         try {
             prop.load(new FileInputStream(SETTINGS_PATH));
+
             rmiHost = prop.getProperty("HOST");
             rmiPort = Integer.parseInt(prop.getProperty("PORT"));
 
             rmiRegistryName = prop.getProperty("RMI_REGISTRY_NAME");
 
             mcAddress = prop.getProperty("MC_ADDR");
-            mcRecievePort = prop.getProperty("MC_REC_PORT");
             mcSendPort = Integer.parseInt(prop.getProperty("MC_SEND_PORT"));
+
+            bRmiHost = prop.getProperty("B_HOST");
+            bRmiPort = Integer.parseInt(prop.getProperty("B_PORT"));
+            bRmiRegistryName = prop.getProperty("B_RMI_REGISTRY_NAME");
 
 
             // check if any of the properties are null
-            if (rmiHost == null || mcAddress == null || mcRecievePort == null || mcSendPort == 0 || rmiPort == 0 || rmiRegistryName == null) {
+            if (rmiHost == null || mcAddress == null || mcSendPort == 0 || rmiPort == 0 || rmiRegistryName == null || bRmiHost == null || bRmiPort == 0 || bRmiRegistryName == null) {
                 System.out.println("[EXCEPTION] Properties file is missing some properties");
                 System.out.println("Current config: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName);
                 return;
             }
 
             UrlQueue urlQueue = new UrlQueue();
-            rmiServer = new RMIServer(urlQueue.getUrlQueue(), mcAddress, mcSendPort, Integer.parseInt(mcRecievePort), null);
+            rmiServer = new RMIServer(urlQueue.getUrlQueue(), mcAddress, mcSendPort,  null, bRmiRegistryName, bRmiHost, bRmiPort);
 
         } catch (RemoteException er) {
             System.out.println("[EXCEPTION] RemoteException");
@@ -102,20 +120,28 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
         while (true) {
             try {
+                // create the registry and bind the server to the current host
                 Registry r = LocateRegistry.createRegistry(rmiPort);
                 System.setProperty("java.rmi.server.hostname", rmiHost); // set the host name
                 r.rebind(rmiRegistryName, rmiServer);
                 System.out.println("[SERVER] Running on " + rmiHost + ":" + rmiPort + "");
 
+                try {
+                    rmiServer.b = (RMIBarrelInterface) LocateRegistry.getRegistry(bRmiHost, bRmiPort).lookup(bRmiRegistryName);
+                } catch (NotBoundException | RemoteException e1) {
+                    System.out.println("[EXCEPTION] NotBoundException | RemoteException, could not get barrel Registry: "+ e1.getMessage());
+                    e1.printStackTrace();
+                    return;
+                }
+
                 // keep the server running
                 loop();
-
             } catch (RemoteException e) {
                 System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
                 try {
                     Thread.sleep(await_time);
                     rmiServer.hPrincipal = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
-                    rmiServer.backUp(rmiPort, rmiHost, rmiRegistryName);
+                    rmiServer.backUpCreate(rmiPort, rmiHost, rmiRegistryName);
                 } catch (InterruptedException | NotBoundException ei) {
                     System.out.println("[EXCEPTION] InterruptedException | NotBoundException");
                     ei.printStackTrace();
@@ -130,7 +156,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
     }
 
-    public void backUp(int rmiPort, String rmiHost, String rmiRegistryName) throws NotBoundException, RemoteException, InterruptedException {
+    public void backUpCreate(int rmiPort, String rmiHost, String rmiRegistryName) throws NotBoundException, RemoteException, InterruptedException {
         while (true) {
             try {
                 // check if server is alive
@@ -221,189 +247,23 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
     @Override
     public ArrayList<String> checkRegister(String username, String password, String firstName, String lastName) throws RemoteException {
-        String id = UUID.randomUUID().toString();
-        Message msg = new Message(id, "type:register|username:" + username + "|password:" + password + "|firstName:" + firstName + "|lastName:" + lastName);
-        this.m_Send.sendInfo(msg, this.sendQueue);
+        ArrayList<String> res = this.b.checkUserRegistration(username, password, firstName, lastName);
+        System.out.println("[SERVER] Barrel RMI Response: " + res);
 
-        String response = this.m_Receive.parseRecievedPacket(msg, this.sendQueue);
-        this.sendQueue.remove(msg);
+        String message = res.get(2);
 
-        try {
-            String[] responseArray = response.split("\\|");
-            String status = responseArray[2].split(":")[1];
-            String message = responseArray[3].split(":")[1];
-            Message msgRes = new Message(id, "type:ack");
-            this.m_Send.sendInfo(msgRes, this.sendQueue);
-
-            if (status.equals("error")) {
-                // register unsuccessful and not admin
-                return new ArrayList<String>(Arrays.asList("false", "false", message));
-            }
-
-            String admin = responseArray[4].split(":")[1];
-            if (admin.equals("true")) {
-                // register successful and admin
-                return new ArrayList<String>(Arrays.asList("true", "true", message));
-            }
-
-            // register successful and not admin
-            return new ArrayList<String>(Arrays.asList("true", "false", message));
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("[EXCEPTION] ArrayIndexOutOfBoundsException");
-            System.out.println("[EXCEPTION] In response: " + response);
-            e.printStackTrace();
-            return new ArrayList<String>(Arrays.asList("false", "false", "Something went wrong"));
+        if (res.get(1).equals("failure")) {
+            // register unsuccessful and not admin
+            return new ArrayList<String>(Arrays.asList("false", "false", message));
         }
 
-    }
-}
-
-
-class MulticastReceive extends Thread {
-    // size of the message in bytes
-    int messageSize = 1024 * 8;
-    // socket Timeout
-    int socketTimeout = 1500;
-    // this is the group that will receive the messages
-    InetAddress group;
-    MulticastSend multicastSend;
-    MulticastSocket socket;
-    Semaphore sem;
-    // this is the multicast that will receive the messages
-    private String MULTICAST_ADDRESS;
-    // this is the port that will receive the messages
-    private int PORT;
-
-
-    public MulticastReceive(MulticastSend multicastSend, String multicastAddress, int receivePort) {
-        this.sem = new Semaphore(1);
-        this.multicastSend = multicastSend;
-        this.MULTICAST_ADDRESS = multicastAddress;
-        this.PORT = receivePort;
-
-        try {
-            this.socket = new MulticastSocket(this.PORT);
-            this.group = InetAddress.getByName(this.MULTICAST_ADDRESS);
-        } catch (UnknownHostException eu) {
-            System.out.println("[EXCEPTION] UnknownHostException");
-            eu.printStackTrace();
-        } catch (IOException ei) {
-            System.out.println("[EXCEPTION] IOException");
-            ei.printStackTrace();
-        }
-    }
-
-    public void run() {
-        try {
-            // wait for the socket to be ready
-            this.socket.setSoTimeout(socketTimeout);
-            this.socket.joinGroup(this.group);
-            while (true) {
-            }
-        } catch (SocketException e) {
-            System.out.println("[EXCEPTION] SocketException");
-            e.printStackTrace();
-        } catch (IOException e) {
-            System.out.println("[EXCEPTION] IOException");
-            e.printStackTrace();
-        }
-        socket.close();
-
-    }
-
-    public String parseRecievedPacket(Message msg, LinkedList<Message> sendQueue) {
-        String message = null;
-        boolean checkInQueue;
-        System.out.println("[RECEIVED] " + msg.message);
-        while (message == null) {
-            byte[] buffer = new byte[messageSize];
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-            try {
-                // print socket info
-                this.socket.receive(packet);
-                message = new String(packet.getData(), 0, packet.getLength());
-                String[] messageArray = message.split("\\|");
-                String id = messageArray[1].split(":")[1];
-                if (msg.id.equals(id)) {
-                    System.out.println("[RECEIVED] Received our first ACK: " + message);
-                } else {
-                    checkInQueue = false;
-                    for (Message m : sendQueue) {
-                        if (m.id.equals(id)) {
-                            checkInQueue = true; // message is in queue
-                            break;
-                        }
-                    }
-                    if (!checkInQueue) {
-                        // this happens when the server sends a message to the client and the client sends an ACK to the server
-                        System.out.println("[RECEIVED] Received another ACK: " + message);
-                        Message msgACK = new Message(id, "type:ack");
-                        this.multicastSend.sendInfo(msgACK, sendQueue); // send again
-                    } else {
-                        buffer = new byte[messageSize];
-                        packet = new DatagramPacket(buffer, buffer.length, this.group, this.PORT);
-                        this.socket.send(packet);
-                    }
-                    message = null;
-                }
-            } catch (SocketTimeoutException e) {
-                message = null;
-                System.out.println("[EXCEPTION] Couldn't connect to Multicast Server. SocketTimeoutException: " + e.getMessage());
-                e.printStackTrace();
-                this.multicastSend.sendInfo(msg, sendQueue); // send again
-            } catch (IOException e) {
-                System.out.println("[EXCEPTION] IOException: " + e.getMessage());
-                e.printStackTrace();
-            } catch (ArrayIndexOutOfBoundsException e) {
-                System.out.println("[EXCEPTION] ArrayIndexOutOfBoundsException: " + e.getMessage());
-                System.out.println("[EXCEPTION] Message: " + message);
-                e.printStackTrace();
-            } catch (Exception e) {
-                System.out.println("[EXCEPTION] Exception: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-        return message;
-    }
-}
-
-class MulticastSend {
-    MulticastSocket socket;
-    InetAddress group;
-    private String MULTICAST_ADDRESS;
-    private int PORT;
-
-    public MulticastSend(String multicastAddress, int sendPort) {
-        this.PORT = sendPort;
-        this.MULTICAST_ADDRESS = multicastAddress;
-
-        try {
-            this.socket = new MulticastSocket(this.PORT);
-            this.group = InetAddress.getByName(this.MULTICAST_ADDRESS);
-        } catch (UnknownHostException eu) {
-            System.out.println("[EXCEPTION] UnknownHostException");
-            eu.printStackTrace();
-        } catch (IOException ei) {
-            System.out.println("[EXCEPTION] IOException");
-            ei.printStackTrace();
-        }
-    }
-
-    public void sendInfo(Message m, LinkedList<Message> sendQueue) {
-        // check if message type is ack
-        String type = m.getType();
-        byte[] buffer = m.message.getBytes();
-
-        if (!type.equals("ack")) {
-            sendQueue.offer(m);
+        String admin = res.get(3);
+        if (admin.equals("true")) {
+            // register successful and admin
+            return new ArrayList<String>(Arrays.asList("true", "true", message));
         }
 
-        try {
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.PORT);
-            this.socket.send(packet);
-        } catch (IOException e) {
-            System.out.println("[EXCEPTION] IOException");
-            e.printStackTrace();
-        }
+        // register successful and not admin
+        return new ArrayList<String>(Arrays.asList("true", "false", message));
     }
 }

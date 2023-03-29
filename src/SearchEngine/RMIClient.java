@@ -1,7 +1,6 @@
 package SearchEngine;
 
 import Client.Client;
-import interfaces.RMIClientInterface;
 import interfaces.RMIServerInterface;
 
 import java.io.*;
@@ -13,7 +12,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Properties;
 
-class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
+class RMIClient extends UnicastRemoteObject {
     static final int keepAliveTime = 5000;
     private final String rmiHost;
     private final int rmiPort;
@@ -322,7 +321,7 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
                 System.out.println("[CLIENT] Logged in as " + this.client.username);
                 return;
             } else {
-                System.out.println("[CLIENT] Registration failed: " + res.get(2));
+                System.out.println("[ERROR] Registration failed: " + res.get(2));
                 System.out.println("[CLIENT] Try again? (y/n)");
                 try {
                     String choice = br.readLine();
@@ -360,8 +359,4 @@ class RMIClient extends UnicastRemoteObject implements RMIClientInterface {
         }
     }
 
-    @Override
-    public void notifyMessage(String message) throws RemoteException {
-        System.out.println(message);
-    }
 }

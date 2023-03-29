@@ -1,11 +1,12 @@
 package SearchEngine;
 
 import Client.User;
-import interfaces.RMIServerInterface;
+import interfaces.RMIBarrelInterface;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -13,22 +14,23 @@ import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Properties;
+import java.rmi.registry.Registry;
+import java.util.*;
 
-public class Barrel extends Thread {
+public class Barrel extends Thread implements RMIBarrelInterface {
     static final int alive_checks = 5;
     static final int await_time = 2000;
+    private final int id; // id do barrel
+
+    // multicast from downloaders
     private final String MULTICAST_ADDRESS;
     private final int MULTICAST_RECEIVE_PORT;
-    private final int id;
 
     private final HashMap<String, HashSet<String>> word_Links;
     private final HashMap<String, HashSet<String>> link_links;
     private final HashMap<String, ArrayList<String>> link_info;
     private final HashMap<String, HashSet<String>> users;
+
 
     private final int rmiPort;
     private final String rmiHost;
@@ -41,14 +43,16 @@ public class Barrel extends Thread {
 
     int messageSize = 8 * 1024;
     Database files;
-    private RMIServerInterface b;
-    private InetAddress group;
-    private MulticastSocket receiveSocket;// send socket do multicastserver
 
-    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, RMIServerInterface b, File linkfile, File wordfile, File infofile, File usersfile, Database files) {
+    private InetAddress group;
+    private RMIBarrelInterface b;
+    private MulticastSocket receiveSocket; // send socket do multicastserver
+
+    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, File linkfile, File wordfile, File infofile, File usersfile, RMIBarrelInterface barrelInterface, Database files) {
         this.id = id;
         this.receiveSocket = null;
         this.group = null;
+
         this.linkfile = linkfile;
         this.wordfile = wordfile;
         this.infofile = infofile;
@@ -62,10 +66,10 @@ public class Barrel extends Thread {
         this.rmiPort = rmiPort;
         this.rmiHost = rmiHost;
         this.rmiRegister = rmiRegister;
-        this.b = b;
+        this.b = barrelInterface;
 
         this.word_Links = new HashMap<>();
-        this.link_links = new HashMap<>();//files.getLinks(this.linkfile);
+        this.link_links = new HashMap<>();
         this.link_info = new HashMap<>();
         this.users = new HashMap<>();
     }
@@ -80,20 +84,26 @@ public class Barrel extends Thread {
             Properties multicastServerProp = new Properties();
             multicastServerProp.load(new FileInputStream(new File("src/MulticastServer.properties").getAbsoluteFile()));
 
+            // rmi to send register the barrel
+            String rmiHost = barrelProp.getProperty("B_HOST");
+            String rmiRegister = barrelProp.getProperty("B_RMI_REGISTER");
+            int rmiPort = Integer.parseInt(barrelProp.getProperty("B_PORT"));
 
-            String rmiHost = barrelProp.getProperty("HOST");
-            String rmiRegister = barrelProp.getProperty("RMI_REGISTER");
-            int rmiPort = Integer.parseInt(barrelProp.getProperty("PORT"));
-
-
+            // Multicast to receive data from downloaders
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
 
-            RMIServerInterface b = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
+            // create the registry
+            Registry r = LocateRegistry.createRegistry(rmiPort);
+            System.setProperty("java.rmi.server.hostname", rmiHost); // set the host name
 
-            for (int i = 0; i < 2; i++) {
+            // parrel interface to rebind the barrel
+            RMIBarrelInterface barrelInterface = new Barrel(0, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, null, null, null, null, null, null);
+            r.rebind(rmiRegister, barrelInterface); // main barrel to receive the register
 
-                if (rmiHost == null || rmiPort == 0 || multicastAddress == null || receivePort == 0) {
+            for (int i = 1; i < 3; i++) {
+
+                if (rmiHost == null || rmiPort == 0 || rmiRegister == null || multicastAddress == null || receivePort == 0) {
                     System.out.println("[BARREL " + i + "] Error reading properties file");
                     System.exit(1);
                 }
@@ -104,15 +114,14 @@ public class Barrel extends Thread {
                 File usersfile = new File("src\\users-" + i);
 
                 Database files = new Database(i);
-                Barrel barrel = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, b, linkfile, wordfile, infofile, usersfile, files);
-                barrel.start();
+                Barrel barrelt = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, linkfile, wordfile, infofile, usersfile, barrelInterface, files);
+                barrelt.start();
             }
 
+        } catch (RemoteException e) {
+            System.out.println("[BARREL] Error creating registry: " + e.getMessage());
         } catch (IOException e) {
             System.out.println("[BARREL] Error reading properties file: " + e.getMessage());
-            e.printStackTrace();
-        } catch (NotBoundException e) {
-            System.out.println("[BARREL] Error connecting to RMI server: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -149,21 +158,6 @@ public class Barrel extends Thread {
                     this.link_info.get(list[2]).add(list[3]);
                     this.link_info.get(list[2]).add(list[4]);
                 }
-            } else if (id.equals("register")) {
-                System.out.println("[BARREL " + this.id + "] " + received);
-                HashMap<String, User>  currentUsers = this.files.getUsers();
-
-                // type:register|username:" + username + "|password:" + password + "|firstName:" + firstName + "|lastName:" + lastName);
-                String username =  list[1].split(":")[1];
-
-                // get the current users
-                if (currentUsers.containsKey(username)) {
-                    // update the user
-
-                } else {
-                    // add the user
-                    
-                }
             } else {
                 System.out.println("[BARREL " + this.id + "] " + received);
             }
@@ -175,29 +169,24 @@ public class Barrel extends Thread {
         }
     }
 
-    public void sendResponse(String response) throws IOException {
-        byte[] sendbuffer = response.getBytes();
-        DatagramPacket sendPacket = new DatagramPacket(sendbuffer, sendbuffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
-        this.receiveSocket.send(sendPacket);
-    }
-
-
     public void run() {
         System.out.println("[BARREL " + this.id + "] Barrel running...");
 
         try {
+            System.out.println("[SERVER] Running on " + rmiHost + ":" + rmiPort + "");
+
+            // Multicast, receive from downloaders
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
             this.receiveSocket.joinGroup(this.group);
 
             loop();
-            //System.out.println("[BARREL " + (this.id+1) + "]" + received);
         } catch (RemoteException e) {
             System.out.println("[BARREL " + this.id + "] RemoteException, could not create registry. Retrying in " + await_time / 1000 + " second...");
 
             try {
                 Thread.sleep(await_time);
-                this.b = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
+                this.b = (RMIBarrelInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
                 this.backUp(rmiPort, rmiHost, rmiRegister);
             } catch (InterruptedException | NotBoundException | RemoteException ei) {
                 System.out.println("[EXCEPTION] InterruptedException | NotBoundException | RemoteException");
@@ -212,6 +201,12 @@ public class Barrel extends Thread {
         }
     }
 
+    public ArrayList<String> registerUser(String username, String password) throws RemoteException {
+        ArrayList<String> response = new ArrayList<>();
+
+        return response;
+    }
+
     private void backUp(int rmiPort, String rmiHost, String rmiRegister) throws RemoteException {
         while (true) {
             try {
@@ -224,7 +219,7 @@ public class Barrel extends Thread {
                 for (int i = 0; i < alive_checks; i++) {
                     try {
                         Thread.sleep(await_time);
-                        this.b = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
+                        this.b = (RMIBarrelInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
                     } catch (RemoteException er) {
                         System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in " + +await_time / 1000 + " second(s)...");
                         this.b = null;
@@ -240,5 +235,32 @@ public class Barrel extends Thread {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean alive() throws RemoteException {
+        return false;
+    }
+
+    @Override
+    public ArrayList<String> checkUserRegistration(String username, String password, String firstName, String lastName) throws RemoteException {
+        HashMap<String, User> users = this.files.getUsers();
+        if (users.containsKey(username)) {
+            // "type:register | status:failure | message:User already exists"
+            return new ArrayList<>(Arrays.asList("register", "failure", "User already exists"));
+        }
+
+        // if no users, make first user admin
+        if (users.size() == 0) {
+            // "type:register | status:success | message:User registered"
+            users.put(username, new User(username, password, true, firstName, lastName));
+            this.files.updateUsers(users);
+            return new ArrayList<>(Arrays.asList("register", "success", "Admin User registered", "true"));
+        }
+
+        // "type:register | status:success | message:User registered"
+        users.put(username, new User(username, password, false, firstName, lastName));
+        this.files.updateUsers(users);
+        return new ArrayList<>(Arrays.asList("register", "success", "User registered", "false"));
     }
 }
