@@ -200,7 +200,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
         // HashMap<String, HashMap<String>> links = barrel.files.getLinks();
 
-
+        return null;
 
     }
 
