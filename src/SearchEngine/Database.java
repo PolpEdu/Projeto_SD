@@ -30,7 +30,7 @@ public class Database implements Serializable {
     }
 
     public void setPath(int n) {
-        String usersPath = "src\\users" + n + ".txt";
+        String usersPath = "src\\users";
         this.usersFile = new File(usersPath);
     }
 
