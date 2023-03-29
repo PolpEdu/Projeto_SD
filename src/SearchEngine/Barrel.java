@@ -40,9 +40,6 @@ class Barrel extends Thread implements Serializable {
     private final File wordfile;
     private final File infofile;
 
-    private final File linkfileb;
-    private final File wordfileb;
-    private final File infofileb;
     private final File usersfile;
 
     int messageSize = 8 * 1024;
@@ -68,9 +65,7 @@ class Barrel extends Thread implements Serializable {
         this.wordfile = wordfile;
         this.infofile = infofile;
         this.usersfile = usersfile;
-        this.linkfileb = new File("link-" + this.id + "-backup");
-        this.wordfileb = new File("words-" + this.id + "-backup");
-        this.infofileb = new File("info-" + this.id + "-backup");
+
 
         this.files = files;
 
@@ -83,16 +78,16 @@ class Barrel extends Thread implements Serializable {
         this.rmiRegister = rmiRegister;
         this.b = barrelInterface;
 
-        this.word_Links = files.getWords(wordfile, this.wordfileb);
-        this.link_links = files.getLinks(linkfile, this.linkfileb);
-        this.link_info = files.getLinksInfo(infofile, this.infofileb);
+        this.word_Links = files.getWords(wordfile);
+        this.link_links = files.getLinks(linkfile);
+        this.link_info = files.getLinksInfo(infofile);
 
         this.users = new HashMap<>();
 
     }
 
     public void loop() throws IOException {
-
+        ArrayList<String> queuelist = new ArrayList<>();
         while (true) {
 
             byte[] receivebuffer = new byte[messageSize];
@@ -102,50 +97,87 @@ class Barrel extends Thread implements Serializable {
 
             String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-            String id = "ack";
-            String type = "ack";
-            String[] list  = null;
 
-            if(received.contains("id")){
-                list = received.split("\\|");
-                id = list[0].split(":")[1];
-                type = list[1].split(":")[1];
+            String[] list = received.split("\\|");
+            String id = list[0].split(":")[1];
+            String type = list[1].split(":")[1];
+
+
+           if(id.equals("done")){
+                String[] split;
+                String splittype;
+                String splitid;
+
+                for(String str: queuelist){
+                    System.out.println(str);
+                   split =  str.split("\\|");
+                   splitid = split[0].split(":")[1];
+                   splittype = split[1].split(":")[1];
+                    if (splitid.equals("dwnl")) {
+                        // System.out.println("[BARREL " + this.id + "] " + received);
+                        if (splittype.equals("word")) {
+                            if(id.equals(split[4])){
+                                if (!this.word_Links.containsKey(split[2])) {
+                                    this.word_Links.put(split[2], new HashSet<>());
+                                }
+                                this.word_Links.get(split[2]).add(split[3]);
+                                this.files.updateWords(word_Links, wordfile);
+                                queuelist.remove(str);
+                            }
+
+                            //System.out.println("test " + list[2] +" " +list[3]);
+                        } else if (splittype.equals("links")) {
+                            if(id.equals(split[4])) {
+                                if (!this.link_links.containsKey(split[2])) {
+                                    this.link_links.put(split[2], new HashSet<>());
+                                }
+                                this.link_links.get(split[2]).add(split[3]);
+                                this.files.updateLinks(link_links, linkfile);
+                                queuelist.remove(str);
+                            }
+                            //System.out.println("test " + list[2] + " " + list[3]);
+                        } else if (splittype.equals("siteinfo")) {
+                            if(id.equals(split[5])) {
+                                if (!this.link_info.containsKey(split[2])) {
+                                    this.link_info.put(split[2], new ArrayList<>());
+                                }
+
+                                this.link_info.get(split[2]).add(split[3]);
+                                this.link_info.get(split[2]).add(split[4]);
+
+                                this.files.updateInfo(link_info, infofile);
+                                queuelist.remove(str);
+                            }
+                        }
+                    }
+
+                }
             }
 
             String send;
 
 
             if (id.equals("dwnl")) {
+                queuelist.add(received);
                 // System.out.println("[BARREL " + this.id + "] " + received);
                 if (type.equals("word")) {
-                    if (!this.word_Links.containsKey(list[2])) {
-                        this.word_Links.put(list[2], new HashSet<>());
-                    }
-                    this.word_Links.get(list[2]).add(list[3]);
-                    send = list[4] + "|" + type;
+
+                    send = "id:ack|type:ack|"+list[4] + "|" + type;
                     this.sendMessage(send);
-                    this.files.updateWords(word_Links, wordfile, this.wordfileb);
+
                     //System.out.println("test " + list[2] +" " +list[3]);
                 } else if (type.equals("links")) {
-                    if (!this.link_links.containsKey(list[2])) {
-                        this.link_links.put(list[2], new HashSet<>());
-                    }
-                    this.link_links.get(list[2]).add(list[3]);
-                    send = list[4] + "|" + type;
+
+                    send = "id:ack|type:ack|"+list[4] + "|" + type;
                     this.sendMessage(send);
 
-                    this.files.updateLinks(link_links, linkfile,this.linkfileb);
+
                     //System.out.println("test " + list[2] + " " + list[3]);
                 } else if (type.equals("siteinfo")) {
-                    if (!this.link_info.containsKey(list[2])) {
-                        this.link_info.put(list[2], new ArrayList<>());
-                    }
 
-                    this.link_info.get(list[2]).add(list[3]);
-                    this.link_info.get(list[2]).add(list[4]);
-                    send = list[5] + "|" + type;
+                    send = "id:ack|type:ack|"+list[5] + "|" + type;
                     this.sendMessage(send);
-                    this.files.updateInfo(link_info, infofile, this.infofileb);
+
                 }
             }
 //            else{

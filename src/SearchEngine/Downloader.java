@@ -239,7 +239,7 @@ public class Downloader extends Thread implements Remote {
                                 while (System.currentTimeMillis() < (tempoinicial + 1000)) {
                                     this.sendSocket.receive(receivePacket);
                                     String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                                    if(received.equals(this.id + "|" + "word") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                    if(received.equals("id:ack|type:ack|"+this.id + "|" + "word") || System.currentTimeMillis() >= (tempoinicial + 500)){
                                         quit = true;
                                         break;
                                     }
@@ -263,7 +263,7 @@ public class Downloader extends Thread implements Remote {
                                 this.sendSocket.receive(receivePacket);
                                 String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                                if(received.equals(this.id + "|" + "links") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                if(received.equals("id:ack|type:ack|"+this.id + "|" + "links") || System.currentTimeMillis() >= (tempoinicial + 500)){
                                     quit = true;
                                     break;
                                 }
@@ -287,7 +287,7 @@ public class Downloader extends Thread implements Remote {
                             this.sendSocket.receive(receivePacket);
                             String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                            if(received.equals(this.id + "|" + "siteinfo") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                            if(received.equals("id:ack|type:ack|"+this.id + "|" + "siteinfo") || System.currentTimeMillis() >= (tempoinicial + 500)){
                                 quit = true;
                                 break;
                             }
@@ -297,6 +297,7 @@ public class Downloader extends Thread implements Remote {
                     }
 
                     System.out.println("[DOWNLOADER " + this.id + "] ALL INFO SENDED");
+                    sendMessage("id:done|type:ack|" + this.id);
                     //colocar os novos links na queue para continuar a ir buscar informaçã
                     for (String l : links) {
                         server.offerLink(l);
