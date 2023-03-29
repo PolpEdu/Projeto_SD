@@ -11,11 +11,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
 class Barrel extends Thread implements Serializable {
@@ -27,6 +22,8 @@ class Barrel extends Thread implements Serializable {
     // multicast from downloaders
     private final String MULTICAST_ADDRESS;
     private final int MULTICAST_RECEIVE_PORT;
+
+    private final int MULTICAST_SEND_PORT;
 
     private final HashMap<String, HashSet<String>> word_Links;
     private final HashMap<String, HashSet<String>> link_links;
@@ -48,11 +45,15 @@ class Barrel extends Thread implements Serializable {
 
     private InetAddress group;
     private RMIBarrelInterface b;
-    private MulticastSocket receiveSocket; // send socket do multicastserver
+    private MulticastSocket receiveSocket;
+    private MulticastSocket sendSocket;
 
-    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, File linkfile, File wordfile, File infofile, File usersfile, RMIBarrelInterface barrelInterface, Database files) {
+
+
+    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, String rmiHost, int rmiPort, String rmiRegister, File linkfile, File wordfile, File infofile, File usersfile, RMIBarrelInterface barrelInterface, Database files, int MULTICAST_SEND_PORT) {
         this.id = id;
         this.receiveSocket = null;
+        this.sendSocket = null;
         this.group = null;
 
         this.linkfile = linkfile;
@@ -64,6 +65,7 @@ class Barrel extends Thread implements Serializable {
 
         this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
         this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
+        this.MULTICAST_SEND_PORT = MULTICAST_SEND_PORT;
 
         this.rmiPort = rmiPort;
         this.rmiHost = rmiHost;
@@ -78,15 +80,29 @@ class Barrel extends Thread implements Serializable {
     }
 
     public void loop() throws IOException {
+
         while (true) {
+
             byte[] receivebuffer = new byte[messageSize];
             DatagramPacket receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
             this.receiveSocket.receive(receivePacket);
 
+
             String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
-            String[] list = received.split("\\|");
-            String id = list[0].split(":")[1];
-            String type = list[1].split(":")[1];
+
+            String id = "ack";
+            String type = "ack";
+            String[] list  = null;
+
+            if(received.contains("id")){
+                list = received.split("\\|");
+                id = list[0].split(":")[1];
+                type = list[1].split(":")[1];
+            }
+
+
+            String send;
+
 
             if (id.equals("dwnl")) {
                 // System.out.println("[BARREL " + this.id + "] " + received);
@@ -95,12 +111,26 @@ class Barrel extends Thread implements Serializable {
                         this.word_Links.put(list[2], new HashSet<>());
                     }
                     this.word_Links.get(list[2]).add(list[3]);
+                    send = list[4] + "|" + type;
+                    byte[] buffer = send.getBytes();
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+
+                    this.receiveSocket.send(packet);
+
+                    this.files.updateWords(word_Links, wordfile);
                     //System.out.println("test " + list[2] +" " +list[3]);
                 } else if (type.equals("links")) {
                     if (!this.link_links.containsKey(list[2])) {
                         this.link_links.put(list[2], new HashSet<>());
                     }
                     this.link_links.get(list[2]).add(list[3]);
+                    send = list[4] + "|" + type;
+                    byte[] buffer = send.getBytes();
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+
+                    this.receiveSocket.send(packet);
+
+                    this.files.updateLinks(link_links, linkfile);
                     //System.out.println("test " + list[2] + " " + list[3]);
                 } else if (type.equals("siteinfo")) {
                     if (!this.link_info.containsKey(list[2])) {
@@ -109,14 +139,18 @@ class Barrel extends Thread implements Serializable {
 
                     this.link_info.get(list[2]).add(list[3]);
                     this.link_info.get(list[2]).add(list[4]);
+                    send = list[5] + "|" + type;
+                    byte[] buffer = send.getBytes();
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+
+                    this.receiveSocket.send(packet);
+
+                    this.files.updateInfo(link_info, infofile);
                 }
-            } else {
+            } else{
                 System.out.println("[BARREL " + this.id + "] " + received);
             }
 
-            this.files.updateLinks(link_links, linkfile);
-            this.files.updateWords(word_Links, wordfile);
-            this.files.updateInfo(link_info, infofile);
         }
     }
 
@@ -126,6 +160,7 @@ class Barrel extends Thread implements Serializable {
         try {
             // Multicast, receive from downloaders
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
+            this.sendSocket = new MulticastSocket(MULTICAST_SEND_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
             this.receiveSocket.joinGroup(this.group);
 

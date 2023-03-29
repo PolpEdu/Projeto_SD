@@ -26,23 +26,26 @@ import java.util.regex.Pattern;
 
 public class Downloader extends Thread implements Remote {
 
-    private final int MULTICAST_RECEIVE_PORT;
+    private final int MULTICAST_SEND_PORT; //enviar para os barrels
+
+    private final int MULTICAST_RECEIVE_PORT; //receber dos barrels
     private final String MULTICAST_ADDRESS;
     private final Semaphore conSem;
     private final int rmiPort;
     private final String rmiHost;
     private final String rmiRegister;
-    private MulticastSocket receiveSocket;
+    private MulticastSocket sendSocket;
     private InetAddress group;
     private RMIServerInterface server;
     private int id;
-    private ArrayBlockingQueue<String> urlQueue;
+    private MulticastSocket receiveSocket;
 
-
-    public Downloader(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, Semaphore conSem, int rmiPort, String rmiHost, String rmiRegister, RMIServerInterface server) {
+    public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem, int rmiPort, String rmiHost, String rmiRegister, RMIServerInterface server, int MULTICAST_RECEIVE_PORT) {
+        this.sendSocket = null;
         this.receiveSocket = null;
         this.group = null;
         this.conSem = conSem;
+        this.MULTICAST_SEND_PORT = MULTICAST_SEND_PORT;
         this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
         this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
         this.rmiPort = rmiPort;
@@ -85,18 +88,19 @@ public class Downloader extends Thread implements Remote {
             }
 
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
-            int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
+            int sendPort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));//envia para os barrels
+            int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_SEND_PORT"));//recebe dos barrels
 
             Semaphore listsem = new Semaphore(1);
 
-            for (int i = 0; i < 2; i++) {
+            for (int i = 1; i < 11; i++) {
 
-                if (multicastAddress == null || receivePort == 0) {
+                if (multicastAddress == null || sendPort == 0) {
                     System.out.println("[DOWNLOADER" + i + "] Error reading properties file");
                     System.exit(1);
                 }
 
-                Downloader downloader = new Downloader(i, receivePort, multicastAddress, listsem, rmiPort, rmiHost, rmiRegister, server);
+                Downloader downloader = new Downloader(i, sendPort, multicastAddress, listsem, rmiPort, rmiHost, rmiRegister, server, receivePort);
                 downloader.start();
             }
 
@@ -145,9 +149,10 @@ public class Downloader extends Thread implements Remote {
     public void run() {
         System.out.println("[DOWNLOADER " + this.id + "] is running ...");
         try {
+            this.sendSocket = new MulticastSocket(MULTICAST_SEND_PORT);
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
-            this.receiveSocket.joinGroup(this.group);
+            this.sendSocket.joinGroup(this.group);
 
             this.QueueInfo();
         } catch (IOException e) {
@@ -199,7 +204,6 @@ public class Downloader extends Thread implements Remote {
 
         while (true) {
             try {
-//
 
                 String link = server.takeLink();
 
@@ -208,11 +212,12 @@ public class Downloader extends Thread implements Remote {
                         sleep(1000);
                     }
                 }
-                String message;
+                String li;
+                String wo;
+                String i;
                 ArrayList<String> links = new ArrayList<>();
                 ArrayList<String> listWords = new ArrayList<>();
                 ArrayList<String> info = new ArrayList<>();
-
 
                 //linguagem regular de forma a nao receber caracteres especiais e apenas guardar numeros e letras
                 Pattern pattern = Pattern.compile("^[a-zA-Z0-9]*$");
@@ -220,24 +225,84 @@ public class Downloader extends Thread implements Remote {
                     for (String w : listWords) {
                         Matcher matcher = pattern.matcher(w);
                         if (matcher.matches()) {
-                            message = "id:dwnl|type:word|" + w + "|" + link;
-                            this.sendMessage(message);
-                        }
+                            wo = "id:dwnl|type:word|" + w + "|" + link + "|" +  this.id;
+                            this.sendMessage(wo);
 
+                            while(true) {
+                                long tempoinicial = System.currentTimeMillis();
+                                ArrayList<String> ackword = new ArrayList<>();
+                                int messageSize = 8 * 1024;
+                                byte[] receivebuffer = new byte[messageSize];
+                                DatagramPacket receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
+
+                                while (System.currentTimeMillis() < (tempoinicial + 1000)) {
+                                    this.sendSocket.receive(receivePacket);
+                                    String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                                    ackword.add(received);
+                                    if(received.equals(this.id + "|" + "word") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                        break;
+                                    }
+                                }
+
+                                if (ackword.contains(this.id + "|" + "word")) {
+                                    break;
+                                }
+                                this.sendMessage(wo);
+                            }
+                        }
                     }
                     for (String l : links) {
-                        message = "id:dwnl|type:links|" + l + "|" + link;
-                        this.sendMessage(message);
+                        li = "id:dwnl|type:links|" + l + "|" + link+ "|" + this.id;
+                        this.sendMessage(li);
+                        while(true) {
+                            long tempoinicial = System.currentTimeMillis();
+                            ArrayList<String> acklink = new ArrayList<>();
+                            int messageSize = 8 * 1024;
+                            byte[] receivebuffer = new byte[messageSize];
+                            DatagramPacket receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
+
+                            while (System.currentTimeMillis() < (tempoinicial + 1000)) {
+                                this.sendSocket.receive(receivePacket);
+                                String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                                acklink.add(received);
+                                if(received.equals(this.id + "|" + "links") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                    break;
+                                }
+                            }
+
+                            if (acklink.contains(this.id + "|" + "links")) {
+                                break;
+                            }
+                            this.sendMessage(li);
+                        }
                     }
 
-                    message = "id:dwnl|type:siteinfo|" + link + "|" + info.get(0) + "|" + info.get(1);
+                    i = "id:dwnl|type:siteinfo|" + link + "|" + info.get(0) + "|" + info.get(1)+ "|" + this.id;
+                    this.sendMessage(i);
+                    while(true) {
+                        long tempoinicial = System.currentTimeMillis();
+                        ArrayList<String> ackinfo = new ArrayList<>();
+                        int messageSize = 8 * 1024;
+                        byte[] receivebuffer = new byte[messageSize];
+                        DatagramPacket receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);
 
-                    this.sendMessage(message);
-                    //System.out.println(message);
+                        while (System.currentTimeMillis() < (tempoinicial + 1000)) {
+                            this.sendSocket.receive(receivePacket);
+                            String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                            ackinfo.add(received);
+                            if(received.equals(this.id + "|" + "siteinfo") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                break;
+                            }
+                        }
 
-                    //colocar os novos links na queue para continuar a ir buscar informação
+                        if (ackinfo.contains(this.id + "|" + "siteinfo")) {
+                            break;
+                        }
+                        this.sendMessage(i);
+                    }
 
-
+                    System.out.println("[DOWNLOADER " + this.id + "] ALL INFO SENDED");
+                    //colocar os novos links na queue para continuar a ir buscar informaçã
                     for (String l : links) {
                         server.offerLink(l);
                     }
@@ -247,6 +312,8 @@ public class Downloader extends Thread implements Remote {
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
     }
@@ -255,9 +322,9 @@ public class Downloader extends Thread implements Remote {
         try {
             this.conSem.acquire();
             byte[] buffer = send.getBytes();
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_SEND_PORT);
 
-            this.receiveSocket.send(packet);
+            this.sendSocket.send(packet);
 
             this.conSem.release();
 

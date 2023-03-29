@@ -49,6 +49,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             // Multicast to receive data from downloaders
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
+            int sendPort = Integer.parseInt(multicastServerProp.getProperty("MC_SEND_PORT"));
 
 
             IndexBarrel mainBarrel = new IndexBarrel();
@@ -87,7 +88,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
                 File usersfile = new File("src\\users-" + i);
 
                 Database files = new Database(i);
-                Barrel barrel_t = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, linkfile, wordfile, infofile, usersfile, mainBarrel.b, files);
+                Barrel barrel_t = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, linkfile, wordfile, infofile, usersfile, mainBarrel.b, files, sendPort);
                 mainBarrel.barrels_threads.add(barrel_t);
                 barrel_t.start();
             }

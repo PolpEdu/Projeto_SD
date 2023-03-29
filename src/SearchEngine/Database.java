@@ -150,7 +150,7 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("links: " + links);
+
         return links;
     }
 
@@ -179,7 +179,7 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("words: " + linksInfo);
+
         return linksInfo;
     }
 
@@ -208,7 +208,7 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: "+ e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("words: " + words);
+
         return words;
     }
 
