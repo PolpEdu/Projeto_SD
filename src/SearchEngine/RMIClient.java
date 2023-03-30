@@ -350,7 +350,6 @@ class RMIClient extends UnicastRemoteObject {
 
         HashMap<String, ArrayList<String>> res = this.sv.searchLinks(words);
 
-
         // check for empty results
         if (res.size() == 0) {
             System.out.println("[CLIENT] No Links found");
@@ -363,18 +362,26 @@ class RMIClient extends UnicastRemoteObject {
     private void printLinks(HashMap<String, ArrayList<String>> links, BufferedReader br) {
         // links will be like this: <link, <title, description>>
 
-        System.out.println(links);
+        // todo: function(link) -> hashset<link> de todos os links associados a esse link -> linkpointers
+
         int i = 0;
         System.out.println("\n### RESULTS ###");
         for (String link : links.keySet()) {
-            String suc = links.get(link).get(0);
-            if (suc.equals("success")) {
-                suc = "Success!";
+            if (link.length() == 0) {
+                System.out.println("[CLIENT] Empty link");
+                continue;
             }
+
             i++;
-            System.out.println("  " + i + " - " + suc);
-            System.out.println("    " + link);
-            System.out.println("    " + links.get(link).get(1));
+            try {
+                System.out.println("  " + i + " - " + link);
+                System.out.println("    " + links.get(link).get(0));
+                System.out.println("    " + links.get(link).get(1));
+            } catch (IndexOutOfBoundsException e) {
+                System.out.println("[EXCEPTION] Error while printing links: " + e.getMessage());
+                continue;
+            }
+
             System.out.println();
             if (i == 10) {
                 System.out.print("Do you want to see more? (y/n): ");

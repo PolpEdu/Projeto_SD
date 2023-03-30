@@ -234,7 +234,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
     // RETURNS an hashmap with every link found as key and the title as the first value of the object array and the description as the second value
     public HashMap<String, ArrayList<String>> searchLinks(String[] words) throws RemoteException {
-        HashSet<String> totalUrlfound = new HashSet<String>();
+        ArrayList<HashSet<String>> totalUrlfound = new ArrayList<HashSet<String>>();
         HashMap<String, ArrayList<String>> res = new HashMap<String, ArrayList<String>>();
 
         System.out.println("[SERVER] Searching for links. From words: " + Arrays.toString(words) + "");
@@ -253,22 +253,40 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             }
             // check the first element of the hashset, if the first element "failure" is found, then the search failed
             if (links.iterator().next().equals("No barrels available")) {
-                System.out.println("[SERVER] Search failed for word: " + w);
+                System.out.println("[SERVER] Search failed for word: " + w + ". No barrels available.");
                 continue;
             }
 
-            for (String l : links) {
-                if (!totalUrlfound.contains(l)) {
-                    totalUrlfound.add(l);
+            totalUrlfound.add(links);
+        }
+
+        // we have an array of hashsets, we need to merge them into one Array<Stirng>.
+        // only add the links that are in all the hashsets
+        ArrayList<String> finalUrlfound = new ArrayList<String>();
+        for (HashSet<String> h : totalUrlfound) {
+            for (String l : h) {
+                if (finalUrlfound.contains(l)) {
+                    continue;
+                }
+                boolean found = true;
+                for (HashSet<String> h2 : totalUrlfound) {
+                    if (!h2.contains(l)) {
+                        found = false;
+                        break;
+                    }
+                }
+                if (found) {
+                    finalUrlfound.add(l);
                 }
             }
         }
 
-        System.out.println("[SERVER] Found " + totalUrlfound.size() + " links.");
+
+        System.out.println("[SERVER] Found " + finalUrlfound);
 
 
         // add the links to the hashmap as the key and the title as the first value of the object array and the description as the second value
-        for (String l : totalUrlfound) {
+        for (String l : finalUrlfound) {
             ArrayList<String> title = this.b.searchTitle(l);
             ArrayList<String> description = this.b.searchDescription(l);
 
@@ -277,10 +295,14 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 //q: is it possible return hashmap with link as key and empty arraylist as value?
                 res.put(l, new ArrayList<String>());
                 continue;
+            } else if (!Objects.equals(title.get(0), "success") || !Objects.equals(description.get(0), "success")) {
+                System.out.println("[SERVER] Error finding Title or Description for link: " + l);
+                res.put(l, new ArrayList<String>());
+                continue;
             }
 
             // select the first possible title and description for the link from the title and description arraylists
-            res.put(l, new ArrayList<String>(Arrays.asList(title.get(0), description.get(0))));
+            res.put(l, new ArrayList<String>(Arrays.asList(title.get(1), description.get(1))));
         }
 
         return res;

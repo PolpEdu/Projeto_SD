@@ -216,9 +216,12 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
         }
 
-        ArrayList<String> links = barrel.getLinkInfo(word);
 
-        if (links == null) {
+        String title = barrel.getLinkTitle(word);
+
+        System.out.println("[BARREL-INTERFACE] Links title: " + title);
+
+        if (title == null) {
             // "status:failure | message:Link does not exist"
             return new ArrayList<>(Arrays.asList("failure", "Link does not exist"));
         }
@@ -227,7 +230,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         // and the rest with links
         ArrayList<String> result = new ArrayList<>();
         result.add("success");
-        result.addAll(links);
+        result.add(title);
         return result;
     }
 
@@ -239,12 +242,17 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
         }
 
-        ArrayList<String> linksInfo = barrel.getLinkInfo(word);
+        String linksInfo = barrel.getLinkDescription(word);
+        System.out.println("[BARREL-INTERFACE] Links description: " + linksInfo);
         if (linksInfo == null) {
             // "status:failure | message:Link does not exist"
-            return new ArrayList<>();
+            return new ArrayList<> (Arrays.asList("failure", "Link does not exist"));
         }
-        return linksInfo;
+        // return links linksInfo with ArrayList
+        ArrayList<String> result = new ArrayList<>();
+        result.add("success");
+        result.add(linksInfo);
+        return result;
     }
 
     @Override
