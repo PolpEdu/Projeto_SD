@@ -92,7 +92,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
                 File infofile = new File("src\\info-" + i);
 
                 Database files = new Database(i);
-                Barrel barrel_t = new Barrel(i ,receivePort, multicastAddress,  linkfile, wordfile, infofile, mainBarrel.b, files, sendPort, ackSem);
+                Barrel barrel_t = new Barrel(i ,receivePort, multicastAddress,  linkfile, wordfile, infofile,files, ackSem);
                 mainBarrel.barrels_threads.add(barrel_t);
                 barrel_t.start();
             }
