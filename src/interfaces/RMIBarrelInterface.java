@@ -14,4 +14,5 @@ public interface RMIBarrelInterface extends Remote{
     HashSet<String> searchLinks(String word) throws RemoteException;
     ArrayList<String> searchTitle(String word) throws RemoteException;
     ArrayList<String> searchDescription(String word) throws RemoteException;
+    HashSet<String> linkpointers(String link) throws RemoteException;
 }

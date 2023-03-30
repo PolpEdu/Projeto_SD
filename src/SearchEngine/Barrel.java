@@ -181,6 +181,9 @@ class Barrel extends Thread implements Serializable {
         return this.link_info.get(link);
     }
 
+    public HashSet<String> getLinkPointers(String link){
+        return this.link_links.get(link);
+    }
 
     public void run() {
         System.out.println("[BARREL " + this.id + "] Barrel running...");
