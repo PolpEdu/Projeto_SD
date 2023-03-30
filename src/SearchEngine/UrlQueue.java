@@ -18,12 +18,19 @@ public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterfac
     private final File urlqueuefile;
     private final File urlqueuefileb;
 
+    private final Database db;
+
     public UrlQueue() throws RemoteException {
         super();
-        this.urlQueue = new LinkedBlockingQueue<>();
-        this.urlqueuefile = new File("urlqueue");
-        this.urlqueuefileb = new File("urlqueueb");
-        this.urlQueue.offer("https://www.uc.pt/");
+        this.db = new Database(1);
+
+        this.urlqueuefile = new File("src\\urlqueue");
+        this.urlqueuefileb = new File("src\\urlqueueb");
+        this.urlQueue = db.getUrlQueue(this.urlqueuefile, this.urlqueuefileb);
+        if(this.urlQueue.isEmpty()){
+            this.urlQueue.offer("https://www.uc.pt/");
+        }
+
     }
 
     public static void main(String[] args) {
@@ -77,6 +84,7 @@ public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterfac
     @Override
     public void offerLink(String link) throws RemoteException {
         this.urlQueue.offer(link);
+        this.db.updateUrlQueue(this.urlQueue, this.urlqueuefile, this.urlqueuefileb);
     }
 
     @Override
