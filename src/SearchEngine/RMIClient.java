@@ -219,10 +219,6 @@ class RMIClient extends UnicastRemoteObject {
                 // Give admin perms
                 giveAdminPerms(br);
                 break;
-            case "6":
-                // history
-                history();
-                break;
             case "7":
                 // Logout
                 logout();
@@ -240,34 +236,6 @@ class RMIClient extends UnicastRemoteObject {
     }
 
     private void giveAdminPerms(BufferedReader br) {
-    }
-
-    private void history() throws RemoteException {
-        ArrayList<String> res = this.sv.history(this.client.username);
-
-        if (res == null) {
-            System.out.println("[CLIENT] No history found");
-            return;
-        }
-
-        String status = res.get(0);
-        if (status.equals("failure")) {
-            String msg = res.get(1);
-            System.out.println("[CLIENT] Couldn't fetch history: " + msg);
-            return;
-        }
-
-        if (res.size() == 1) {
-            System.out.println("[CLIENT] No history found");
-            return;
-        }
-
-        System.out.println("[CLIENT] History:");
-
-        for (int i = 1; i < res.size(); i++) {
-            System.out.println(res.get(i));
-        }
-
     }
 
     private void userList() {
@@ -400,8 +368,12 @@ class RMIClient extends UnicastRemoteObject {
         int i = 0;
         System.out.println("\n### RESULTS ###");
         for (String link : links.keySet()) {
+            String suc = links.get(link).get(0);
+            if (suc.equals("success")) {
+                suc = "Success!";
+            }
             i++;
-            System.out.println("  " + i + " - " + links.get(link).get(0));
+            System.out.println("  " + i + " - " + suc);
             System.out.println("    " + link);
             System.out.println("    " + links.get(link).get(1));
             System.out.println();

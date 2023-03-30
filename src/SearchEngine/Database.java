@@ -168,7 +168,20 @@ public class Database implements Serializable {
             this.s_linksFile.release();
         } catch (StreamCorruptedException | EOFException e) {
             System.out.println("[EXCEPTION] EOF Error, corrupted file: " + e.getMessage());
-            e.printStackTrace();
+            try {
+                FileInputStream fis = new FileInputStream(backup);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                links = (HashMap<String, HashSet<String>>) ois.readObject();
+
+
+            } catch (FileNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             System.out.println("[EXCEPTION] While getting links: " + e.getMessage());
 
@@ -213,12 +226,26 @@ public class Database implements Serializable {
             this.s_linksInfoFile.release();
         } catch (StreamCorruptedException | EOFException e) {
             System.out.println("[EXCEPTION] EOF Error, corrupted file: " + e.getMessage());
-            e.printStackTrace();
+            try {
+                FileInputStream fis = new FileInputStream(backup);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
+                ois.close();
+                return linksInfo;
+
+            } catch (FileNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             System.out.println("[EXCEPTION] While getting info: " + e.getMessage());
 
             try {
-                FileInputStream fis = new FileInputStream(infofile);
+                FileInputStream fis = new FileInputStream(backup);
                 ObjectInputStream ois = new ObjectInputStream(fis);
 
                 linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
@@ -261,12 +288,27 @@ public class Database implements Serializable {
             this.s_wordsFile.release();
         } catch (StreamCorruptedException | EOFException e) {
             System.out.println("[EXCEPTION] EOF Error, corrupted file: " + e.getMessage());
-            e.printStackTrace();
+            try {
+                FileInputStream fis = new FileInputStream(backup);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                words = (HashMap<String, HashSet<String>>) ois.readObject();
+
+                ois.close();
+
+                return words;
+            } catch (FileNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
 
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             System.out.println("[EXCEPTION] While getting words: " + e.getMessage());
             try {
-                FileInputStream fis = new FileInputStream(wordsfile);
+                FileInputStream fis = new FileInputStream(backup);
                 ObjectInputStream ois = new ObjectInputStream(fis);
 
                 words = (HashMap<String, HashSet<String>>) ois.readObject();

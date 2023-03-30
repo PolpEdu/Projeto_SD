@@ -323,8 +323,5 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return new ArrayList<String>(Arrays.asList("true", admin, message));
     }
 
-    public ArrayList<String> history(String username) throws RemoteException {
-        return this.b.history(username);
-    }
 
 }

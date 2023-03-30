@@ -243,28 +243,6 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return linksInfo;
     }
 
-    @Override
-    public ArrayList<String> history(String username) throws RemoteException {
-        Barrel barrel = this.selectBarrelToExcute();
-        if (barrel == null) {
-            // "status:failure | message:No barrels available"
-            return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
-        }
-
-        HashMap<String, User> users = barrel.files.getUsers();
-        User user = users.get(username);
-
-        if (user == null) {
-            // "status:failure | message:User does not exist"
-            return new ArrayList<>(Arrays.asList("failure", "User does not exist"));
-        }
-
-        ArrayList<String> history = new ArrayList<>();
-        history.add("success");
-        history.addAll(user.searchHistory);
-        return history;
-    }
-
     private Barrel selectBarrelToExcute() {
         // select a random barrel to fulfill the task
         if (this.barrels_threads.size() == 0) {
