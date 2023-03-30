@@ -20,15 +20,25 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     static final int await_time = 2000;
 
     RMIBarrelInterface b;
+
+    public int PORT;
+    public String HOST;
+    public String RMI_REGISTER;
+
     private ArrayList<Barrel> barrels_threads;
 
     private int id;
 
-    public IndexBarrel(int id) throws RemoteException {
+    public IndexBarrel(int id, String HOST, int PORT, String RMI_REGISTER) throws RemoteException {
         super();
         // create a list of barrel threads
         this.barrels_threads = new ArrayList<>();
         this.id = id;
+
+        this.HOST = HOST;
+        this.PORT = PORT;
+        this.RMI_REGISTER = RMI_REGISTER;
+
     }
 
 
@@ -51,10 +61,9 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             // Multicast to receive data from downloaders
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
-            int sendPort = Integer.parseInt(multicastServerProp.getProperty("MC_SEND_PORT"));
 
             int id = 1;
-            IndexBarrel mainBarrel = new IndexBarrel(id);
+            IndexBarrel mainBarrel = new IndexBarrel(id, rmiHost, rmiPort, rmiRegister);
             try {
                 // create the registry
                 Registry r = LocateRegistry.createRegistry(rmiPort);
@@ -90,7 +99,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
                 File infofile = new File("src\\info-" + i);
 
                 Database files = new Database(i);
-                Barrel barrel_t = new Barrel(i ,receivePort, multicastAddress,  linkfile, wordfile, infofile,files, ackSem);
+                Barrel barrel_t = new Barrel(i ,receivePort, multicastAddress,  linkfile, wordfile, infofile, files, ackSem);
                 mainBarrel.barrels_threads.add(barrel_t);
                 barrel_t.start();
             }
@@ -292,6 +301,37 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
         User user = users.get(username);
         return user.admin;
+    }
+
+    @Override
+    public ArrayList<ArrayList<String>> getBarrelsAlive() throws RemoteException {
+        // return the current ip port and status of the barrels
+        ArrayList<ArrayList<String>> result = new ArrayList<>();
+        /*for (Barrel barrel : this.barrels_threads) {
+            ArrayList<String> barrelInfo = new ArrayList<>();
+
+            result.add(barrelInfo);
+        }*/
+        return result;
+    }
+
+    @Override
+    public ArrayList<String> saveWordSearches(String phrase) throws RemoteException {
+        Barrel barrel = this.selectBarrelToExcute();
+        if (barrel == null) {
+            // "status:failure | message:No barrels available"
+            return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
+        }
+
+        HashMap<String, Integer> topWords = barrel.files.getTopWords();
+        if (topWords.containsKey(phrase)) {
+            topWords.put(phrase, topWords.get(phrase) + 1);
+        } else {
+            topWords.put(phrase, 1);
+        }
+
+        barrel.files.updateTopWords(topWords);
+        return new ArrayList<>(Arrays.asList("success", "Word saved"));
     }
 
     private Barrel selectBarrelToExcute() {

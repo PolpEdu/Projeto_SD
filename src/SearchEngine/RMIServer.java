@@ -27,6 +27,9 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     // HashMap of clients connected to server
     HashMap<String, Client> clients;
 
+    // save the number of searches of each word: <word, number of searches>
+    HashMap<String, Integer> wordSearches;
+
     // this is the queue that will store the messages that are waiting for an ack
     LinkedList<Message> sendQueue;
 
@@ -197,7 +200,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     }
 
 
-    public void updateClient(String username, Client client) throws RemoteException {
+    private void updateClient(String username, Client client) throws RemoteException {
         if (client == null) {
             this.clients.remove(username);
         } else {
@@ -209,7 +212,14 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
     }
 
-    // function to check if the user is logged in
+    /**
+     * Function to login a user.
+     * The function searches for the logged in user in the hashmap and if it is not found, it will add it to the hashmap
+     *
+     * @param username the username of the user
+     * @return returns true if the user is logged in and false if the user is already logged in
+     * @throws RemoteException if there is a problem with the connection to the barrel
+     */
     @Override
     public boolean isLoggedIn(String username) throws RemoteException {
         return this.clients.containsKey(username);
@@ -224,8 +234,29 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return false;
     }
 
-    // RETURNS an hashmap with every link found as key and the title as the first value of the object array and the description as the second value
-    public HashMap<String, ArrayList<String>> searchLinks(String[] words) throws RemoteException {
+
+    /**
+     * Function to search for links in the barrels. It will return an hashmap with every link found as key and
+     * the title as the first value of the object array and the description as the second value as so:
+     *
+     * @param phrase the phrase to search for. The words will be separated by space
+     * @return returns an hashmap like so <link, <title, description>>. If no links are found, it will return an empty hashmap
+     * @throws RemoteException if there is a problem with the connection to the barrel
+     */
+    public HashMap<String, ArrayList<String>> searchLinks(String phrase) throws RemoteException {
+        // separate words by space
+        String[] words = phrase.split(" ");
+        String[] pois = {"de", "sobre", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem", "hei", "há", "havemos", "hão", "houve", "houvemos", "houveram", "houvera", "houvéramos", "haja", "hajamos", "hajam", "houvesse", "houvéssemos", "houvessem", "houver", "houvermos", "houverem", "houverei", "houverá", "houveremos", "houverão", "houveria", "houveríamos", "houveriam", "sou", "somos", "são", "era", "éramos", "eram", "fui", "foi", "fomos", "foram", "fora", "fôramos", "seja", "sejamos", "sejam", "fosse", "fôssemos", "fossem", "for", "formos", "forem", "serei", "será", "seremos", "serão", "seria", "seríamos", "seriam", "tenho", "tem", "temos", "tém", "tinha", "tínhamos", "tinham", "tive", "teve", "tivemos", "tiveram", "tivera", "tivéramos", "tenha", "tenhamos", "tenham", "tivesse", "tivéssemos", "tivessem", "tiver", "tivermos", "tiverem", "terei", "terá", "teremos", "terão", "teria", "teríamos", "teriam"};
+        ArrayList<String> stopWords = new ArrayList<>(Arrays.asList(pois));
+
+        // remove stop words
+        for (int i = 0; i < words.length; i++) {
+            if (stopWords.contains(words[i])) {
+                words[i] = "";
+            }
+        }
+
+
         ArrayList<HashSet<String>> totalUrlfound = new ArrayList<HashSet<String>>();
         HashMap<String, ArrayList<String>> res = new HashMap<String, ArrayList<String>>();
 
@@ -273,9 +304,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             }
         }
 
-
         System.out.println("[SERVER] Found " + finalUrlfound);
-
 
         // add the links to the hashmap as the key and the title as the first value of the object array and the description as the second value
         for (String l : finalUrlfound) {
@@ -286,9 +315,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 System.out.println("[SERVER] Error finding Title or Description for link: " + l);
                 res.put(l, new ArrayList<String>());
                 continue;
-            } else
-
-            if (title.size() == 0 || description.size() == 0) {
+            } else if (title.size() == 0 || description.size() == 0) {
                 System.out.println("[SERVER] No Title or Description found for link: " + l);
                 //q: is it possible return hashmap with link as key and empty arraylist as value?
                 res.put(l, new ArrayList<String>());
@@ -301,6 +328,12 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
             // select the first possible title and description for the link from the title and description arraylists
             res.put(l, new ArrayList<String>(Arrays.asList(title.get(1), description.get(1))));
+        }
+
+        // call the index barrel to update the word searches
+        ArrayList<String> res1 = this.b.saveWordSearches(phrase);
+        if (res1.get(0).equals("failure")) {
+            System.out.println("[SERVER] Error updating word searches: "+ res1.get(1));
         }
 
         return res;
@@ -360,7 +393,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return new ArrayList<String>(Arrays.asList("true", admin, message));
     }
 
-
+    @Override
     public ArrayList<String> linkPointers(String link) throws RemoteException {
         HashSet<String> res = this.b.linkpointers(link);
         if (res == null) {
@@ -370,4 +403,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
         return new ArrayList<String>(res);
     }
+
+
 }

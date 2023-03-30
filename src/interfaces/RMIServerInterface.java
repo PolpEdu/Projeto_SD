@@ -11,14 +11,17 @@ public interface RMIServerInterface extends Remote {
     boolean isLoggedIn(String username) throws RemoteException;
     ArrayList<String> checkLogin(String username, String password) throws RemoteException;
     ArrayList<String> checkRegister(String username, String password, String firstName, String lastName) throws RemoteException;
+    boolean logout(String username) throws RemoteException;
+    boolean isAdmin(String username) throws RemoteException;
 
-    HashMap<String, ArrayList<String>> searchLinks(String[] words) throws RemoteException;
+
+    HashMap<String, ArrayList<String>> searchLinks(String phrase) throws RemoteException;
     ArrayList<String> linkPointers(String link) throws RemoteException;
 
-    boolean logout(String username) throws RemoteException;
 
     ArrayList<String> getLinksByRelevance(String link) throws RemoteException;
 
-    boolean isAdmin(String username) throws RemoteException;
+
+
 
 }
