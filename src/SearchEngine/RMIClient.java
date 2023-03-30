@@ -8,12 +8,12 @@ import java.net.ConnectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.server.UnicastRemoteObject;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class RMIClient extends UnicastRemoteObject {
+class RMIClient {
     static final int keepAliveTime = 5000;
     private final String rmiHost;
     private final int rmiPort;
