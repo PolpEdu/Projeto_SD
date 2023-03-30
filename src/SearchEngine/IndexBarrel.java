@@ -201,7 +201,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             return new HashSet<>(Arrays.asList("No barrels available"));
         }
 
-        return barrel.files.getLinksAssciatedWord(word, barrel.linkfile);
+        return barrel.getLinksAssciatedWord(word);
     }
 
     @Override
@@ -212,7 +212,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
         }
 
-        ArrayList<String> links = barrel.files.getLinkInfo(word ,barrel.linkfile);
+        ArrayList<String> links = barrel.getLinkInfo(word);
 
         if (links == null) {
             // "status:failure | message:Link does not exist"
@@ -229,7 +229,18 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
     @Override
     public ArrayList<String> searchDescription(String word) throws RemoteException {
-        return null;
+        Barrel barrel = this.selectBarrelToExcute();
+        if (barrel == null) {
+            // "status:failure | message:No barrels available"
+            return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
+        }
+
+        ArrayList<String> linksInfo = barrel.getLinkInfo(word);
+        if (linksInfo == null) {
+            // "status:failure | message:Link does not exist"
+            return new ArrayList<>();
+        }
+        return linksInfo;
     }
 
     @Override

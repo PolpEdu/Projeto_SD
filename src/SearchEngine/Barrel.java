@@ -173,6 +173,15 @@ class Barrel extends Thread implements Serializable {
         }
     }
 
+    public HashSet<String> getLinksAssciatedWord(String word) {
+        return this.word_Links.get(word);
+    }
+
+    public ArrayList<String> getLinkInfo(String link) {
+        return this.link_info.get(link);
+    }
+
+
     public void run() {
         System.out.println("[BARREL " + this.id + "] Barrel running...");
 
