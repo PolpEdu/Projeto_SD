@@ -21,6 +21,15 @@ class RMIClient extends UnicastRemoteObject {
     private RMIServerInterface sv;
     private Client client;
 
+    /**
+     * Constructor for RMIClient class that creates a new instance of a client
+     * @param svInterface the server interface
+     * @param client the client object
+     * @param rmiHost the host of the server
+     * @param rmiPort the port of the server
+     * @param rmiRegistryName the name of the registry
+     * @throws RemoteException if the client cannot connect to the server interface
+     */
     public RMIClient(RMIServerInterface svInterface, Client client, String rmiHost, int rmiPort, String rmiRegistryName) throws RemoteException {
         super();
         this.sv = svInterface;
@@ -30,6 +39,12 @@ class RMIClient extends UnicastRemoteObject {
         this.rmiRegistryName = rmiRegistryName;
     }
 
+    /**
+     * Main method for the client, creates a new instance of the client
+     * and connects to the server interface. It then calls the menu method
+     * for the user to interact with the server
+     * @param args the arguments passed to the main method. We don't use them since we already have the properties file
+     */
     public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
         String rmiHost;
@@ -75,6 +90,11 @@ class RMIClient extends UnicastRemoteObject {
         }
     }
 
+
+    /**
+     * Method that handles the logic for all the types of menu prompts.
+     * @param type the type of menu prompt: 0 - anonymous, 1 - admin, 2 - user
+     */
     private void printMenus(int type) {
         switch (type) {
             case 0:
@@ -83,14 +103,11 @@ class RMIClient extends UnicastRemoteObject {
                 return;
             case 1:
                 // admin - main menu
-                System.out.print("\n### Admin User Panel ###\n1.Search Links\n3.Index new URL\n4.User List\n  6.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### Admin Panel ###\n1.Search Links\n2.Barrels List\n3.Downloaders List\n4.Top 10 searches\n  5.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 2:
                 // user - main menu
                 System.out.print("\n### User Panel ###\n1.Search Links\n  2.Logout\n  e.Exit\n --> Choice: ");
-                return;
-            case 3:
-                System.out.print("\n### Admin Panel ###\n1.Top 10 pages\n2.Top 10 searches\n3.Multicast Servers\nb.Back\n  e.Exit\n --> Choice: ");
                 return;
             default:
                 System.out.println("[EXCEPTION] Invalid menu type");
@@ -99,6 +116,9 @@ class RMIClient extends UnicastRemoteObject {
         }
     }
 
+    /**
+     * Method that handles the logic for the anonymous user menu.
+     */
     private void menu() {
         InputStream in = System.in;
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -150,6 +170,78 @@ class RMIClient extends UnicastRemoteObject {
         }
     }
 
+    /**
+     * Method that handles the logic for the anonymous user menu.
+     * @param br the buffered reader object
+     * @return true if there wasn't an error, false otherwise
+     * @throws IOException if there was an error reading from the buffer
+     */
+    private boolean adminLoggedLogic(BufferedReader br) throws IOException {
+        String choice = "";
+
+        try {
+            choice = br.readLine();
+        } catch (IOException ei) {
+            System.out.println("EXCEPTION: IOException");
+            return false;
+        }
+
+        // System.out.print("\n### Admin Panel ###\n1.Search Links\n2.Barrels List\n3.Downloaders List\n4.Top 10 searches\n  5.Logout\n  e.Exit\n --> Choice: ");
+
+        switch (choice.toLowerCase()) {
+            case "1":
+                // Search Link
+                searchLinks(br);
+                break;
+            case "2":
+                // Index new URL
+                barrelsUp();
+                break;
+            case "3":
+                // Downloaders List
+                downloadersUp();
+                break;
+            case "4":
+                // User List
+                topSearches();
+                break;
+            case "5":
+                // Logout
+                logout();
+                break;
+            case "e":
+                // Exit
+                System.out.println("[CLIENT] Exiting...");
+                System.exit(0);
+                break;
+            default:
+                System.out.println("[CLIENT] Invalid choice");
+                break;
+        }
+        return true;
+    }
+
+
+    private void topSearches() {
+
+    }
+
+    private void downloadersUp() {
+
+    }
+
+    private void barrelsUp() {
+        // print the host and the port of all the barrels
+
+
+    }
+
+    /**
+     * Method that handles the logic for the loggedIn user menu.
+     * @param br the buffered reader
+     * @return true if no errors occurred, false otherwise
+     * @throws IOException if an error occurs while reading from the buffer
+     */
     private boolean loggedLogic(BufferedReader br) throws IOException {
         String choice = "";
 
@@ -179,60 +271,6 @@ class RMIClient extends UnicastRemoteObject {
                 break;
         }
         return true;
-    }
-
-    private boolean adminLoggedLogic(BufferedReader br) throws IOException {
-        String choice = "";
-
-        try {
-            choice = br.readLine();
-        } catch (IOException ei) {
-            System.out.println("EXCEPTION: IOException");
-            return false;
-        }
-
-        switch (choice.toLowerCase()) {
-            case "1":
-                // Search Link
-                searchLinks(br);
-                break;
-            case "3":
-                // Index new URL
-                indexNewURL(br);
-                break;
-            case "4":
-                // User List
-                userList();
-                break;
-            case "5":
-                // Give admin perms
-                giveAdminPerms(br);
-                break;
-            case "6":
-                // Logout
-                logout();
-                break;
-            case "e":
-                // Exit
-                System.out.println("[CLIENT] Exiting...");
-                System.exit(0);
-                break;
-            default:
-                System.out.println("[CLIENT] Invalid choice");
-                break;
-        }
-        return true;
-    }
-
-    private void giveAdminPerms(BufferedReader br) {
-    }
-
-    private void userList() {
-
-    }
-
-    private void indexNewURL(BufferedReader br) {
-
     }
 
     private Boolean anonLogic(BufferedReader br) throws IOException {
@@ -272,11 +310,9 @@ class RMIClient extends UnicastRemoteObject {
 
     private void searchLinks(BufferedReader br) throws RemoteException {
         String phrase = ""; // search phrase
-        Pattern pattern = Pattern.compile("^[a-zA-Z0-9 ]*$");
-        String[] pois = {"de", "sobre", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem", "hei", "há", "havemos", "hão", "houve", "houvemos", "houveram", "houvera", "houvéramos", "haja", "hajamos", "hajam", "houvesse", "houvéssemos", "houvessem", "houver", "houvermos", "houverem", "houverei", "houverá", "houveremos", "houverão", "houveria", "houveríamos", "houveriam", "sou", "somos", "são", "era", "éramos", "eram", "fui", "foi", "fomos", "foram", "fora", "fôramos", "seja", "sejamos", "sejam", "fosse", "fôssemos", "fossem", "for", "formos", "forem", "serei", "será", "seremos", "serão", "seria", "seríamos", "seriam", "tenho", "tem", "temos", "tém", "tinha", "tínhamos", "tinham", "tive", "teve", "tivemos", "tiveram", "tivera", "tivéramos", "tenha", "tenhamos", "tenham", "tivesse", "tivéssemos", "tivessem", "tiver", "tivermos", "tiverem", "terei", "terá", "teremos", "terão", "teria", "teríamos", "teriam"};
-        ArrayList<String> stopWords = new ArrayList<>(Arrays.asList(pois));
-
         System.out.print("\nSearch: ");
+
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9 ]*$");
 
         while (true) {
             try {
@@ -297,17 +333,9 @@ class RMIClient extends UnicastRemoteObject {
             }
         }
 
-        // separate words by space
-        String[] words = phrase.split(" ");
 
-        // remove stop words
-        for (int i = 0; i < words.length; i++) {
-            if (stopWords.contains(words[i])) {
-                words[i] = "";
-            }
-        }
 
-        HashMap<String, ArrayList<String>> res = this.sv.searchLinks(words);
+        HashMap<String, ArrayList<String>> res = this.sv.searchLinks(phrase);
 
         // check for empty results
         if (res.size() == 0) {

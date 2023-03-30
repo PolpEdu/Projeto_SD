@@ -23,6 +23,7 @@ class Barrel extends Thread implements Serializable {
     public final File wordfileb;
     public final File infofileb;
     private final int id; // id do barrel
+
     // multicast from downloaders
     private final String MULTICAST_ADDRESS;
     private final int MULTICAST_RECEIVE_PORT;
@@ -30,13 +31,15 @@ class Barrel extends Thread implements Serializable {
     private final HashMap<String, HashSet<String>> word_Links;
     private final HashMap<String, HashSet<String>> link_links;
     private final HashMap<String, ArrayList<String>> link_info;
+    private final HashMap<String, Integer> top_searches;
+
     private final Semaphore ackSem;
     int messageSize = 8 * 1024;
     Database files;
     private InetAddress group;
     private MulticastSocket receiveSocket;
 
-    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, File linkfile, File wordfile, File infofile,  Database files,  Semaphore ackSem) {
+    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, File linkfile, File wordfile, File infofile, Database files,  Semaphore ackSem) {
         this.id = id;
         this.receiveSocket = null;
         this.group = null;
@@ -55,10 +58,10 @@ class Barrel extends Thread implements Serializable {
         this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
 
 
-
         this.word_Links = files.getWords(wordfile, this.wordfileb);
         this.link_links = files.getLinks(linkfile, this.linkfileb);
         this.link_info = files.getLinksInfo(infofile, this.infofileb);
+        this.top_searches = files.getTopWords();
     }
 
     public void loop() throws IOException {

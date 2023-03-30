@@ -9,41 +9,20 @@ import java.util.HashSet;
 import java.util.concurrent.Semaphore;
 
 public class Database implements Serializable {
-    private final int BUFFER_SIZE = 30; // buffer size
     Semaphore s_linksFile = new Semaphore(1);
     Semaphore s_linksInfoFile = new Semaphore(1);
     Semaphore s_wordsFile = new Semaphore(1);
     Semaphore s_usersFile = new Semaphore(1);
+    Semaphore s_searchesFiles = new Semaphore(1);
     private File usersFile;
+    private File searchesFile;
     private int svID;
 
 
     public Database(int svID) {
         this.usersFile = new File("src\\users");
+        this.searchesFile = new File("src\\searches");
         this.svID = svID;
-    }
-
-    public HashMap<String, User> getUsers() {
-        HashMap<String, User> users = new HashMap<>();
-        try {
-            this.s_usersFile.acquire();
-            if (!this.usersFile.exists()) {
-                this.usersFile.createNewFile();
-                this.s_usersFile.release();
-                updateUsers(new HashMap<String, User>());
-                this.s_usersFile.acquire();
-            } else {
-                FileInputStream fis = new FileInputStream(this.usersFile);
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                users = (HashMap<String, User>) ois.readObject();
-                ois.close();
-            }
-            this.s_usersFile.release();
-        } catch (IOException | InterruptedException | ClassNotFoundException e) {
-            System.out.println("[EXCEPTION] While getting users: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return users;
     }
 
     public void updateUsers(HashMap<String, User> users) {
@@ -144,6 +123,70 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While updating links: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public void updateTopWords(HashMap<String, Integer> topWords) {
+        try {
+            this.s_searchesFiles.acquire();
+            if (!searchesFile.exists()) {
+                searchesFile.createNewFile();
+            }
+            FileOutputStream fos = new FileOutputStream(searchesFile);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(topWords);
+            oos.close();
+            fos.close();
+
+            this.s_searchesFiles.release();
+        } catch (IOException | InterruptedException e) {
+            System.out.println("[EXCEPTION] While updating top words: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public HashMap<String, User> getUsers() {
+        HashMap<String, User> users = new HashMap<>();
+        try {
+            this.s_usersFile.acquire();
+            if (!this.usersFile.exists()) {
+                this.usersFile.createNewFile();
+                this.s_usersFile.release();
+                updateUsers(new HashMap<String, User>());
+                this.s_usersFile.acquire();
+            } else {
+                FileInputStream fis = new FileInputStream(this.usersFile);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                users = (HashMap<String, User>) ois.readObject();
+                ois.close();
+            }
+            this.s_usersFile.release();
+        } catch (IOException | InterruptedException | ClassNotFoundException e) {
+            System.out.println("[EXCEPTION] While getting users: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    public HashMap<String, Integer> getTopWords() {
+        HashMap<String, Integer> words = new HashMap<>();
+        try {
+            this.s_searchesFiles.acquire();
+            if (!this.searchesFile.exists()) {
+                this.searchesFile.createNewFile();
+                this.s_searchesFiles.release();
+                updateTopWords(new HashMap<String, Integer>());
+                this.s_searchesFiles.acquire();
+            } else {
+                FileInputStream fis = new FileInputStream(this.searchesFile);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                words = (HashMap<String, Integer>) ois.readObject();
+                ois.close();
+            }
+            this.s_searchesFiles.release();
+        } catch (InterruptedException | IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return words;
     }
 
     // links - links.

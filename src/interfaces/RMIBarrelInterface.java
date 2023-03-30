@@ -18,4 +18,8 @@ public interface RMIBarrelInterface extends Remote{
 
     boolean isAdmin(String username) throws RemoteException;
 
+    ArrayList<ArrayList<String>> getBarrelsAlive() throws RemoteException;
+
+    ArrayList<String> saveWordSearches(String phrase) throws RemoteException;
+
 }
