@@ -232,11 +232,42 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
     }
 
-    public ArrayList<String> searchLink(String link) throws RemoteException {
-        ArrayList<String> res = this.b.searchLink(link);
+    // RETURNS an hashmap with every link found as key and the title as the first value of the object array and the description as the second value
+    public HashMap<String, ArrayList<String>> searchLinks(String[] words) throws RemoteException {
+        HashSet<String> totalUrlfound = new HashSet<String>();
+        HashMap<String, ArrayList<String>> res = new HashMap<String, ArrayList<String>>();
+
+        for (String w : words) {
+            HashSet<String> links = this.b.searchLinks(w);
+
+            if (links.size() == 0) {
+                System.out.println("[SERVER] No Links found for word: " + w);
+                return new HashMap<String, ArrayList<String>>();
+            }
+
+            for (String l : links) {
+                if (!totalUrlfound.contains(l)) {
+                    totalUrlfound.add(l);
+                }
+            }
+        }
 
 
+        // add the links to the hashmap as the key and the title as the first value of the object array and the description as the second value
+        for (String l : totalUrlfound) {
+            ArrayList<String> title = this.b.searchTitle(l);
+            ArrayList<String> description = this.b.searchDescription(l);
 
+            if (title.size() == 0 || description.size() == 0) {
+                System.out.println("[SERVER] No Title or Description found for link: " + l);
+                //q: is it possible return hashmap with link as key and empty arraylist as value?
+                res.put(l, new ArrayList<String>());
+                continue;
+            }
+
+            // select the first possible title and description for the link from the title and description arraylists
+            res.put(l, new ArrayList<String>(Arrays.asList(title.get(0), description.get(0))));
+        }
 
         return res;
     }
@@ -279,4 +310,5 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     public ArrayList<String> history(String username) throws RemoteException {
         return this.b.history(username);
     }
+
 }

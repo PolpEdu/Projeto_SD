@@ -27,6 +27,8 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         this.barrels_threads = new ArrayList<>();
     }
 
+
+
     public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
 
@@ -189,35 +191,42 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     @Override
-    public ArrayList<String> searchLink(String link) throws RemoteException {
+    public HashSet<String> searchLinks(String word) throws RemoteException {
+        Barrel barrel = this.selectBarrelToExcute();
+        if (barrel == null) {
+            // "status:failure | message:No barrels available"
+            // return an Hashset with status and message
+            return new HashSet<>(Arrays.asList("failure", "No barrels available"));
+        }
+
+        return barrel.files.getLinksAssciatedWord(word, barrel.linkfile);
+    }
+
+    @Override
+    public ArrayList<String> searchTitle(String word) throws RemoteException {
         Barrel barrel = this.selectBarrelToExcute();
         if (barrel == null) {
             // "status:failure | message:No barrels available"
             return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
         }
 
-        System.out.println("Link: " + link);
-        System.out.println("Link: " + barrel.linkfile.getName());
+        ArrayList<String> links = barrel.files.getLinkInfo(word ,barrel.linkfile);
 
-        HashMap<String, HashSet<String>> links = barrel.files.getLinks(barrel.linkfile);
-        System.out.println("Link: " + links);
-
-        if (!links.containsKey(link)) {
+        if (links == null) {
             // "status:failure | message:Link does not exist"
             return new ArrayList<>(Arrays.asList("failure", "Link does not exist"));
         }
+
         // return an array list with the first element as the status
-        // the second one as the url title
+        // and the rest with links
+        ArrayList<String> result = new ArrayList<>();
+        result.add("success");
+        result.addAll(links);
+        return result;
+    }
 
-        HashMap<String, HashSet<String>> words = barrel.files.getWords(barrel.wordfile);
-        // print
-        System.out.println("Link: " + words);
-        HashSet<String> wordsSet = links.get(link);
-
-        HashMap<String, ArrayList<String>> linksInfo = barrel.files.getLinksInfo(barrel.infofile);
-        System.out.println("Link: " + linksInfo);
-        ArrayList<String> linkInfo = linksInfo.get(link);
-
+    @Override
+    public ArrayList<String> searchDescription(String word) throws RemoteException {
         return null;
     }
 

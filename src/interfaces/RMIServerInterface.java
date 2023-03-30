@@ -3,6 +3,8 @@ package interfaces;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import Client.*;
 
 public interface RMIServerInterface extends Remote {
@@ -17,8 +19,9 @@ public interface RMIServerInterface extends Remote {
     ArrayList<String> checkLogin(String username, String password) throws RemoteException;
     ArrayList<String> checkRegister(String username, String password, String firstName, String lastName) throws RemoteException;
 
-    ArrayList<String> searchLink(String link) throws RemoteException;
+    HashMap<String, ArrayList<String>> searchLinks(String[] words) throws RemoteException;
     ArrayList<String> searchWord(String word) throws RemoteException;
 
     ArrayList<String> history(String username) throws RemoteException;
+
 }

@@ -74,9 +74,9 @@ public class Database implements Serializable {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(fileLinks);
 
-            System.out.println("Links updated: "+ fileLinks);
             oos.close();
             fos.close();
+
         } catch (IOException e) {
             System.out.println("[EXCEPTION] While updating links: " + e.getMessage());
             e.printStackTrace();
@@ -120,6 +120,7 @@ public class Database implements Serializable {
         }
     }
 
+    // links - links.
     public HashMap<String, HashSet<String>> getLinks(File linksFile) {
         HashMap<String, HashSet<String>> links = new HashMap<>();
         try {
@@ -146,13 +147,11 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: " + e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("[DB] links: ");
-        for (String key : links.keySet()) {
-            System.out.println(key + " -> " + links.get(key));
-        }
+        System.out.println("getLinks: " + links);
         return links;
     }
 
+    // links- phrases.
     public HashMap<String, ArrayList<String>> getLinksInfo(File infofile) {
         HashMap<String, ArrayList<String>> linksInfo = new HashMap<>();
         try {
@@ -178,10 +177,11 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: " + e.getMessage());
             e.printStackTrace();
         }
-        // System.out.println("words: " + linksInfo);
+        System.out.println("getLinksInfo: " + linksInfo);
         return linksInfo;
     }
 
+    // single words -> links.
     public HashMap<String, HashSet<String>> getWords(File wordsfile) {
         HashMap<String, HashSet<String>> words = new HashMap<>();
         try {
@@ -208,10 +208,60 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: " + e.getMessage());
             e.printStackTrace();
         }
-        // System.out.println("words: " + words);
+        System.out.println("getWords: " + words);
         return words;
     }
 
+    public HashSet<String> getLinksAssciatedWord(String word, File wordsfile) {
+        HashSet<String> links = new HashSet<String>();
+        try {
+            this.s_wordsFile.acquire();
+            if (!wordsfile.exists()) {
+                wordsfile.createNewFile();
+                this.s_wordsFile.release();
+                updateWords(new HashMap<String, HashSet<String>>(), wordsfile);
+                this.s_wordsFile.acquire();
+            } else {
+                FileInputStream fis = new FileInputStream(wordsfile);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                HashMap<String, HashSet<String>> words = (HashMap<String, HashSet<String>>) ois.readObject();
+
+                ois.close();
+                links = words.get(word);
+            }
+            this.s_wordsFile.release();
+        } catch (IOException | InterruptedException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return links;
+    }
+
+    public ArrayList<String> getLinkInfo(String link, File infofile) {
+        ArrayList<String> info = new ArrayList<>();
+
+        try {
+            this.s_linksFile.acquire();
+            if (!infofile.exists()) {
+                infofile.createNewFile();
+                this.s_linksFile.release();
+                updateLinks(new HashMap<String, HashSet<String>>(), infofile);
+                this.s_linksFile.acquire();
+            } else {
+                FileInputStream fis = new FileInputStream(infofile);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                HashMap<String, ArrayList<String>> linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
+
+                ois.close();
+                info = linksInfo.get(link);
+            }
+            this.s_linksFile.release();
+        } catch (IOException | InterruptedException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return info;
+    }
 }
 
 
