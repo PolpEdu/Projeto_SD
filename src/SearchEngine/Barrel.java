@@ -26,7 +26,7 @@ class Barrel extends Thread implements Serializable {
     // multicast from downloaders
     private final String MULTICAST_ADDRESS;
     private final int MULTICAST_RECEIVE_PORT;
-    private final int MULTICAST_SEND_PORT;
+
     private final HashMap<String, HashSet<String>> word_Links;
     private final HashMap<String, HashSet<String>> link_links;
     private final HashMap<String, ArrayList<String>> link_info;
@@ -34,14 +34,11 @@ class Barrel extends Thread implements Serializable {
     int messageSize = 8 * 1024;
     Database files;
     private InetAddress group;
-    private RMIBarrelInterface b;
     private MulticastSocket receiveSocket;
-    private MulticastSocket sendSocket;
 
-    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, File linkfile, File wordfile, File infofile, RMIBarrelInterface barrelInterface, Database files, int MULTICAST_SEND_PORT, Semaphore ackSem) {
+    public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, File linkfile, File wordfile, File infofile,  Database files,  Semaphore ackSem) {
         this.id = id;
         this.receiveSocket = null;
-        this.sendSocket = null;
         this.group = null;
         this.ackSem = ackSem;
 
@@ -56,9 +53,8 @@ class Barrel extends Thread implements Serializable {
 
         this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
         this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
-        this.MULTICAST_SEND_PORT = MULTICAST_SEND_PORT;
 
-        this.b = barrelInterface;
+
 
         this.word_Links = files.getWords(wordfile, this.wordfileb);
         this.link_links = files.getLinks(linkfile, this.linkfileb);
@@ -207,7 +203,6 @@ class Barrel extends Thread implements Serializable {
         try {
             // Multicast, receive from downloaders
             this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
-            this.sendSocket = new MulticastSocket(MULTICAST_SEND_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
             this.receiveSocket.joinGroup(this.group);
 
@@ -226,7 +221,7 @@ class Barrel extends Thread implements Serializable {
             byte[] buffer = send.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, this.group, this.MULTICAST_RECEIVE_PORT);
 
-            this.sendSocket.send(packet);
+            this.receiveSocket.send(packet);
 
             this.ackSem.release();
 

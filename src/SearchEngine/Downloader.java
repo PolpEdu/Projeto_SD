@@ -255,7 +255,6 @@ public class Downloader extends Thread implements Remote {
                                     break;
                                 }
                             }
-
                         }
                     }
 
