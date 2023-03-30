@@ -226,7 +226,7 @@ public class Downloader extends Thread implements Remote {
                                 while (System.currentTimeMillis() < (tempoinicial + 1000)) {
                                     this.sendSocket.receive(receivePacket);
                                     String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                                    if(received.equals("id:ack|type:ack|"+this.id + "|" + "word") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                    if(received.equals("id:ack|type:ack|"+this.id + "|" + "word") || System.currentTimeMillis() >= (tempoinicial + 1000)){
                                         quit = true;
                                         break;
                                     }
@@ -250,7 +250,7 @@ public class Downloader extends Thread implements Remote {
                                 this.sendSocket.receive(receivePacket);
                                 String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                                if(received.equals("id:ack|type:ack|"+this.id + "|" + "links") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                                if(received.equals("id:ack|type:ack|"+this.id + "|" + "links") || System.currentTimeMillis() >= (tempoinicial + 1000)){
                                     quit = true;
                                     break;
                                 }
@@ -273,7 +273,7 @@ public class Downloader extends Thread implements Remote {
                             this.sendSocket.receive(receivePacket);
                             String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                            if(received.equals("id:ack|type:ack|"+this.id + "|" + "siteinfo") || System.currentTimeMillis() >= (tempoinicial + 500)){
+                            if(received.equals("id:ack|type:ack|"+this.id + "|" + "siteinfo") || System.currentTimeMillis() >= (tempoinicial + 1000)){
                                 quit = true;
                                 break;
                             }
