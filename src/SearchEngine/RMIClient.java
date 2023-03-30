@@ -9,10 +9,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -82,15 +79,15 @@ class RMIClient extends UnicastRemoteObject {
         switch (type) {
             case 0:
                 // Login or Register
-                System.out.print("\n### Login Menu ###\n1.Search words\n2.Search Links\n  3.Login\n  4.Register\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### Login Menu ###\n1.Search Links\n  2.Login\n  3.Register\n  e.Exit\n --> Choice: ");
                 return;
             case 1:
                 // admin - main menu
-                System.out.print("\n### Admin User Panel ###\n1.Search words\n2.Search Links\n3.Index new URL\n4.User List\n6.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### Admin User Panel ###\n1.Search Links\n3.Index new URL\n4.User List\n  6.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 2:
                 // user - main menu
-                System.out.print("\n### User Panel ###\n1.Search words\n2.Search Links\n  3.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### User Panel ###\n1.Search Links\n  2.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 3:
                 System.out.print("\n### Admin Panel ###\n1.Top 10 pages\n2.Top 10 searches\n3.Multicast Servers\nb.Back\n  e.Exit\n --> Choice: ");
@@ -166,14 +163,10 @@ class RMIClient extends UnicastRemoteObject {
 
         switch (choice.toLowerCase()) {
             case "1":
-                // Search words
-                searchImportance(br);
-                break;
-            case "2":
                 // Search Link
                 searchLinks(br);
                 break;
-            case "3":
+            case "2":
                 logout();
                 break;
             case "e":
@@ -200,10 +193,6 @@ class RMIClient extends UnicastRemoteObject {
 
         switch (choice.toLowerCase()) {
             case "1":
-                // Search words
-                searchImportance(br);
-                break;
-            case "2":
                 // Search Link
                 searchLinks(br);
                 break;
@@ -219,7 +208,7 @@ class RMIClient extends UnicastRemoteObject {
                 // Give admin perms
                 giveAdminPerms(br);
                 break;
-            case "7":
+            case "6":
                 // Logout
                 logout();
                 break;
@@ -259,17 +248,13 @@ class RMIClient extends UnicastRemoteObject {
         switch (choice.toLowerCase()) {
             case "1":
                 // Search words
-                searchImportance(br);
-                break;
-            case "2":
-                // Search Link
                 searchLinks(br);
                 break;
-            case "3":
+            case "2":
                 // Login
                 login(br);
                 break;
-            case "4":
+            case "3":
                 // Register
                 register(br);
                 break;
@@ -283,32 +268,6 @@ class RMIClient extends UnicastRemoteObject {
                 break;
         }
         return true;
-    }
-
-    private void searchImportance(BufferedReader br) throws RemoteException {
-        System.out.print("\nSearch by Importance: ");
-        String phraseSearch = "";
-
-        while (true) {
-            try {
-                phraseSearch = br.readLine();
-                if (phraseSearch.contains(":") || phraseSearch.contains("|")) {
-                    System.out.print("[CLIENT] Word cannot contain ':' or '|'\nWord: ");
-                    continue;
-                }
-                break;
-            } catch (IOException e) {
-                System.out.println("[EXCEPTION] IOException");
-                e.printStackTrace();
-            }
-        }
-
-        ArrayList<String> links = this.sv.searchWord(phraseSearch);
-        if (links.size() == 0) {
-            System.out.println("[CLIENT] No Words found");
-            return;
-        }
-        // printLinks("LINKS", links, true);
     }
 
     private void searchLinks(BufferedReader br) throws RemoteException {
@@ -356,16 +315,64 @@ class RMIClient extends UnicastRemoteObject {
             return;
         }
 
-        printLinks(res, br);
+
+        HashMap<String, Integer> linksRelevance = new HashMap<String, Integer>();
+
+        for (String link : res.keySet()) {
+            // get the link relevance by checking how many links are associated with it
+            int relevance = this.sv.getLinksByRelevance(link).size();
+            linksRelevance.put(link, relevance);
+        }
+
+        // System.out.println("relevance: " +linksRelevance);
+
+        // this function returns a hashset of links that are associated with the link
+        // the more the links are associated with the link, the more relevant the link is
+        // for every link, order HashMap<String, ArrayList<String>> links by relevance
+
+        // sort res by relevance
+        HashMap<String, ArrayList<String>> linksSorted = sortByValue(res, linksRelevance);
+
+        // System.out.println("Links Sorted: "+ linksSorted);
+
+        boolean adm = this.sv.isAdmin(this.client.username);
+        boolean isLogged = this.sv.isLoggedIn(this.client.username);
+
+        printLinks(linksSorted, br, adm, isLogged);
+
     }
 
-    private void printLinks(HashMap<String, ArrayList<String>> links, BufferedReader br) {
+    private HashMap<String, ArrayList<String>> sortByValue(HashMap<String, ArrayList<String>> links, HashMap<String, Integer> linksRelevance) {
+        /*
+            links: {
+                <link> : [<title>, <description>],
+                <link> : [<title>, <description>]
+            }
+            linksRelevance: {
+                <link> : <relevanceWeight>,
+                <link> : <relevanceWeight>
+            }
+         */
+
+        System.out.println("Links Relevance: " + linksRelevance);
+        HashMap<String, ArrayList<String>> sortedLinks = new HashMap<String, ArrayList<String>>();
+
+        // sort linksRelevance by relevnce Weight value
+
+        System.out.println("Links Relevance Sorted: " + linksRelevance);
+
+        return sortedLinks;
+    }
+
+    private void printLinks(HashMap<String, ArrayList<String>> links, BufferedReader br, boolean isadmin, boolean isLogged) throws RemoteException {
         // links will be like this: <link, <title, description>>
 
-        // todo: function(link) -> hashset<link> de todos os links associados a esse link -> linkpointers
-
         int i = 0;
-        System.out.println("\n### RESULTS ###");
+        System.out.println("\n### RESULTS BY RELEVANCE ORDER ###");
+
+        // create a hashmap with the index of the print and the link to help later with the link info
+        HashMap<Integer, String> linksIndex = new HashMap<Integer, String>();
+
         for (String link : links.keySet()) {
             if (link.length() == 0) {
                 System.out.println("[CLIENT] Empty link");
@@ -373,6 +380,7 @@ class RMIClient extends UnicastRemoteObject {
             }
 
             i++;
+            linksIndex.put(i, link);
             try {
                 System.out.println("  " + i + " - " + link);
                 System.out.println("    " + links.get(link).get(0));
@@ -384,9 +392,50 @@ class RMIClient extends UnicastRemoteObject {
 
             System.out.println();
             if (i == 10) {
-                System.out.print("Do you want to see more? (y/n): ");
+
+                // if the user is admin localy and in the server.
+                if (isLogged) {
+                    System.out.print("[CLIENT] Select a link to show connections (1-10) or go to next page (y/n): ");
+                } else {
+                    System.out.print("[CLIENT] Next Page? (y/n): ");
+                }
                 try {
                     String answer = br.readLine();
+
+                    while (!answer.equals("y") && !answer.equals("n")) {
+                        // check if the answer is a number between 1 and 10
+                        if (isLogged) {
+                            try {
+                                int linkNumber = Integer.parseInt(answer);
+                                if (linkNumber >= 1 && linkNumber <= 10) {
+                                    // System.out.print(linksIndex);
+                                    // get the link
+                                    String linkToPrint = linksIndex.get(linkNumber);
+
+                                    // get the links associated with the link
+                                    ArrayList<String> linksByRelevance = this.sv.linkPointers(linkToPrint);
+
+                                    // print the links
+                                    System.out.println("\n### LINKS ASSOCIATED WITH " + linkToPrint + " ###");
+                                    for (String l : linksByRelevance) {
+                                        System.out.println("  " + l);
+                                    }
+                                    System.out.println();
+                                    continue;
+                                }
+                                System.out.print("[CLIENT] Invalid number: ");
+                                answer = br.readLine();
+                                continue;
+                            } catch (NumberFormatException e) {
+                                System.out.println("[EXCEPTION] NumberFormatException");
+                                e.printStackTrace();
+                            }
+                        }
+
+                        System.out.print("[CLIENT] Invalid answer. Do you want to see more? (y/n): ");
+                        answer = br.readLine();
+                    }
+
                     if (answer.equals("n")) {
                         break;
                     }
@@ -395,6 +444,50 @@ class RMIClient extends UnicastRemoteObject {
                     e.printStackTrace();
                 }
                 i = 0;
+                linksIndex = new HashMap<Integer, String>();
+            }
+        }
+        // check if linksIndex is empty
+        if (isLogged && linksIndex.size() > 0) {
+            String answer = "";
+            while (true) {
+                System.out.print("[CLIENT] Select a link to show connections (1-" + linksIndex.size() + ") and 'e' to exit: ");
+                try {
+                    answer = br.readLine();
+
+                    if (answer.equals("e")) {
+                        break;
+                    }
+
+                    try {
+                        int linkNumber = Integer.parseInt(answer);
+                        if (linkNumber >= 1 && linkNumber <= linksIndex.size()) {
+                            // System.out.print(linksIndex);
+                            // get the link
+                            String linkToPrint = linksIndex.get(linkNumber);
+
+                            // get the links associated with the link
+                            ArrayList<String> linksByRelevance = this.sv.linkPointers(linkToPrint);
+
+                            // print the links
+                            System.out.println("\n### LINKS ASSOCIATED WITH " + linkToPrint + " ###");
+
+                            for (String l : linksByRelevance) {
+                                System.out.println("  " + l);
+                            }
+                            System.out.println();
+                            continue;
+                        }
+                        System.out.print("[CLIENT] Invalid number: ");
+                    } catch (NumberFormatException e) {
+                        System.out.println("[EXCEPTION] NumberFormatException");
+                        e.printStackTrace();
+                    }
+                } catch (IOException e) {
+                    System.out.println("[EXCEPTION] IOException");
+                    e.printStackTrace();
+                }
+                return;
             }
         }
     }
@@ -504,7 +597,6 @@ class RMIClient extends UnicastRemoteObject {
 
                 // admin or not
                 this.client = new Client(username, res.get(1).equals("true"));
-                this.sv.updateClient(this.client.username, this.client);
 
 
                 System.out.println("[CLIENT] Logged in as " + this.client.username);
@@ -531,7 +623,7 @@ class RMIClient extends UnicastRemoteObject {
     }
 
     private void logout() throws RemoteException {
-        this.sv.updateClient(this.client.username, null);
+        this.sv.logout(this.client.username);
         this.client = new Client("Anon", false);
         System.out.println("[CLIENT] Logged out");
     }
@@ -543,7 +635,6 @@ class RMIClient extends UnicastRemoteObject {
                 System.out.println("[CLIENT] Trying to reconnect...");
                 Thread.sleep(keepAliveTime);
                 this.sv = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
-                this.sv.updateClient(this.client.username, this.client);
 
                 System.out.println("[CLIENT] Reconnected!");
                 this.menu();

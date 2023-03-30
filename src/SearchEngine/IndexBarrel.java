@@ -272,10 +272,29 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             // "status:failure | message:No barrels available"
             return new HashSet<>(Arrays.asList("failure", "No barrels available"));
         }
+
+        System.out.println("[BARREL-INTERFACE] Searching for linkpointers: " + link);
+
         return barrel.getLinkPointers(link);
     }
 
+    @Override
+    public boolean isAdmin(String username) throws RemoteException {
+        Barrel barrel = this.selectBarrelToExcute();
+        if (barrel == null) {
+            // "status:failure | message:No barrels available"
+            return false;
+        }
 
+        HashMap<String, User> users = barrel.files.getUsers();
+        if (!users.containsKey(username)) {
+            // "status:failure | message:User does not exist"
+            return false;
+        }
+
+        User user = users.get(username);
+        return user.admin;
+    }
 
     private Barrel selectBarrelToExcute() {
         // select a random barrel to fulfill the task

@@ -219,7 +219,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return this.urlQueue.isEmpty();
     }
 
-    @Override
     public void updateClient(String username, Client client) throws RemoteException {
         if (client == null) {
             this.clients.remove(username);
@@ -230,6 +229,21 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 this.clients.put(username, client);
             }
         }
+    }
+
+    // function to check if the user is logged in
+    @Override
+    public boolean isLoggedIn(String username) throws RemoteException {
+        return this.clients.containsKey(username);
+    }
+
+    @Override
+    public boolean logout(String username) throws RemoteException {
+        if (this.clients.containsKey(username)) {
+            this.clients.remove(username);
+            return true;
+        }
+        return false;
     }
 
     // RETURNS an hashmap with every link found as key and the title as the first value of the object array and the description as the second value
@@ -315,8 +329,13 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     }
 
     @Override
-    public ArrayList<String> searchWord(String word) throws RemoteException {
-        return null;
+    public ArrayList<String> getLinksByRelevance(String link) throws RemoteException {
+        HashSet<String> res = this.b.linkpointers(link);
+        if (res == null) {
+            System.out.println("[SERVER] Error finding links with link: " + link);
+            return null;
+        }
+        return new ArrayList<String>(res);
     }
 
     @Override
@@ -330,8 +349,17 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             return new ArrayList<String>(Arrays.asList("false", "false", message));
         }
         String admin = res.get(2);
+
+        Client c = new Client(username, Boolean.parseBoolean(admin));
+        this.updateClient(username, c);
+
         // login successful and not admin
         return new ArrayList<String>(Arrays.asList("true", admin, message));
+    }
+
+    @Override
+    public boolean isAdmin(String username) throws RemoteException {
+        return this.b.isAdmin(username);
     }
 
     @Override
@@ -339,15 +367,29 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         ArrayList<String> res = this.b.checkUserRegistration(username, password, firstName, lastName);
         System.out.println("[SERVER] Barrel RMI Response: " + res);
 
+
         String message = res.get(1);
         if (res.get(0).equals("failure")) {
             // register unsuccessful and not admin
             return new ArrayList<String>(Arrays.asList("false", "false", message));
         }
         String admin = res.get(2);
+
+        Client c = new Client(username, Boolean.parseBoolean(admin));
+        this.updateClient(username, c);
+
         // register successful and not admin
         return new ArrayList<String>(Arrays.asList("true", admin, message));
     }
 
 
+    public ArrayList<String> linkPointers(String link) throws RemoteException {
+        HashSet<String> res = this.b.linkpointers(link);
+        if (res == null) {
+            System.out.println("[SERVER] Error finding links with link: " + link);
+            return null;
+        }
+
+        return new ArrayList<String>(res);
+    }
 }
