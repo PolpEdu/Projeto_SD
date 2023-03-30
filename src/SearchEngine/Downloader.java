@@ -1,6 +1,7 @@
 package SearchEngine;
 
 import interfaces.RMIServerInterface;
+import interfaces.RMIUrlQueueInterface;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -15,6 +16,7 @@ import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
@@ -30,10 +32,10 @@ public class Downloader extends Thread implements Remote {
     private final Semaphore conSem;
     private MulticastSocket sendSocket;
     private InetAddress group;
-    private final RMIServerInterface server;
+    private final RMIUrlQueueInterface server;
     private final int id;
 
-    public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem,RMIServerInterface server) {
+    public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem,RMIUrlQueueInterface server) {
         this.sendSocket = null;
         this.group = null;
         this.conSem = conSem;
@@ -44,7 +46,6 @@ public class Downloader extends Thread implements Remote {
 
         this.id = id;
         this.server = server;
-
     }
 
     public static void main(String[] args) {
@@ -67,9 +68,9 @@ public class Downloader extends Thread implements Remote {
                 return;
             }
 
-            RMIServerInterface server = null;
+            RMIUrlQueueInterface server;
             try {
-                server = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
+                server = (RMIUrlQueueInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegister);
 
             } catch (RemoteException e) {
                 System.out.println("[DOWNLOADER] Error connecting to RMI server:");

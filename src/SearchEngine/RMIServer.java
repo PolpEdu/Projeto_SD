@@ -24,8 +24,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     static final int await_time = 1000;
 
 
-    private final LinkedBlockingQueue<String> urlQueue;
-
     // HashMap of clients connected to server
     HashMap<String, Client> clients;
 
@@ -58,7 +56,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
         this.clients = new HashMap<>();
         this.sendQueue = new LinkedList<>();
-        this.urlQueue = urlQueue;
+
     }
 
     public static void main(String[] args) throws RemoteException {
@@ -198,26 +196,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return true;
     }
 
-    @Override
-    public String takeLink() throws RemoteException {
-
-        try {
-            return this.urlQueue.take();
-
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void offerLink(String link) throws RemoteException {
-        this.urlQueue.offer(link);
-    }
-
-    @Override
-    public boolean isempty() throws RemoteException {
-        return this.urlQueue.isEmpty();
-    }
 
     public void updateClient(String username, Client client) throws RemoteException {
         if (client == null) {
