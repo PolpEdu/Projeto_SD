@@ -18,6 +18,10 @@ class Barrel extends Thread implements Serializable {
     public final File linkfile;
     public final File wordfile;
     public final File infofile;
+
+    public final File linkfileb;
+    public final File wordfileb;
+    public final File infofileb;
     private final int id; // id do barrel
     // multicast from downloaders
     private final String MULTICAST_ADDRESS;
@@ -44,7 +48,9 @@ class Barrel extends Thread implements Serializable {
         this.linkfile = linkfile;
         this.wordfile = wordfile;
         this.infofile = infofile;
-
+        this.infofileb = new File("src\\info-"+this.id+"backup");
+        this.wordfileb = new File("src\\words-"+this.id+"backup");
+        this.linkfileb = new File("src\\links-"+this.id+"backup");
 
         this.files = files;
 
@@ -54,10 +60,9 @@ class Barrel extends Thread implements Serializable {
 
         this.b = barrelInterface;
 
-        this.word_Links = files.getWords(wordfile);
-        this.link_links = files.getLinks(linkfile);
-        this.link_info = files.getLinksInfo(infofile);
-
+        this.word_Links = files.getWords(wordfile, this.wordfileb);
+        this.link_links = files.getLinks(linkfile, this.linkfileb);
+        this.link_info = files.getLinksInfo(infofile, this.infofileb);
     }
 
     public void loop() throws IOException {
@@ -131,9 +136,9 @@ class Barrel extends Thread implements Serializable {
 
                 // add to update buffer
 
-                this.files.updateWords(word_Links, wordfile);
-                this.files.updateLinks(link_links, linkfile);
-                this.files.updateInfo(link_info, infofile);
+                this.files.updateWords(word_Links, wordfile, this.wordfileb);
+                this.files.updateLinks(link_links, linkfile, this.linkfileb);
+                this.files.updateInfo(link_info, infofile, this.infofileb);
             }
 
             String send;

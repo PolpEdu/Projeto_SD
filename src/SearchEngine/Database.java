@@ -65,7 +65,7 @@ public class Database implements Serializable {
         }
     }
 
-    public void updateLinks(HashMap<String, HashSet<String>> fileLinks, File linksFile) {
+    public void updateLinks(HashMap<String, HashSet<String>> fileLinks, File linksFile, File backup) {
         try {
             this.s_linksFile.acquire();
             if (!linksFile.exists()) {
@@ -74,18 +74,20 @@ public class Database implements Serializable {
 
             FileOutputStream fos = new FileOutputStream(linksFile);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-
-            ArrayList<HashMap<String, HashSet<String>>> bufferList = new ArrayList<>();
-            bufferList.add(fileLinks);
-            if (bufferList.size() >= BUFFER_SIZE) {
-                for (HashMap<String, HashSet<String>> bufferedFileLinks : bufferList) {
-                    oos.writeObject(bufferedFileLinks);
-                }
-                bufferList.clear();
-            }
-
+            oos.writeObject(fileLinks);
             oos.close();
             fos.close();
+
+            if (!backup.exists()) {
+                backup.createNewFile();
+            }
+
+            fos = new FileOutputStream(backup);
+            oos = new ObjectOutputStream(fos);
+            oos.writeObject(fileLinks);
+            oos.close();
+            fos.close();
+
             this.s_linksFile.release();
         } catch (IOException | InterruptedException e) {
             System.out.println("[EXCEPTION] While updating links: " + e.getMessage());
@@ -93,7 +95,7 @@ public class Database implements Serializable {
         }
     }
 
-    public void updateWords(HashMap<String, HashSet<String>> fileWords, File wordsFile) {
+    public void updateWords(HashMap<String, HashSet<String>> fileWords, File wordsFile, File backup) {
         try {
             this.s_wordsFile.acquire();
             if (!wordsFile.exists()) {
@@ -104,6 +106,13 @@ public class Database implements Serializable {
             oos.writeObject(fileWords);
             oos.close();
             fos.close();
+
+            fos = new FileOutputStream(backup);
+            oos = new ObjectOutputStream(fos);
+            oos.writeObject(fileWords);
+            oos.close();
+            fos.close();
+
             this.s_wordsFile.release();
         } catch (IOException | InterruptedException e) {
             System.out.println("[EXCEPTION] While updating links: " + e.getMessage());
@@ -111,7 +120,7 @@ public class Database implements Serializable {
         }
     }
 
-    public void updateInfo(HashMap<String, ArrayList<String>> fileInfo, File infoFile) {
+    public void updateInfo(HashMap<String, ArrayList<String>> fileInfo, File infoFile, File backup) {
         try {
             this.s_linksInfoFile.acquire();
             if (!infoFile.exists()) {
@@ -123,6 +132,13 @@ public class Database implements Serializable {
             oos.writeObject(fileInfo);
             oos.close();
             fos.close();
+
+            fos = new FileOutputStream(backup);
+            oos = new ObjectOutputStream(fos);
+            oos.writeObject(fileInfo);
+            oos.close();
+            fos.close();
+
             this.s_linksInfoFile.release();
         } catch (IOException | InterruptedException e) {
             System.out.println("[EXCEPTION] While updating links: " + e.getMessage());
@@ -131,14 +147,14 @@ public class Database implements Serializable {
     }
 
     // links - links.
-    public HashMap<String, HashSet<String>> getLinks(File linksFile) {
+    public HashMap<String, HashSet<String>> getLinks(File linksFile, File backup) {
         HashMap<String, HashSet<String>> links = new HashMap<>();
         try {
             this.s_linksFile.acquire();
             if (!linksFile.exists()) {
                 linksFile.createNewFile();
                 this.s_linksFile.release();
-                updateLinks(new HashMap<String, HashSet<String>>(), linksFile);
+                updateLinks(new HashMap<String, HashSet<String>>(), linksFile, backup);
                 this.s_linksFile.acquire();
             } else {
 
@@ -155,21 +171,36 @@ public class Database implements Serializable {
             e.printStackTrace();
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             System.out.println("[EXCEPTION] While getting links: " + e.getMessage());
-            e.printStackTrace();
+
+            try {
+                FileInputStream fis = new FileInputStream(backup);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                links = (HashMap<String, HashSet<String>>) ois.readObject();
+
+
+            } catch (FileNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+
         }
         // System.out.println("getLinks: " + links);
         return links;
     }
 
     // links- phrases.
-    public HashMap<String, ArrayList<String>> getLinksInfo(File infofile) {
+    public HashMap<String, ArrayList<String>> getLinksInfo(File infofile, File backup) {
         HashMap<String, ArrayList<String>> linksInfo = new HashMap<>();
         try {
             this.s_linksInfoFile.acquire();
             if (!infofile.exists()) {
                 infofile.createNewFile();
                 this.s_linksInfoFile.release();
-                updateInfo(new HashMap<String, ArrayList<String>>(), infofile);
+                updateInfo(new HashMap<String, ArrayList<String>>(), infofile, backup);
                 this.s_linksInfoFile.acquire();
             } else {
                 FileInputStream fis = new FileInputStream(infofile);
@@ -184,15 +215,32 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] EOF Error, corrupted file: " + e.getMessage());
             e.printStackTrace();
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
-            System.out.println("[EXCEPTION] While getting links: " + e.getMessage());
-            e.printStackTrace();
+            System.out.println("[EXCEPTION] While getting info: " + e.getMessage());
+
+            try {
+                FileInputStream fis = new FileInputStream(infofile);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
+                ois.close();
+                return linksInfo;
+
+            } catch (FileNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+
+
         }
         // System.out.println("getLinksInfo: " + linksInfo);
         return linksInfo;
     }
 
     // single words -> links.
-    public HashMap<String, HashSet<String>> getWords(File wordsfile) {
+    public HashMap<String, HashSet<String>> getWords(File wordsfile, File backup) {
         HashMap<String, HashSet<String>> words = new HashMap<>();
         try {
             this.s_wordsFile.acquire();
@@ -200,7 +248,7 @@ public class Database implements Serializable {
             if (!wordsfile.exists()) {
                 wordsfile.createNewFile();
                 this.s_wordsFile.release();
-                updateWords(new HashMap<String, HashSet<String>>(), wordsfile);
+                updateWords(new HashMap<String, HashSet<String>>(), wordsfile, backup);
                 this.s_wordsFile.acquire();
             } else {
                 FileInputStream fis = new FileInputStream(wordsfile);
@@ -216,65 +264,29 @@ public class Database implements Serializable {
             e.printStackTrace();
 
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
-            System.out.println("[EXCEPTION] While getting links: " + e.getMessage());
-            e.printStackTrace();
+            System.out.println("[EXCEPTION] While getting words: " + e.getMessage());
+            try {
+                FileInputStream fis = new FileInputStream(wordsfile);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                words = (HashMap<String, HashSet<String>>) ois.readObject();
+
+                ois.close();
+
+                return words;
+            } catch (FileNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+
         }
         // System.out.println("getWords: " + words);
         return words;
     }
 
-    public HashSet<String> getLinksAssciatedWord(String word, File wordsfile) {
-        HashSet<String> links = new HashSet<String>();
-        try {
-            this.s_wordsFile.acquire();
-            if (!wordsfile.exists()) {
-                wordsfile.createNewFile();
-                this.s_wordsFile.release();
-                updateWords(new HashMap<String, HashSet<String>>(), wordsfile);
-                this.s_wordsFile.acquire();
-            } else {
-                FileInputStream fis = new FileInputStream(wordsfile);
-                ObjectInputStream ois = new ObjectInputStream(fis);
-
-                HashMap<String, HashSet<String>> words = (HashMap<String, HashSet<String>>) ois.readObject();
-                System.out.println("getLinksAssciatedWord: " + words);
-                ois.close();
-                links = words.get(word);
-                System.out.println("getLinksAssciatedWord: " + links);
-            }
-            this.s_wordsFile.release();
-        } catch (IOException | InterruptedException | ClassNotFoundException e) {
-
-            e.printStackTrace();
-        }
-        return links;
-    }
-
-    public ArrayList<String> getLinkInfo(String link, File infofile) {
-        ArrayList<String> info = new ArrayList<>();
-
-        try {
-            this.s_linksFile.acquire();
-            if (!infofile.exists()) {
-                infofile.createNewFile();
-                this.s_linksFile.release();
-                updateLinks(new HashMap<String, HashSet<String>>(), infofile);
-                this.s_linksFile.acquire();
-            } else {
-                FileInputStream fis = new FileInputStream(infofile);
-                ObjectInputStream ois = new ObjectInputStream(fis);
-
-                HashMap<String, ArrayList<String>> linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
-
-                ois.close();
-                info = linksInfo.get(link);
-            }
-            this.s_linksFile.release();
-        } catch (IOException | InterruptedException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return info;
-    }
 }
 
 
