@@ -84,6 +84,7 @@ class Barrel extends Thread implements Serializable {
                 String[] split;
                 String splittype;
                 String splitid;
+                String downid = list[2];
 
                 for (String str : queuelist) {
 
@@ -92,7 +93,7 @@ class Barrel extends Thread implements Serializable {
                     splittype = split[1].split(":")[1];
                     if (splitid.equals("dwnl")) {
                         if (splittype.equals("word")) {
-                            if (id.equals(split[4])) {
+                            if (downid.equals(split[4])) {
                                 if (!this.word_Links.containsKey(split[2])) {
                                     this.word_Links.put(split[2], new HashSet<>());
                                 }
@@ -103,7 +104,7 @@ class Barrel extends Thread implements Serializable {
 
                             //System.out.println("test " + list[2] +" " +list[3]);
                         } else if (splittype.equals("links")) {
-                            if (id.equals(split[4])) {
+                            if (downid.equals(split[4])) {
                                 if (!this.link_links.containsKey(split[2])) {
                                     this.link_links.put(split[2], new HashSet<>());
                                 }
@@ -114,7 +115,7 @@ class Barrel extends Thread implements Serializable {
                             }
                             //System.out.println("test " + list[2] + " " + list[3]);
                         } else if (splittype.equals("siteinfo")) {
-                            if (id.equals(split[5])) {
+                            if (downid.equals(split[5])) {
                                 if (!this.link_info.containsKey(split[2])) {
                                     this.link_info.put(split[2], new ArrayList<>());
                                 }
