@@ -18,7 +18,6 @@ import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,14 +25,13 @@ import java.util.regex.Pattern;
 
 public class Downloader extends Thread implements Remote {
 
-    private final int MULTICAST_SEND_PORT; //enviar para os barrels
+    private final int MULTICAST_SEND_PORT;
     private final String MULTICAST_ADDRESS;
     private final Semaphore conSem;
     private MulticastSocket sendSocket;
     private InetAddress group;
     private final RMIServerInterface server;
     private final int id;
-
 
     public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem,RMIServerInterface server) {
         this.sendSocket = null;
@@ -82,10 +80,9 @@ public class Downloader extends Thread implements Remote {
 
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
             int sendPort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));//envia para os barrels
-            int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_SEND_PORT"));//recebe dos barrels
+
 
             Semaphore listsem = new Semaphore(1);
-            Semaphore ackSem = new Semaphore(1);
 
             for (int i = 1; i < 3; i++) {
 
