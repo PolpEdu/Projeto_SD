@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.concurrent.Semaphore;
 
 public class Database implements Serializable {
+    private final int BUFFER_SIZE = 30; // buffer size
     Semaphore s_linksFile = new Semaphore(1);
     Semaphore s_linksInfoFile = new Semaphore(1);
     Semaphore s_wordsFile = new Semaphore(1);
@@ -66,17 +67,27 @@ public class Database implements Serializable {
 
     public void updateLinks(HashMap<String, HashSet<String>> fileLinks, File linksFile) {
         try {
+            this.s_linksFile.acquire();
             if (!linksFile.exists()) {
                 linksFile.createNewFile();
             }
+
             FileOutputStream fos = new FileOutputStream(linksFile);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(fileLinks);
+
+            ArrayList<HashMap<String, HashSet<String>>> bufferList = new ArrayList<>();
+            bufferList.add(fileLinks);
+            if (bufferList.size() >= BUFFER_SIZE) {
+                for (HashMap<String, HashSet<String>> bufferedFileLinks : bufferList) {
+                    oos.writeObject(bufferedFileLinks);
+                }
+                bufferList.clear();
+            }
 
             oos.close();
             fos.close();
-
-        } catch (IOException e) {
+            this.s_linksFile.release();
+        } catch (IOException | InterruptedException e) {
             System.out.println("[EXCEPTION] While updating links: " + e.getMessage());
             e.printStackTrace();
         }
@@ -84,6 +95,7 @@ public class Database implements Serializable {
 
     public void updateWords(HashMap<String, HashSet<String>> fileWords, File wordsFile) {
         try {
+            this.s_wordsFile.acquire();
             if (!wordsFile.exists()) {
                 wordsFile.createNewFile();
             }
@@ -92,17 +104,16 @@ public class Database implements Serializable {
             oos.writeObject(fileWords);
             oos.close();
             fos.close();
-
-
-        } catch (IOException e) {
+            this.s_wordsFile.release();
+        } catch (IOException | InterruptedException e) {
             System.out.println("[EXCEPTION] While updating links: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     public void updateInfo(HashMap<String, ArrayList<String>> fileInfo, File infoFile) {
-        HashMap<String, ArrayList<String>> info;
         try {
+            this.s_linksInfoFile.acquire();
             if (!infoFile.exists()) {
                 infoFile.createNewFile();
             }
@@ -112,8 +123,8 @@ public class Database implements Serializable {
             oos.writeObject(fileInfo);
             oos.close();
             fos.close();
-
-        } catch (IOException e) {
+            this.s_linksInfoFile.release();
+        } catch (IOException | InterruptedException e) {
             System.out.println("[EXCEPTION] While updating links: " + e.getMessage());
             e.printStackTrace();
         }
@@ -226,7 +237,7 @@ public class Database implements Serializable {
                 ObjectInputStream ois = new ObjectInputStream(fis);
 
                 HashMap<String, HashSet<String>> words = (HashMap<String, HashSet<String>>) ois.readObject();
-
+                System.out.println("getLinksAssciatedWord: " + words);
                 ois.close();
                 links = words.get(word);
                 System.out.println("getLinksAssciatedWord: " + links);

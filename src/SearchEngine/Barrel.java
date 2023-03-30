@@ -26,7 +26,6 @@ class Barrel extends Thread implements Serializable {
     private final HashMap<String, HashSet<String>> word_Links;
     private final HashMap<String, HashSet<String>> link_links;
     private final HashMap<String, ArrayList<String>> link_info;
-    private final HashMap<String, HashSet<String>> users;
     private final Semaphore ackSem;
     int messageSize = 8 * 1024;
     Database files;
@@ -58,8 +57,6 @@ class Barrel extends Thread implements Serializable {
         this.word_Links = files.getWords(wordfile);
         this.link_links = files.getLinks(linkfile);
         this.link_info = files.getLinksInfo(infofile);
-
-        this.users = new HashMap<>();
 
     }
 
@@ -131,13 +128,15 @@ class Barrel extends Thread implements Serializable {
                 for(String r: toRemove){
                     queuelist.remove(r);
                 }
+
+                // add to update buffer
+
                 this.files.updateWords(word_Links, wordfile);
                 this.files.updateLinks(link_links, linkfile);
                 this.files.updateInfo(link_info, infofile);
             }
 
             String send;
-
 
             if (id.equals("dwnl")) {
                 queuelist.add(received);
