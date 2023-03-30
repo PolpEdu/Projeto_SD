@@ -58,6 +58,7 @@ class Barrel extends Thread implements Serializable {
         this.word_Links = files.getWords(wordfile);
         this.link_links = files.getLinks(linkfile);
         this.link_info = files.getLinksInfo(infofile);
+        System.out.println(link_info.size());
 
         this.users = new HashMap<>();
 
@@ -79,7 +80,7 @@ class Barrel extends Thread implements Serializable {
             String id = list[0].split(":")[1];
             String type = list[1].split(":")[1];
 
-            System.out.println("[BARREL " + this.id + "] " + received);
+
             if (id.equals("done")) {
                 String[] split;
                 String splittype;
@@ -91,6 +92,8 @@ class Barrel extends Thread implements Serializable {
                     split = str.split("\\|");
                     splitid = split[0].split(":")[1];
                     splittype = split[1].split(":")[1];
+
+
                     if (splitid.equals("dwnl")) {
                         if (splittype.equals("word")) {
                             if (downid.equals(split[4])) {
@@ -98,23 +101,21 @@ class Barrel extends Thread implements Serializable {
                                     this.word_Links.put(split[2], new HashSet<>());
                                 }
                                 this.word_Links.get(split[2]).add(split[3]);
-                                this.files.updateWords(word_Links, wordfile);
+
                                 queuelist.remove(str);
                             }
 
-                            //System.out.println("test " + list[2] +" " +list[3]);
                         } else if (splittype.equals("links")) {
                             if (downid.equals(split[4])) {
                                 if (!this.link_links.containsKey(split[2])) {
                                     this.link_links.put(split[2], new HashSet<>());
                                 }
                                 this.link_links.get(split[2]).add(split[3]);
-                                System.out.println("Links: " + link_links);
-                                this.files.updateLinks(link_links, linkfile);
+
                                 queuelist.remove(str);
                             }
-                            //System.out.println("test " + list[2] + " " + list[3]);
                         } else if (splittype.equals("siteinfo")) {
+
                             if (downid.equals(split[5])) {
                                 if (!this.link_info.containsKey(split[2])) {
                                     this.link_info.put(split[2], new ArrayList<>());
@@ -123,13 +124,15 @@ class Barrel extends Thread implements Serializable {
                                 this.link_info.get(split[2]).add(split[3]);
                                 this.link_info.get(split[2]).add(split[4]);
 
-                                this.files.updateInfo(link_info, infofile);
                                 queuelist.remove(str);
                             }
                         }
                     }
 
                 }
+                this.files.updateWords(word_Links, wordfile);
+                this.files.updateLinks(link_links, linkfile);
+                this.files.updateInfo(link_info, infofile);
             }
 
             String send;
