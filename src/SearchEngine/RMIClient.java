@@ -82,15 +82,15 @@ class RMIClient extends UnicastRemoteObject {
         switch (type) {
             case 0:
                 // Login or Register
-                System.out.print("\n### Login Menu ###\n1.Search words\n2.Search Link\n  3.Login\n  4.Register\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### Login Menu ###\n1.Search words\n2.Search Links\n  3.Login\n  4.Register\n  e.Exit\n --> Choice: ");
                 return;
             case 1:
                 // admin - main menu
-                System.out.print("\n### Admin User Panel ###\n1.Search words\n2.Search Link\n3.Index new URL\n4.User List\n5.Give admin Perms\n6.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### Admin User Panel ###\n1.Search words\n2.Search Links\n3.Index new URL\n4.User List\n5.Give admin Perms\n6.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 2:
                 // user - main menu
-                System.out.print("\n### User Panel ###\n1.Search words\n2.Search Link\n  3.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### User Panel ###\n1.Search words\n2.Search Links\n  3.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 3:
                 System.out.print("\n### Admin Panel ###\n1.Top 10 pages\n2.Top 10 searches\n3.Multicast Servers\nb.Back\n  e.Exit\n --> Choice: ");
@@ -345,7 +345,7 @@ class RMIClient extends UnicastRemoteObject {
 
     private void searchLinks(BufferedReader br) throws RemoteException {
         String phrase = ""; // search phrase
-        Pattern pattern = Pattern.compile("^[a-zA-Z0-9]*$");
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9 ]*$");
         String[] pois = {"de", "sobre", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem", "hei", "há", "havemos", "hão", "houve", "houvemos", "houveram", "houvera", "houvéramos", "haja", "hajamos", "hajam", "houvesse", "houvéssemos", "houvessem", "houver", "houvermos", "houverem", "houverei", "houverá", "houveremos", "houverão", "houveria", "houveríamos", "houveriam", "sou", "somos", "são", "era", "éramos", "eram", "fui", "foi", "fomos", "foram", "fora", "fôramos", "seja", "sejamos", "sejam", "fosse", "fôssemos", "fossem", "for", "formos", "forem", "serei", "será", "seremos", "serão", "seria", "seríamos", "seriam", "tenho", "tem", "temos", "tém", "tinha", "tínhamos", "tinham", "tive", "teve", "tivemos", "tiveram", "tivera", "tivéramos", "tenha", "tenhamos", "tenham", "tivesse", "tivéssemos", "tivessem", "tiver", "tivermos", "tiverem", "terei", "terá", "teremos", "terão", "teria", "teríamos", "teriam"};
         ArrayList<String> stopWords = new ArrayList<>(Arrays.asList(pois));
 
@@ -360,7 +360,7 @@ class RMIClient extends UnicastRemoteObject {
                 }
                 Matcher matcher = pattern.matcher(phrase);
                 if (!matcher.matches()) {
-                    System.out.print("[CLIENT] Word cannot contain special characters\nLink: ");
+                    System.out.print("[CLIENT] Word cannot contain special characters\nSearch: ");
                     continue;
                 }
                 break;
@@ -381,6 +381,7 @@ class RMIClient extends UnicastRemoteObject {
         }
 
         HashMap<String, ArrayList<String>> res = this.sv.searchLinks(words);
+
 
         // check for empty results
         if (res.size() == 0) {

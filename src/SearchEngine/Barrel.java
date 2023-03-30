@@ -58,7 +58,6 @@ class Barrel extends Thread implements Serializable {
         this.word_Links = files.getWords(wordfile);
         this.link_links = files.getLinks(linkfile);
         this.link_info = files.getLinksInfo(infofile);
-        System.out.println(link_info.size());
 
         this.users = new HashMap<>();
 

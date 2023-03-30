@@ -18,8 +18,10 @@ import java.util.concurrent.Semaphore;
 public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterface {
     static final int alive_checks = 5;
     static final int await_time = 2000;
+
     RMIBarrelInterface b;
     private ArrayList<Barrel> barrels_threads;
+    private ArrayList<String> barrels_erros;
 
     public IndexBarrel() throws RemoteException {
         super();
@@ -196,7 +198,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         if (barrel == null) {
             // "status:failure | message:No barrels available"
             // return an Hashset with status and message
-            return new HashSet<>(Arrays.asList("failure", "No barrels available"));
+            return new HashSet<>(Arrays.asList("No barrels available"));
         }
 
         return barrel.files.getLinksAssciatedWord(word, barrel.linkfile);

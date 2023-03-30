@@ -237,13 +237,27 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         HashSet<String> totalUrlfound = new HashSet<String>();
         HashMap<String, ArrayList<String>> res = new HashMap<String, ArrayList<String>>();
 
+        System.out.println("[SERVER] Searching for links. From words: " + Arrays.toString(words) + "");
+
         for (String w : words) {
             HashSet<String> links = this.b.searchLinks(w);
 
+            if (links == null) {
+                System.out.println("[SERVER] Error finding links with word: " + w);
+                continue;
+            }
+
             if (links.size() == 0) {
                 System.out.println("[SERVER] No Links found for word: " + w);
-                return new HashMap<String, ArrayList<String>>();
+                continue;
             }
+            // check the first element of the hashset, if the first element "failure" is found, then the search failed
+            if (links.iterator().next().equals("No barrels available")) {
+                System.out.println("[SERVER] Search failed for word: " + w);
+                continue;
+            }
+
+
 
             for (String l : links) {
                 if (!totalUrlfound.contains(l)) {
@@ -251,6 +265,8 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 }
             }
         }
+
+        System.out.println("[SERVER] Found " + totalUrlfound.size() + " links.");
 
 
         // add the links to the hashmap as the key and the title as the first value of the object array and the description as the second value
