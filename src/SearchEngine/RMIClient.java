@@ -354,12 +354,19 @@ class RMIClient extends UnicastRemoteObject {
             }
          */
 
-        System.out.println("Links Relevance: " + linksRelevance);
-        HashMap<String, ArrayList<String>> sortedLinks = new HashMap<String, ArrayList<String>>();
+        // System.out.println("Links Relevance: " + linksRelevance);
 
-        // sort linksRelevance by relevnce Weight value
+        // Sort the keys of links HashMap based on the corresponding values in linksRelevance HashMap
+        List<String> sortedKeys = new ArrayList<>(links.keySet());
+        Collections.sort(sortedKeys, (a, b) -> linksRelevance.get(b) - linksRelevance.get(a));
 
-        System.out.println("Links Relevance Sorted: " + linksRelevance);
+        // Create a new HashMap with the sorted keys and their corresponding values
+        HashMap<String, ArrayList<String>> sortedLinks = new LinkedHashMap<>();
+        for (String key : sortedKeys) {
+            sortedLinks.put(key, links.get(key));
+        }
+
+        System.out.println("Sorted Links: " + sortedLinks);
 
         return sortedLinks;
     }
@@ -392,22 +399,27 @@ class RMIClient extends UnicastRemoteObject {
 
             System.out.println();
             if (i == 10) {
+                while (true) {
+                    // if the user is admin localy and in the server.
+                    if (isLogged) {
+                        System.out.print("[CLIENT] Select a link to show connections (1-10) or go to next page (y/n): ");
+                    } else {
+                        System.out.print("[CLIENT] Next Page? (y/n): ");
+                    }
+                    try {
+                        String answer = br.readLine();
 
-                // if the user is admin localy and in the server.
-                if (isLogged) {
-                    System.out.print("[CLIENT] Select a link to show connections (1-10) or go to next page (y/n): ");
-                } else {
-                    System.out.print("[CLIENT] Next Page? (y/n): ");
-                }
-                try {
-                    String answer = br.readLine();
+                        while (!answer.equals("y") && !answer.equals("n")) {
 
-                    while (!answer.equals("y") && !answer.equals("n")) {
-                        // check if the answer is a number between 1 and 10
-                        if (isLogged) {
-                            try {
-                                int linkNumber = Integer.parseInt(answer);
-                                if (linkNumber >= 1 && linkNumber <= 10) {
+                            // check if the answer is a number between 1 and 10
+                            if (isLogged) {
+                                try {
+                                    int linkNumber = Integer.parseInt(answer);
+                                    while (linkNumber < 1 || linkNumber > 10) {
+                                        System.out.print("[CLIENT] Invalid number or 'e' to exit. Select a link to show connections (1-10) or go to next page (y/n):");
+                                        answer = br.readLine();
+                                        linkNumber = Integer.parseInt(answer);
+                                    }
                                     // System.out.print(linksIndex);
                                     // get the link
                                     String linkToPrint = linksIndex.get(linkNumber);
@@ -421,31 +433,30 @@ class RMIClient extends UnicastRemoteObject {
                                         System.out.println("  " + l);
                                     }
                                     System.out.println();
-                                    continue;
+                                    break;
+                                } catch (NumberFormatException e) {
+                                    System.out.println("[EXCEPTION] NumberFormatException");
+                                    e.printStackTrace();
                                 }
-                                System.out.print("[CLIENT] Invalid number: ");
-                                answer = br.readLine();
-                                continue;
-                            } catch (NumberFormatException e) {
-                                System.out.println("[EXCEPTION] NumberFormatException");
-                                e.printStackTrace();
                             }
+
+                            System.out.print("[CLIENT] Invalid answer. Do you want to see more? (y/n): ");
+                            answer = br.readLine();
                         }
 
-                        System.out.print("[CLIENT] Invalid answer. Do you want to see more? (y/n): ");
-                        answer = br.readLine();
+                        if (answer.equals("n")) {
+                            break;
+                        }
+                    } catch (IOException e) {
+                        System.out.println("[EXCEPTION] IOException");
+                        e.printStackTrace();
                     }
-
-                    if (answer.equals("n")) {
-                        break;
-                    }
-                } catch (IOException e) {
-                    System.out.println("[EXCEPTION] IOException");
-                    e.printStackTrace();
                 }
                 i = 0;
                 linksIndex = new HashMap<Integer, String>();
+
             }
+
         }
         // check if linksIndex is empty
         if (isLogged && linksIndex.size() > 0) {
@@ -461,24 +472,26 @@ class RMIClient extends UnicastRemoteObject {
 
                     try {
                         int linkNumber = Integer.parseInt(answer);
-                        if (linkNumber >= 1 && linkNumber <= linksIndex.size()) {
-                            // System.out.print(linksIndex);
-                            // get the link
-                            String linkToPrint = linksIndex.get(linkNumber);
-
-                            // get the links associated with the link
-                            ArrayList<String> linksByRelevance = this.sv.linkPointers(linkToPrint);
-
-                            // print the links
-                            System.out.println("\n### LINKS ASSOCIATED WITH " + linkToPrint + " ###");
-
-                            for (String l : linksByRelevance) {
-                                System.out.println("  " + l);
-                            }
-                            System.out.println();
-                            continue;
+                        while (linkNumber < 1 || linkNumber > linksIndex.size()) {
+                            System.out.print("[CLIENT] Invalid number or 'e' to exit. Select a link to show connections (1-" + linksIndex.size() + "):");
+                            answer = br.readLine();
+                            linkNumber = Integer.parseInt(answer);
                         }
-                        System.out.print("[CLIENT] Invalid number: ");
+                        // System.out.print(linksIndex);
+                        // get the link
+                        String linkToPrint = linksIndex.get(linkNumber);
+
+                        // get the links associated with the link
+                        ArrayList<String> linksByRelevance = this.sv.linkPointers(linkToPrint);
+
+                        // print the links
+                        System.out.println("\n### LINKS ASSOCIATED WITH " + linkToPrint + " ###");
+
+                        for (String l : linksByRelevance) {
+                            System.out.println("  " + l);
+                        }
+                        System.out.println();
+                        continue;
                     } catch (NumberFormatException e) {
                         System.out.println("[EXCEPTION] NumberFormatException");
                         e.printStackTrace();

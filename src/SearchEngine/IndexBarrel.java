@@ -21,8 +21,6 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
     RMIBarrelInterface b;
     private ArrayList<Barrel> barrels_threads;
-    private ArrayList<String> barrels_erros;
-
 
     private int id;
 
@@ -221,10 +219,10 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
         }
 
-        System.out.println("[BARREL-INTERFACE] Searching for title: " + word);
+        // System.out.println("[BARREL-INTERFACE] Searching for title: " + word);
         String title = barrel.getLinkTitle(word);
 
-        System.out.println("[BARREL-INTERFACE] Links title: " + title);
+        // System.out.println("[BARREL-INTERFACE] Links title: " + title);
 
         if (title == null) {
             // "status:failure | message:Link does not exist"
@@ -253,7 +251,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         }
 
         String linksInfo = barrel.getLinkDescription(word);
-        System.out.println("[BARREL-INTERFACE] Links description: " + linksInfo);
+        // System.out.println("[BARREL-INTERFACE] Links description: " + linksInfo);
         if (linksInfo == null) {
             // "status:failure | message:Link does not exist"
             return new ArrayList<> (Arrays.asList("failure", "Link does not exist"));
@@ -273,7 +271,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             return new HashSet<>(Arrays.asList("failure", "No barrels available"));
         }
 
-        System.out.println("[BARREL-INTERFACE] Searching for linkpointers: " + link);
+        // System.out.println("[BARREL-INTERFACE] Searching for linkpointers: " + link);
 
         return barrel.getLinkPointers(link);
     }
