@@ -27,32 +27,23 @@ import java.util.regex.Pattern;
 public class Downloader extends Thread implements Remote {
 
     private final int MULTICAST_SEND_PORT; //enviar para os barrels
-
-    private final int MULTICAST_RECEIVE_PORT; //receber dos barrels
     private final String MULTICAST_ADDRESS;
     private final Semaphore conSem;
-    private final Semaphore ackSem;
-    private final int rmiPort;
-    private final String rmiHost;
-    private final String rmiRegister;
     private MulticastSocket sendSocket;
     private InetAddress group;
-    private RMIServerInterface server;
-    private int id;
-    private MulticastSocket receiveSocket;
+    private final RMIServerInterface server;
+    private final int id;
 
-    public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem, Semaphore ackSem, int rmiPort, String rmiHost, String rmiRegister, RMIServerInterface server, int MULTICAST_RECEIVE_PORT) {
+
+    public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem,RMIServerInterface server) {
         this.sendSocket = null;
-        this.receiveSocket = null;
         this.group = null;
         this.conSem = conSem;
-        this.ackSem = ackSem;
+
         this.MULTICAST_SEND_PORT = MULTICAST_SEND_PORT;
-        this.MULTICAST_RECEIVE_PORT = MULTICAST_RECEIVE_PORT;
+
         this.MULTICAST_ADDRESS = MULTICAST_ADDRESS;
-        this.rmiPort = rmiPort;
-        this.rmiHost = rmiHost;
-        this.rmiRegister = rmiRegister;
+
         this.id = id;
         this.server = server;
 
@@ -103,7 +94,7 @@ public class Downloader extends Thread implements Remote {
                     System.exit(1);
                 }
 
-                Downloader downloader = new Downloader(i, sendPort, multicastAddress, listsem, ackSem, rmiPort, rmiHost, rmiRegister, server, receivePort);
+                Downloader downloader = new Downloader(i, sendPort, multicastAddress, listsem,server);
                 downloader.start();
             }
 
@@ -153,7 +144,6 @@ public class Downloader extends Thread implements Remote {
         System.out.println("[DOWNLOADER " + this.id + "] is running ...");
         try {
             this.sendSocket = new MulticastSocket(MULTICAST_SEND_PORT);
-            this.receiveSocket = new MulticastSocket(MULTICAST_RECEIVE_PORT);
             this.group = InetAddress.getByName(MULTICAST_ADDRESS);
             this.sendSocket.joinGroup(this.group);
 
