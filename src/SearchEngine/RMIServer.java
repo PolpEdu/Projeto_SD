@@ -257,8 +257,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 continue;
             }
 
-
-
             for (String l : links) {
                 if (!totalUrlfound.contains(l)) {
                     totalUrlfound.add(l);

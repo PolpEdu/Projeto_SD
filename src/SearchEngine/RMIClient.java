@@ -86,7 +86,7 @@ class RMIClient extends UnicastRemoteObject {
                 return;
             case 1:
                 // admin - main menu
-                System.out.print("\n### Admin User Panel ###\n1.Search words\n2.Search Links\n3.Index new URL\n4.User List\n5.Give admin Perms\n6.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### Admin User Panel ###\n1.Search words\n2.Search Links\n3.Index new URL\n4.User List\n6.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 2:
                 // user - main menu
@@ -363,8 +363,7 @@ class RMIClient extends UnicastRemoteObject {
     private void printLinks(HashMap<String, ArrayList<String>> links, BufferedReader br) {
         // links will be like this: <link, <title, description>>
 
-        // print links from 1 to 10 and ask if the user wants to see more,
-        // if so print the next 10
+        System.out.println(links);
         int i = 0;
         System.out.println("\n### RESULTS ###");
         for (String link : links.keySet()) {

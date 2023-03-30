@@ -202,7 +202,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         if (barrel == null) {
             // "status:failure | message:No barrels available"
             // return an Hashset with status and message
-            return new HashSet<>(Arrays.asList("No barrels available"));
+            return new HashSet<>(Arrays.asList("failure","No barrels available"));
         }
 
         return barrel.getLinksAssciatedWord(word);
