@@ -290,6 +290,12 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             ArrayList<String> title = this.b.searchTitle(l);
             ArrayList<String> description = this.b.searchDescription(l);
 
+            if (title == null || description == null) {
+                System.out.println("[SERVER] Error finding Title or Description for link: " + l);
+                res.put(l, new ArrayList<String>());
+                continue;
+            } else
+
             if (title.size() == 0 || description.size() == 0) {
                 System.out.println("[SERVER] No Title or Description found for link: " + l);
                 //q: is it possible return hashmap with link as key and empty arraylist as value?

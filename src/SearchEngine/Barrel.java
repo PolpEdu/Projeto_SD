@@ -182,10 +182,18 @@ class Barrel extends Thread implements Serializable {
     }
 
     public String getLinkDescription(String link) {
+        ArrayList<String> description = this.link_info.get(link);
+        if (description == null) {
+            return "No description.";
+        }
         return this.link_info.get(link).get(1);
     }
 
     public String getLinkTitle(String link) {
+        ArrayList<String> title = this.link_info.get(link);
+        if (title == null) {
+            return "No title.";
+        }
         return this.link_info.get(link).get(0);
     }
 

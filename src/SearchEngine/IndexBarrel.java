@@ -210,13 +210,18 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
     @Override
     public ArrayList<String> searchTitle(String word) throws RemoteException {
+        if (word == null) {
+            // "status:failure | message:Word is null"
+            return new ArrayList<>(Arrays.asList("failure", "Word is null"));
+        }
+
         Barrel barrel = this.selectBarrelToExcute();
         if (barrel == null) {
             // "status:failure | message:No barrels available"
             return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
         }
 
-
+        System.out.println("[BARREL-INTERFACE] Searching for title: " + word);
         String title = barrel.getLinkTitle(word);
 
         System.out.println("[BARREL-INTERFACE] Links title: " + title);
@@ -236,6 +241,11 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
     @Override
     public ArrayList<String> searchDescription(String word) throws RemoteException {
+        if (word == null) {
+            // "status:failure | message:Word is null"
+            return new ArrayList<>(Arrays.asList("failure", "Word is null"));
+        }
+
         Barrel barrel = this.selectBarrelToExcute();
         if (barrel == null) {
             // "status:failure | message:No barrels available"
