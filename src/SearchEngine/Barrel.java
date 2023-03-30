@@ -86,7 +86,7 @@ class Barrel extends Thread implements Serializable {
                 String splittype;
                 String splitid;
                 String downid = list[2];
-
+                ArrayList<String> toRemove = new ArrayList<>();
                 for (String str : queuelist) {
 
                     split = str.split("\\|");
@@ -101,18 +101,18 @@ class Barrel extends Thread implements Serializable {
                                     this.word_Links.put(split[2], new HashSet<>());
                                 }
                                 this.word_Links.get(split[2]).add(split[3]);
-
-                                queuelist.remove(str);
+                                toRemove.add(str);
                             }
 
-                        } else if (splittype.equals("links")) {
+                        }
+                        else if (splittype.equals("links")) {
                             if (downid.equals(split[4])) {
                                 if (!this.link_links.containsKey(split[2])) {
                                     this.link_links.put(split[2], new HashSet<>());
                                 }
                                 this.link_links.get(split[2]).add(split[3]);
 
-                                queuelist.remove(str);
+                                toRemove.add(str);
                             }
                         } else if (splittype.equals("siteinfo")) {
 
@@ -124,11 +124,13 @@ class Barrel extends Thread implements Serializable {
                                 this.link_info.get(split[2]).add(split[3]);
                                 this.link_info.get(split[2]).add(split[4]);
 
-                                queuelist.remove(str);
+                                toRemove.add(str);
                             }
                         }
                     }
-
+                }
+                for(String r: toRemove){
+                    queuelist.remove(r);
                 }
                 this.files.updateWords(word_Links, wordfile);
                 this.files.updateLinks(link_links, linkfile);
