@@ -339,7 +339,6 @@ class RMIClient extends UnicastRemoteObject {
         boolean isLogged = this.sv.isLoggedIn(this.client.username);
 
         printLinks(linksSorted, br, adm, isLogged);
-
     }
 
     private HashMap<String, ArrayList<String>> sortByValue(HashMap<String, ArrayList<String>> links, HashMap<String, Integer> linksRelevance) {
@@ -416,8 +415,15 @@ class RMIClient extends UnicastRemoteObject {
                                 try {
                                     int linkNumber = Integer.parseInt(answer);
                                     while (linkNumber < 1 || linkNumber > 10) {
-                                        System.out.print("[CLIENT] Invalid number or 'e' to exit. Select a link to show connections (1-10) or go to next page (y/n):");
+                                        System.out.print("[CLIENT] Invalid number or 'e' to exit. Select a link to show connections (1-10) or go to next page (y/n): ");
                                         answer = br.readLine();
+
+                                        if (answer.equals("e") || answer.equals("n")) {
+                                            return;
+                                        } else if (answer.equals("y")) {
+                                            break;
+                                        }
+
                                         linkNumber = Integer.parseInt(answer);
                                     }
                                     // System.out.print(linksIndex);
@@ -436,16 +442,17 @@ class RMIClient extends UnicastRemoteObject {
                                     break;
                                 } catch (NumberFormatException e) {
                                     System.out.println("[EXCEPTION] NumberFormatException");
-                                    e.printStackTrace();
+                                    continue;
                                 }
                             }
 
                             System.out.print("[CLIENT] Invalid answer. Do you want to see more? (y/n): ");
                             answer = br.readLine();
                         }
-
-                        if (answer.equals("n")) {
+                        if (answer.equals("y")) {
                             break;
+                        } else if (answer.equals("n")) {
+                            return;
                         }
                     } catch (IOException e) {
                         System.out.println("[EXCEPTION] IOException");
@@ -494,7 +501,7 @@ class RMIClient extends UnicastRemoteObject {
                         continue;
                     } catch (NumberFormatException e) {
                         System.out.println("[EXCEPTION] NumberFormatException");
-                        e.printStackTrace();
+                        continue;
                     }
                 } catch (IOException e) {
                     System.out.println("[EXCEPTION] IOException");
