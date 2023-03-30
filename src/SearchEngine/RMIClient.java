@@ -205,17 +205,21 @@ class RMIClient extends UnicastRemoteObject {
                 break;
             case "3":
                 // Index new URL
-                // indexNewURL(br);
+                indexNewURL(br);
                 break;
             case "4":
                 // User List
-                // userList();
+                userList();
                 break;
             case "5":
                 // Give admin perms
-                // giveAdminPerms(br);
+                giveAdminPerms(br);
                 break;
             case "6":
+                // history
+                history();
+                break;
+            case "7":
                 // Logout
                 logout();
                 break;
@@ -229,6 +233,45 @@ class RMIClient extends UnicastRemoteObject {
                 break;
         }
         return true;
+    }
+
+    private void giveAdminPerms(BufferedReader br) {
+    }
+
+    private void history() throws RemoteException {
+        ArrayList<String> res = this.sv.history(this.client.username);
+
+        if (res == null) {
+            System.out.println("[CLIENT] No history found");
+            return;
+        }
+
+        String status = res.get(0);
+        if (status.equals("failure")) {
+            String msg = res.get(1);
+            System.out.println("[CLIENT] Couldn't fetch history: " + msg);
+            return;
+        }
+
+        if (res.size() == 1) {
+            System.out.println("[CLIENT] No history found");
+            return;
+        }
+
+        System.out.println("[CLIENT] History:");
+
+        for (int i = 1; i < res.size(); i++) {
+            System.out.println(res.get(i));
+        }
+
+    }
+
+    private void userList() {
+
+    }
+
+    private void indexNewURL(BufferedReader br) {
+
     }
 
     private Boolean anonLogic(BufferedReader br) throws IOException {
@@ -303,8 +346,8 @@ class RMIClient extends UnicastRemoteObject {
         while (true) {
             try {
                 link = br.readLine();
-                if (link.contains(":") || link.contains("|")) {
-                    System.out.print("[CLIENT] Link cannot contain ':' or '|'\nLink: ");
+                if (link.contains("|")) {
+                    System.out.print("[CLIENT] Link cannot contain '|'\nLink: ");
                     continue;
                 }
                 break;
@@ -325,9 +368,6 @@ class RMIClient extends UnicastRemoteObject {
     private void printLinks(String title, ArrayList<String> links, boolean titledesc) {
         System.out.println("\n### " + title + " ###");
         if (titledesc) {
-            for (int i = 0; i < links.size(); i += 3) {
-                System.out.println("  " + links.get(i) + " - " + links.get(i + 1) + " " + links.get(i + 2));
-            }
             return;
         }
 
@@ -375,7 +415,7 @@ class RMIClient extends UnicastRemoteObject {
 
                 return;
             } else {
-                System.out.println("[CLIENT] Login failed: "+ checked.get(2));
+                System.out.println("[CLIENT] Login failed: " + checked.get(2));
                 String choice = "";
                 while (!choice.equals("y") && !choice.equals("n")) {
                     System.out.print("[CLIENT] Try again? (y/n): ");

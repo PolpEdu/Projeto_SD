@@ -11,20 +11,15 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 
 // needs to be serializable to be sent through rmi
 public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterface {
     static final int alive_checks = 5;
     static final int await_time = 2000;
-
-    private ArrayList<Barrel> barrels_threads;
-
     RMIBarrelInterface b;
+    private ArrayList<Barrel> barrels_threads;
 
     public IndexBarrel() throws RemoteException {
         super();
@@ -87,15 +82,15 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
                 File linkfile = new File("src\\links-" + i);
                 File wordfile = new File("src\\words-" + i);
                 File infofile = new File("src\\info-" + i);
-                File usersfile = new File("src\\users-" + i);
 
                 Database files = new Database(i);
-                Barrel barrel_t = new Barrel(i, receivePort, multicastAddress, rmiHost, rmiPort, rmiRegister, linkfile, wordfile, infofile, usersfile, mainBarrel.b, files, sendPort, ackSem);
+                Barrel barrel_t = new Barrel(i, receivePort, multicastAddress,  linkfile, wordfile, infofile, mainBarrel.b, files, sendPort, ackSem);
                 mainBarrel.barrels_threads.add(barrel_t);
                 barrel_t.start();
             }
         } catch (RemoteException e) {
             System.out.println("[BARREL] Error creating registry: " + e.getMessage());
+            e.printStackTrace();
         } catch (IOException e) {
             System.out.println("[BARREL] Error reading properties file: " + e.getMessage());
             e.printStackTrace();
@@ -201,15 +196,51 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
         }
 
-        // HashMap<String, HashMap<String>> links = barrel.files.getLinks();
+        System.out.println("Link: " + link);
+        System.out.println("Link: " + barrel.linkfile.getName());
+
+        HashMap<String, HashSet<String>> links = barrel.files.getLinks(barrel.linkfile);
+        System.out.println("Link: " + links);
+
+        if (!links.containsKey(link)) {
+            // "status:failure | message:Link does not exist"
+            return new ArrayList<>(Arrays.asList("failure", "Link does not exist"));
+        }
+        // return an array list with the first element as the status
+        // the second one as the url title
+
+        HashMap<String, HashSet<String>> words = barrel.files.getWords(barrel.wordfile);
+        // print
+        System.out.println("Link: " + words);
+        HashSet<String> wordsSet = links.get(link);
+
+        HashMap<String, ArrayList<String>> linksInfo = barrel.files.getLinksInfo(barrel.infofile);
+        System.out.println("Link: " + linksInfo);
+        ArrayList<String> linkInfo = linksInfo.get(link);
 
         return null;
-
     }
 
     @Override
-    public ArrayList<String> searchWord(String word) throws RemoteException {
-        return null;
+    public ArrayList<String> history(String username) throws RemoteException {
+        Barrel barrel = this.selectBarrelToExcute();
+        if (barrel == null) {
+            // "status:failure | message:No barrels available"
+            return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
+        }
+
+        HashMap<String, User> users = barrel.files.getUsers();
+        User user = users.get(username);
+
+        if (user == null) {
+            // "status:failure | message:User does not exist"
+            return new ArrayList<>(Arrays.asList("failure", "User does not exist"));
+        }
+
+        ArrayList<String> history = new ArrayList<>();
+        history.add("success");
+        history.addAll(user.searchHistory);
+        return history;
     }
 
     private Barrel selectBarrelToExcute() {
@@ -221,6 +252,14 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         }
 
         int random = (int) (Math.random() * this.barrels_threads.size());
+
+        // check if barrel is alive if not remove from barrels_threads and select another barrel
+        if (!this.barrels_threads.get(random).isAlive()) {
+            System.out.println("[BARREL-INTERFACE] Barrel " + random + " is not alive");
+            this.barrels_threads.remove(random);
+            return this.selectBarrelToExcute();
+        }
+
         return this.barrels_threads.get(random);
     }
 }

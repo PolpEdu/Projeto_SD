@@ -278,7 +278,6 @@ public class Downloader extends Thread implements Remote {
                     while(!quit) {
                         this.sendMessage(i);
                         long tempoinicial = System.currentTimeMillis();
-                        ArrayList<String> ackinfo = new ArrayList<>();
                         int messageSize = 8 * 1024;
                         byte[] receivebuffer = new byte[messageSize];
                         DatagramPacket receivePacket = new DatagramPacket(receivebuffer, receivebuffer.length);

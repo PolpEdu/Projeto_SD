@@ -20,4 +20,5 @@ public interface RMIServerInterface extends Remote {
     ArrayList<String> searchLink(String link) throws RemoteException;
     ArrayList<String> searchWord(String word) throws RemoteException;
 
+    ArrayList<String> history(String username) throws RemoteException;
 }

@@ -233,9 +233,12 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     }
 
     public ArrayList<String> searchLink(String link) throws RemoteException {
-        ArrayList<String> response = new ArrayList<>();
+        ArrayList<String> res = this.b.searchLink(link);
 
-        return response;
+
+
+
+        return res;
     }
 
     @Override
@@ -271,5 +274,9 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         String admin = res.get(2);
         // register successful and not admin
         return new ArrayList<String>(Arrays.asList("true", admin, message));
+    }
+
+    public ArrayList<String> history(String username) throws RemoteException {
+        return this.b.history(username);
     }
 }

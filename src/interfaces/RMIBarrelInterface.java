@@ -10,6 +10,7 @@ public interface RMIBarrelInterface extends Remote{
     ArrayList<String> checkUserRegistration(String username, String password, String firstName, String lastName) throws RemoteException;
     ArrayList<String> verifyUser(String username, String password) throws RemoteException;
     ArrayList<String> searchLink(String link) throws RemoteException;
-    ArrayList<String> searchWord(String word) throws RemoteException;
+    // ArrayList<String> searchWord(String word) throws RemoteException;
 
+    ArrayList<String> history(String username) throws RemoteException;
 }
