@@ -46,7 +46,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     String bRMIhost;
     int bRMIport;
 
-    public RMIServer(LinkedBlockingQueue urlQueue, String multicastAddress, int multicastSendPort, RMIServerInterface hPrincipal, String bRMIregistry, String bRMIhost, int bRMIport) throws RemoteException {
+    public RMIServer(String multicastAddress, int multicastSendPort, RMIServerInterface hPrincipal, String bRMIregistry, String bRMIhost, int bRMIport) throws RemoteException {
         super();
 
         this.m_Send = new MulticastSend(multicastAddress, multicastSendPort);
@@ -108,8 +108,8 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 return;
             }
 
-            UrlQueue urlQueue = new UrlQueue();
-            rmiServer = new RMIServer(urlQueue.getUrlQueue(), mcAddress, mcSendPort, null, bRmiRegistryName, bRmiHost, bRmiPort);
+
+            rmiServer = new RMIServer(mcAddress, mcSendPort, null, bRmiRegistryName, bRmiHost, bRmiPort);
 
         } catch (RemoteException er) {
             System.out.println("[EXCEPTION] RemoteException");

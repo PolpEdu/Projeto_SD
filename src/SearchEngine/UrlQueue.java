@@ -15,12 +15,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterface {
     private final LinkedBlockingQueue<String> urlQueue;
-    private final File urlqueuefile = new File("urlqueue");
-    private RMIUrlQueueInterface u;
+    private final File urlqueuefile;
+    private final File urlqueuefileb;
 
     public UrlQueue() throws RemoteException {
         super();
         this.urlQueue = new LinkedBlockingQueue<>();
+        this.urlqueuefile = new File("urlqueue");
+        this.urlqueuefileb = new File("urlqueueb");
         this.urlQueue.offer("https://www.uc.pt/");
     }
 
@@ -59,10 +61,6 @@ public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterfac
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public LinkedBlockingQueue<String> getUrlQueue(){
-        return this.urlQueue;
     }
 
     @Override

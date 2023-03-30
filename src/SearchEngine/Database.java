@@ -6,6 +6,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 public class Database implements Serializable {
@@ -371,6 +372,92 @@ public class Database implements Serializable {
         // System.out.println("getWords: " + words);
         return words;
     }
+
+    public LinkedBlockingQueue<String> getUrlQueue(File urlQueue, File backup) {
+        LinkedBlockingQueue<String> queue = new LinkedBlockingQueue<>();
+        try {
+
+            if (!urlQueue.exists()) {
+                urlQueue.createNewFile();
+
+                updateUrlQueue(new LinkedBlockingQueue<>(), urlQueue, backup);
+
+            } else {
+                FileInputStream fis = new FileInputStream(urlQueue);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                queue = (LinkedBlockingQueue<String>) ois.readObject();
+
+                ois.close();
+            }
+
+        } catch (StreamCorruptedException | EOFException e) {
+            System.out.println("[EXCEPTION] EOF Error, corrupted file: " + e.getMessage());
+            try {
+                FileInputStream fis = new FileInputStream(backup);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                queue = (LinkedBlockingQueue<String>) ois.readObject();
+                ois.close();
+                return queue;
+
+            } catch (FileNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("[EXCEPTION] While getting info: " + e.getMessage());
+
+            try {
+                FileInputStream fis = new FileInputStream(backup);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+
+                queue = (LinkedBlockingQueue<String>) ois.readObject();
+                ois.close();
+                return queue;
+
+            } catch (FileNotFoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+
+
+        }
+        // System.out.println("getLinksInfo: " + linksInfo);
+        return queue;
+    }
+    public void updateUrlQueue(LinkedBlockingQueue<String> uqueue, File urlqueue, File backup) {
+        try {
+
+            if (!urlqueue.exists()) {
+                urlqueue.createNewFile();
+            }
+            // escreve numa class "HashNap"
+            FileOutputStream fos = new FileOutputStream(urlqueue);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(uqueue);
+            oos.close();
+            fos.close();
+
+            fos = new FileOutputStream(backup);
+            oos = new ObjectOutputStream(fos);
+            oos.writeObject(uqueue);
+            oos.close();
+            fos.close();
+
+
+        } catch (IOException e) {
+            System.out.println("[EXCEPTION] While updating links: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
 }
 
