@@ -123,11 +123,15 @@ public class Downloader extends Thread implements Remote {
         }
     }
 
-    /**
-     * @param words    - words to add
-     * @param wordList - list of words to save
-     */
 
+    /**
+     *
+     * In this function we get an array and a list to add words
+     * We process the words with a stop word list and add them to the list
+     *
+     * @param words array with words to be processed
+     * @param wordList list to add the words
+     */
     private static void seperateWords(String words, ArrayList<String> wordList) {
         BufferedReader buffer = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(words.getBytes(StandardCharsets.UTF_8))));
         String line;
@@ -162,6 +166,9 @@ public class Downloader extends Thread implements Remote {
         }
     }
 
+    /**
+     * run funcition to start the thread and the socket
+     */
     public void run() {
         System.out.println("[DOWNLOADER " + this.id + "] is running ...");
         try {
@@ -175,6 +182,16 @@ public class Downloader extends Thread implements Remote {
         }
     }
 
+    /**
+     * function to add the info in the arraylists
+     *
+     *
+     * @param webs - website to get info
+     * @param Links - links from website
+     * @param wordL - words from website
+     * @param SiteInfo - title and description from website
+     * @return true if website is valid, false if not
+     */
     boolean getInfoFromWebsite(String webs, ArrayList<String> Links, ArrayList<String> wordL, ArrayList<String> SiteInfo) {
         String ws = webs;
         try {
@@ -220,6 +237,10 @@ public class Downloader extends Thread implements Remote {
         return true;
     }
 
+
+    /**
+     * function to send the info to the barrels
+     */
     void QueueInfo() {
 
         while (true) {
@@ -333,6 +354,11 @@ public class Downloader extends Thread implements Remote {
         }
     }
 
+    /**
+     * function to send a message to the multicast group
+     *
+     * @param send string to send
+     */
     private void sendMessage(String send) {
         try {
             this.conSem.acquire();
