@@ -16,15 +16,37 @@ import java.util.concurrent.Semaphore;
  * Classe indexBarrel que implementa a interface RMIBarrelInterface
  */
 public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterface {
+    /**
+     * number of times to check if the barrel is alive
+     */
     static final int alive_checks = 5;
+    /**
+     * time to wait between alive checks
+     */
     static final int await_time = 2000;
-
+    /**
+     * interface of the barrel
+     */
     RMIBarrelInterface b;
-
+    /**
+     * port of the RMI
+     */
     public int PORT;
+    /**
+     * host ip of the RMI
+     */
     public String HOST;
+    /**
+     * name of the RMI
+     */
     public String RMI_REGISTER;
+    /**
+     * list of barrel threads
+     */
     private ArrayList<Barrel> barrels_threads;
+    /**
+     * id do indexBarrel
+     */
     private int id;
 
     /**

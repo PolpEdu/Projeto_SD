@@ -19,28 +19,77 @@ import java.util.concurrent.Semaphore;
  */
 
 class Barrel extends Thread implements Serializable {
+    /**
+     * file to access the links
+     */
     public final File linkfile;
+    /**
+     * file to access the words
+     */
     public final File wordfile;
+    /**
+     * file to access the info
+     */
     public final File infofile;
+    /**
+     * file to access the links - backup
+     */
 
     public final File linkfileb;
+    /**
+     * file to access the words - backup
+     */
     public final File wordfileb;
+    /**
+     * file to access the info - backup
+     */
     public final File infofileb;
+    /**
+     * id of the barrel
+     */
     private final int id; // id do barrel
 
-    // multicast from downloaders
+    /**
+     * multicast address to send the messages
+     */
     private final String MULTICAST_ADDRESS;
+    /**
+     * multicast port
+     */
     private final int MULTICAST_RECEIVE_PORT;
+    /**
+     * hashmap to associate words to links
+     */
 
     private final HashMap<String, HashSet<String>> word_Links;
+    /**
+     * hashmap to associate link to links
+     */
     private final HashMap<String, HashSet<String>> link_links;
+    /**
+     * hashmap to associate link to title and description
+     */
     private final HashMap<String, ArrayList<String>> link_info;
-    private final HashMap<String, Integer> top_searches;
 
+    /**
+     * semaphore to control the access to acknowledge
+     */
     private final Semaphore ackSem;
+    /**
+     * size of the message
+     */
     int messageSize = 8 * 1024;
+    /**
+     * database object to access the write and read methods
+     */
     Database files;
+    /**
+     * multicast group
+     */
     private InetAddress group;
+    /**
+     * multicast socket
+     */
     private MulticastSocket receiveSocket;
 
     /**
@@ -77,7 +126,7 @@ class Barrel extends Thread implements Serializable {
         this.word_Links = files.getWords(wordfile, this.wordfileb);
         this.link_links = files.getLinks(linkfile, this.linkfileb);
         this.link_info = files.getLinksInfo(infofile, this.infofileb);
-        this.top_searches = files.getTop10Searches();
+
     }
 
     /**

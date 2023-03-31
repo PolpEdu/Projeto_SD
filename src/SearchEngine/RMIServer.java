@@ -16,41 +16,41 @@ import java.util.*;
 
 
 public class RMIServer extends UnicastRemoteObject implements RMIServerInterface {
-    // number of times to check if server is alive
+    /** number of times to check if server is alive */
     static final int alive_checks = 5;
 
-    // time to wait between checks in milliseconds, if server is alive
+    /** time to wait between checks in milliseconds, if server is alive */
     static final int await_time = 1000;
 
 
-    // HashMap of clients connected to server
+    /** HashMap of clients connected to server */
     HashMap<String, Client> clients;
 
-    // Interface for the server that will receive the messages (this class)
+    /** Interface for the server that will receive the messages (this class) */
     RMIServerInterface hPrincipal;
 
-    // Interface for the barrels
+    /** Interface for the barrels */
     RMIBarrelInterface b;
 
-    // Interface for the urlQueue
+    /** Interface for the urlQueue */
     RMIUrlQueueInterface u;
 
-    // Registry for the barrels
+    /** Registry for the barrels */
     String bRMIregistry;
 
-    // Host for the barrels
+    /** Host for the barrels */
     String bRMIhost;
 
-    // Port for the barrels
+    /** Port for the barrels */
     int bRMIport;
 
-    // Registry for the urlQueue
+    /** Registry for the urlQueue */
     String uRMIregistry;
 
-    // Host for the urlQueue
+    /** Host for the urlQueue */
     String uRMIhost;
 
-    // Port for the urlQueue
+    /** Port for the urlQueue */
     int uRMIport;
 
     /**
@@ -87,7 +87,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     /**
      * The main method of the RMIServer. Here we set the security policy and load the properties file.
      * We also create the RMI registry and bind the server to it. As a last step, we create the server and keep it alive.
-     * @implNote As a failover precaution, we keep trying to create the RMI registry with our interface if we can't connect to the server.
+     * As a failover precaution, we keep trying to create the RMI registry with our interface if we can't connect to the server.
      * @param args command line arguments, none are used
      * @throws RemoteException if there is a problem with the RMI connection
      */
@@ -310,7 +310,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
      * the title as the first value of the object array and the description as the second value as so:
      *
      * @param phrase the phrase to search for. The words will be separated by space
-     * @return returns an hashmap like so <link, <title, description>>. If no links are found, it will return an empty hashmap
+     * @return returns an hashmap like. If no links are found, it will return an empty hashmap
      * @throws RemoteException if there is a problem with the connection to the barrel
      */
     public HashMap<String, ArrayList<String>> searchLinks(String phrase) throws RemoteException {

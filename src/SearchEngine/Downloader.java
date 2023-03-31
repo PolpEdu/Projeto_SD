@@ -28,13 +28,33 @@ import java.util.regex.Pattern;
  * this class is responsible for downloading the pages from the queue
  */
 public class Downloader extends Thread implements Remote {
-
+    /**
+     * multicast send port
+     */
     private final int MULTICAST_SEND_PORT;
+    /**
+     * multicast address
+     */
     private final String MULTICAST_ADDRESS;
+    /**
+     * semaphore to control the access to the send messages
+     */
     private final Semaphore conSem;
+    /**
+     * RMI server to the urlqueue
+     */
     private final RMIUrlQueueInterface server;
+    /**
+     * id of the downloader
+     */
     private final int id;
+    /**
+     * socket to send the multicast
+     */
     private MulticastSocket sendSocket;
+    /**
+     * group to send the multicast
+     */
     private InetAddress group;
 
 
@@ -63,6 +83,7 @@ public class Downloader extends Thread implements Remote {
     /**
      * main method of the Downloader class
      * here we make the connection to the multicast and the RMI server and start the download
+     * @param args
      */
     public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
@@ -145,7 +166,7 @@ public class Downloader extends Thread implements Remote {
                 if (line == null) {
                     break;
                 }
-                String[] splited = line.split("[ ,;:.?!“”(){}\\[\\]<>'\n]+");
+                String[] splited = line.split("[ ,;:.?!(){}\\[\\]<>'\n]+");
                 for (String word : splited) {
                     word = word.toLowerCase();
                     if (!wordList.contains(word) && !"".equals(word) && !stopWords.contains(word)) {

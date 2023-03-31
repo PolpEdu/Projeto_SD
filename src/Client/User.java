@@ -7,19 +7,19 @@ import java.io.Serializable;
  * It stores the username, password, admin status, name and surname of the user.
  */
 public class User implements Serializable {
-    // username and password of the user
+    /** username and password of the user */
     public String username;
 
-    // password of the user
+    /** password of the user */
     public String password;
 
-    // name of the user
+    /** name of the user */
     public String name;
 
-    // surname of the user
+    /** surname of the user */
     public String surname;
 
-    // admin status of the user
+    /** admin status of the user */
     public boolean admin;
 
     /**

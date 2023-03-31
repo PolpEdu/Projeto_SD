@@ -20,11 +20,29 @@ import java.util.regex.Pattern;
  */
 
 class RMIClient {
+    /**
+     * time to keep the thread alive
+     */
     static final int keepAliveTime = 5000;
+    /**
+     * rmi host address
+     */
     private final String rmiHost;
+    /**
+     * rmi port
+     */
     private final int rmiPort;
+    /**
+     * rmi registry name
+     */
     private final String rmiRegistryName;
+    /**
+     * RMIserver interface
+     */
     private RMIServerInterface sv;
+    /**
+     * client object
+     */
     private Client client;
 
     /**

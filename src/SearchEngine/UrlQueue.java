@@ -12,14 +12,33 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
-
+/**
+ * UrlQueue class that implements the RMIUrlQueueInterface.
+ */
 public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterface {
-    private final LinkedBlockingQueue<String> urlQueue;
-    private final File urlqueuefile;
-    private final File urlqueuefileb;
 
+    /**
+     * queue of urls to be indexed
+     */
+    private final LinkedBlockingQueue<String> urlQueue;
+    /**
+     * file to save the queue
+     */
+    private final File urlqueuefile;
+    /**
+     * file to save the queue - backup
+     */
+    private final File urlqueuefileb;
+    /**
+     * database object to access the write and read methods
+     */
     private final Database db;
 
+    /**
+     * Constructor of the UrlQueue class.
+     * here we initialize the files to read and write, the database object and the queue.
+     * @throws RemoteException
+     */
     public UrlQueue() throws RemoteException {
         super();
         this.db = new Database();
@@ -34,6 +53,10 @@ public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterfac
 
     }
 
+    /**
+     * main method to start the UrlQueue and de RMI server
+     * @param args
+     */
     public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
         Properties prop = new Properties();
@@ -71,6 +94,11 @@ public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterfac
         }
     }
 
+    /**
+     * function that a downloader will call to get a link from the queue
+     * @return link
+     * @throws RemoteException
+     */
     @Override
     public String takeLink() throws RemoteException {
 
@@ -82,12 +110,22 @@ public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterfac
         }
     }
 
+    /**
+     * function that a crawler will call to add a link to the queue
+     * @param link link to be added
+     * @throws RemoteException
+     */
     @Override
     public void offerLink(String link) throws RemoteException {
         this.urlQueue.offer(link);
         this.db.updateUrlQueue(this.urlQueue, this.urlqueuefile, this.urlqueuefileb);
     }
 
+    /**
+     * function that a crawler will call to check if the queue is empty
+     * @return true if the queue is empty, false otherwise
+     * @throws RemoteException
+     */
     @Override
     public boolean isempty() throws RemoteException {
         return this.urlQueue.isEmpty();

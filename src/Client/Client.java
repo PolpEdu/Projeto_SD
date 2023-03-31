@@ -8,10 +8,10 @@ import java.io.Serializable;
  * This class is used primarily to keep track of connections and authentication.
  */
 public class Client implements Serializable {
-    // username and password of the user
+    /**username and password of the user*/
     public String username;
 
-    // admin status of the user
+    /**admin status of the user*/
     public boolean admin;
 
     /**
