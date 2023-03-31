@@ -582,8 +582,8 @@ class RMIClient {
             ArrayList<String> checked = this.sv.checkLogin(username, password);
             System.out.println(checked);
             if (checked.get(0).equals("true")) {
-                boolean admin = Boolean.getBoolean(checked.get(1));
-                this.client = new Client(username, Boolean.getBoolean(checked.get(1)));
+                boolean admin = checked.get(1).equals("true");
+                this.client = new Client(username, admin);
 
                 if (admin) {
                     System.out.println("[CLIENT] Login successful as admin");
