@@ -126,7 +126,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     /**
-     * Caso o registry do RMI nao seja criado, esta função é chamada para recriar o registry
+     * Caso o registry do RMI nao seja criado, esta função é chamada para recriar o registry apos um certo tempo
      *
      * @param rmiPort port do RMI
      * @param rmiHost host do RMI
@@ -166,7 +166,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     /**
-     * Retorna se ele está vivo
+     * Esta função é chamada para selecionar um barril para dizer se está vivo ou não
      *
      * @return barrel alive
      * @throws RemoteException
@@ -179,7 +179,8 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
     /**
      *
-     * Guarda o novo user no hashmap e escreve no ficheiro
+     * Chama a função para selecionar um barril para executar a função
+     * Esta função é chamada para registar um utilizador e o guardar no ficheiro de users
      *
      * @param username recebe o username
      * @param password recebe a password
@@ -219,6 +220,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     /**
+     * Chama a função para selecionar um barril para executar a função
      * verficar se o user existe e se a password está correta
      *
      * @param username recebe o username
@@ -251,7 +253,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     /**
-     *
+     *chama a função para selecionar um barril para executar a função
      * procura os links associados a uma palavra
      *
      * @param word recebe a palavra
@@ -272,8 +274,8 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     /**
-     *
-     * retorna o titulo do link
+     * chama a função para selecionar um barril para executar a função
+     * retorna o titulo do link caso exista, caso contrario retorna que o link nao existe
      *
      * @param word recebe a palavra
      * @return titulo do link
@@ -311,7 +313,8 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     /**
-     * devolve a descricao do link
+     * pede a um barril para executar a função
+     * retorna o titulo do link caso exista, caso contrario retorna que o link nao existe
      *
      * @param word recebe a palavra
      * @return descricao do link
@@ -344,7 +347,8 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     /**
-     * devolve os links onde o link aparece
+     * pede a um barril para executar a função
+     * devolve os links onde o link aparece caso exista, caso contrario retorna um hashset vazio
      *
      * @param link recebe o link
      * @return devolve links onde o link aparece
@@ -364,7 +368,8 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     /**
-     * devolve se o user é admin ou nao
+     * pede a um barril para executar a função
+     * devolve se o user é admin ou nao atraves de um boolean
      *
      * @param username recebe o username
      * @return true se for admin, false se nao for
