@@ -394,8 +394,9 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     }
 
     /**
+     * pede aos barris para executar a função e devolve os barris que estao vivos
      *
-     * @return
+     * @return lista de barris vivos
      * @throws RemoteException
      */
     @Override
@@ -410,6 +411,15 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return result;
     }
 
+    /**
+     * pede a um barril para executar a função
+     * coloca a palavra na lista de palavras mais pesquisadas com o numero de vezes que foi pesquisada
+     * devolve se a palavra foi guardada
+     *
+     * @param phrase recebe uma pesquisa de um user
+     * @return devolve se a palavra foi guardada
+     * @throws RemoteException
+     */
     @Override
     public ArrayList<String> saveWordSearches(String phrase) throws RemoteException {
         Barrel barrel = this.selectBarrelToExcute();
@@ -429,6 +439,13 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return new ArrayList<>(Arrays.asList("success", "Word saved"));
     }
 
+    /**
+     * pede a um barril para executar a função
+     * devolve as 10 palavras mais pesquisadas que estao num ficheiro
+     *
+     * @return devolve as 10 palavras mais pesquisadas
+     * @throws RemoteException
+     */
     @Override
     public HashMap<String, Integer> getTop10Searches() throws RemoteException {
         Barrel barrel = this.selectBarrelToExcute();
@@ -439,6 +456,13 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
         return barrel.files.getTop10Searches();
     }
+
+    /**
+     * seleciona o barril que vai executar a função de forma aleatoria dentro dos barris que estao vivos
+     * se nao existirem barris ativos devolve null
+     *
+     * @return devolve o barril que vai executar a função
+     */
 
     private Barrel selectBarrelToExcute() {
         // select a random barrel to fulfill the task
