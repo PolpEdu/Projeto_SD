@@ -14,6 +14,11 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * RMIClient class that handles the client side of the RMI connection.
+ * It handles the logic for the menu prompts and the logic for the user to interact with the server.
+ */
+
 class RMIClient {
     static final int keepAliveTime = 5000;
     private final String rmiHost;
@@ -169,6 +174,9 @@ class RMIClient {
         }
     }
 
+    /**
+     * this function asks the RMI server for the top 10 searches and prints them for the user
+     */
     private void topSearches() {
         ArrayList<String> top10 = new ArrayList<>();
         // get the top 10 searches from the server
@@ -236,7 +244,12 @@ class RMIClient {
         }
         return true;
     }
-
+    /**
+     * Method that handles the logic for the anonymous user menu.
+     * @param br the buffered reader
+     * @return true if no errors occurred, false otherwise
+     * @throws IOException if an error occurs while reading from the buffer
+     */
     private Boolean anonLogic(BufferedReader br) throws IOException {
         String choice = "";
 
@@ -277,7 +290,7 @@ class RMIClient {
     }
 
     /**
-     * Method that handles the logic for the anonymous user menu.
+     * Method that handles the logic for the admin user menu.
      * @param br the buffered reader object
      * @return true if there wasn't an error, false otherwise
      * @throws IOException if there was an error reading from the buffer
@@ -331,6 +344,11 @@ class RMIClient {
         return true;
     }
 
+    /**
+     * this function sends a link to the URLQueue to be indexed
+     * @param br the buffered reader in the commands line
+     * @throws RemoteException
+     */
     private void indexNewUrl(BufferedReader br) throws RemoteException {
         String url = "";
         System.out.print("\nURL: ");
@@ -362,6 +380,14 @@ class RMIClient {
         }
     }
 
+    /**
+     * this functions sends a search phrase to the server to be searched and get the links
+     * that are associated with the words in the search phrase
+     * we also already dispose the links in order of relevance
+     *
+     * @param br the buffered reader in the commands line
+     * @throws RemoteException
+     */
     private void searchLinks(BufferedReader br) throws RemoteException {
         String phrase = ""; // search phrase
         System.out.print("\nSearch: ");
@@ -423,6 +449,13 @@ class RMIClient {
         printLinks(linksSorted, br, adm, isLogged);
     }
 
+    /**
+     * this functions put the links in an arraylist sorted by their relevance and returns it
+     *
+     * @param links all links that are associated with the search phrase
+     * @param linksRelevance the relevance of each link
+     * @return an arraylist of links sorted by relevance
+     */
     private HashMap<String, ArrayList<String>> sortByValue(HashMap<String, ArrayList<String>> links, HashMap<String, Integer> linksRelevance) {
         /*
             links: {
@@ -452,6 +485,17 @@ class RMIClient {
         return sortedLinks;
     }
 
+    /**
+     * in this function we print the links we got from the searchLinks function and their info
+     * we also print a menu if they want to see the links associated with the link
+     * if the search has more then 10 links then we print them in different pages of 10 links each
+     *
+     * @param links the links to be printed
+     * @param br the buffered reader in the commands line
+     * @param isadmin if the user is admin
+     * @param isLogged if the user is logged in
+     * @throws RemoteException
+     */
     private void printLinks(HashMap<String, ArrayList<String>> links, BufferedReader br, boolean isadmin, boolean isLogged) throws RemoteException {
         // links will be like this: <link, <title, description>>
 
@@ -652,6 +696,12 @@ class RMIClient {
         }
     }
 
+    /**
+     * here we handle the registration of a new user and send the data to the server and the barrels
+     *
+     * @param br BufferedReader to read from the console
+     * @throws RemoteException
+     */
     private void register(BufferedReader br) throws RemoteException {
         String username = "", password = "", firstName = "", lastName = "";
         while (true) {
@@ -725,12 +775,20 @@ class RMIClient {
         }
     }
 
+    /**
+     *here we handle the logout of the user and pass the menu to anon mode
+     * @throws RemoteException
+     */
+
     private void logout() throws RemoteException {
         this.sv.logout(this.client.username);
         this.client = new Client("Anon", false);
         System.out.println("[CLIENT] Logged out");
     }
 
+    /**
+     * here we try to reconnect to the RMI server if the registry fails
+     */
     private void serverErrorHandling() {
         System.out.println("[EXCEPTION] Could not connect to server");
         while (true) {

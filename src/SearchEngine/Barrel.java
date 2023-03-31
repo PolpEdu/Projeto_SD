@@ -196,7 +196,7 @@ class Barrel extends Thread implements Serializable {
     }
 
     /**
-     * Devolve os links associados a uma palavra
+     * Devolve os links associados a uma palavra que esta no hashmap
      * @param word palavra a procurar
      * @return links associados a uma palavra
      */
@@ -205,7 +205,7 @@ class Barrel extends Thread implements Serializable {
     }
 
     /**
-     * Devolve a descrição de um link
+     * Devolve a descrição de um link que esta no hashmap
      * @param link link a procurar
      * @return descrição do link
      */
@@ -218,7 +218,7 @@ class Barrel extends Thread implements Serializable {
     }
 
     /**
-     * devolve o titulo de um link
+     * devolve o titulo de um link que esta no hashmap
      * @param link link a procurar
      * @return titulo do link
      */
@@ -231,7 +231,7 @@ class Barrel extends Thread implements Serializable {
     }
 
     /**
-     * devolve links em que o link aparece
+     * devolve links em que o link aparece , que esta no hashmap
      * @param link link a procurar
      * @return links em que o link aparece
      */
