@@ -24,6 +24,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
+
+/** 
+ * Downloader class
+ * this class is responsible for downloading the pages from the queue
+ * 
+ *  
+ * 
+*/
 public class Downloader extends Thread implements Remote {
 
     private final int MULTICAST_SEND_PORT;
@@ -34,6 +42,17 @@ public class Downloader extends Thread implements Remote {
     private final RMIUrlQueueInterface server;
     private final int id;
 
+
+    /**
+     * 
+     * constructor of the Downloader class
+     * 
+     * @param id - id of the downloader
+     * @param MULTICAST_SEND_PORT - port to send the multicast
+     * @param MULTICAST_ADDRESS  - address to send the multicast
+     * @param conSem - semaphore to control the access to the queue
+     * @param server - RMI server
+     */
     public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem,RMIUrlQueueInterface server) {
         this.sendSocket = null;
         this.group = null;
@@ -46,6 +65,12 @@ public class Downloader extends Thread implements Remote {
         this.id = id;
         this.server = server;
     }
+    
+    /**
+     * 
+     * main method of the Downloader class
+     * here we make the connection to the multicast and the RMI server and start the download
+     */
 
     public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
@@ -103,6 +128,13 @@ public class Downloader extends Thread implements Remote {
         }
     }
 
+    /**
+     * 
+     * 
+     * @param words - words to add
+     * @param wordList - list of words to save
+     */
+     
     private static void seperateWords(String words, ArrayList<String> wordList) {
         BufferedReader buffer = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(words.getBytes(StandardCharsets.UTF_8))));
         String line;
