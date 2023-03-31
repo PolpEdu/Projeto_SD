@@ -323,7 +323,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             return new ArrayList<>(Arrays.asList("failure", "No barrels available"));
         }
 
-        HashMap<String, Integer> topWords = barrel.files.getTopWords();
+        HashMap<String, Integer> topWords = barrel.files.getTop10Searches();
         if (topWords.containsKey(phrase)) {
             topWords.put(phrase, topWords.get(phrase) + 1);
         } else {
@@ -332,6 +332,17 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
         barrel.files.updateTopWords(topWords);
         return new ArrayList<>(Arrays.asList("success", "Word saved"));
+    }
+
+    @Override
+    public HashMap<String, Integer> getTop10Searches() throws RemoteException {
+        Barrel barrel = this.selectBarrelToExcute();
+        if (barrel == null) {
+            // "status:failure | message:No barrels available"
+            return null;
+        }
+
+        return barrel.files.getTop10Searches();
     }
 
     private Barrel selectBarrelToExcute() {

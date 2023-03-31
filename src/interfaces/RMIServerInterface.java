@@ -14,14 +14,10 @@ public interface RMIServerInterface extends Remote {
     boolean logout(String username) throws RemoteException;
     boolean isAdmin(String username) throws RemoteException;
 
+    ArrayList<String> getTop10Searches() throws RemoteException;
 
     HashMap<String, ArrayList<String>> searchLinks(String phrase) throws RemoteException;
     ArrayList<String> linkPointers(String link) throws RemoteException;
 
-
     ArrayList<String> getLinksByRelevance(String link) throws RemoteException;
-
-
-
-
 }

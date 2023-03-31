@@ -344,7 +344,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         HashSet<String> res = this.b.linkpointers(link);
         if (res == null) {
             System.out.println("[SERVER] Error finding links with link: " + link);
-            return null;
+            return new ArrayList<String>();
         }
         return new ArrayList<String>(res);
     }
@@ -371,6 +371,30 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     @Override
     public boolean isAdmin(String username) throws RemoteException {
         return this.b.isAdmin(username);
+    }
+
+    @Override
+    public ArrayList<String> getTop10Searches() throws RemoteException {
+        // gives a hashmap of all the searches and the number of times they have been searched
+        HashMap<String, Integer> res = this.b.getTop10Searches();
+
+        System.out.println("[SERVER] Top 10 Searches: " + res);
+
+        // return only the top 10 searches
+        ArrayList<String> top10 = new ArrayList<String>();
+        for (int i = 0; i < 10; i++) {
+            String max = "";
+            int maxCount = 0;
+            for (String s : res.keySet()) {
+                if (res.get(s) > maxCount) {
+                    max = s;
+                    maxCount = res.get(s);
+                }
+            }
+            top10.add(max);
+            res.remove(max);
+        }
+        return top10;
     }
 
     @Override

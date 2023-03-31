@@ -61,7 +61,7 @@ class Barrel extends Thread implements Serializable {
         this.word_Links = files.getWords(wordfile, this.wordfileb);
         this.link_links = files.getLinks(linkfile, this.linkfileb);
         this.link_info = files.getLinksInfo(infofile, this.infofileb);
-        this.top_searches = files.getTopWords();
+        this.top_searches = files.getTop10Searches();
     }
 
     public void loop() throws IOException {
@@ -176,8 +176,8 @@ class Barrel extends Thread implements Serializable {
         return this.word_Links.get(word);
     }
 
-    public ArrayList<String> getLinkInfo(String link) {
-        return this.link_info.get(link);
+    public HashMap<String, Integer> getTopSearches() {
+        return this.top_searches;
     }
 
     public String getLinkDescription(String link) {
@@ -197,6 +197,9 @@ class Barrel extends Thread implements Serializable {
     }
 
     public HashSet<String> getLinkPointers(String link){
+        if (this.link_links.get(link) == null){
+            return new HashSet<>();
+        }
         return this.link_links.get(link);
     }
 

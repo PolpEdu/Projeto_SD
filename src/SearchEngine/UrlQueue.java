@@ -28,7 +28,7 @@ public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterfac
         this.urlqueuefileb = new File("src\\urlqueueb");
         this.urlQueue = db.getUrlQueue(this.urlqueuefile, this.urlqueuefileb);
         if(this.urlQueue.isEmpty()){
-            this.urlQueue.offer("https://www.uc.pt/");
+            this.urlQueue.offer("https://www.uc.pt");
         }
 
     }

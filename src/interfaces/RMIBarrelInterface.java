@@ -3,6 +3,7 @@ package interfaces;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public interface RMIBarrelInterface extends Remote{
@@ -21,5 +22,7 @@ public interface RMIBarrelInterface extends Remote{
     ArrayList<ArrayList<String>> getBarrelsAlive() throws RemoteException;
 
     ArrayList<String> saveWordSearches(String phrase) throws RemoteException;
+
+    HashMap<String, Integer> getTop10Searches() throws RemoteException;
 
 }

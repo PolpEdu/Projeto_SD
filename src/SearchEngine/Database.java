@@ -168,7 +168,7 @@ public class Database implements Serializable {
         return users;
     }
 
-    public HashMap<String, Integer> getTopWords() {
+    public HashMap<String, Integer> getTop10Searches() {
         HashMap<String, Integer> words = new HashMap<>();
         try {
             this.s_searchesFiles.acquire();

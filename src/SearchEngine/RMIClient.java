@@ -223,7 +223,20 @@ class RMIClient {
 
 
     private void topSearches() {
+        ArrayList<String> top10 = new ArrayList<>();
+        // get the top 10 searches from the server
+        try {
+            top10 = this.sv.getTop10Searches();
+        } catch (RemoteException e) {
+            System.out.println("[CLIENT] RemoteException");
+            e.printStackTrace();
+        }
 
+        // print the top 10 searches
+        System.out.println("\n### Top 10 Searches ###");
+        for (int i = 0; i < top10.size(); i++) {
+            System.out.println((i+1) + ". " + top10.get(i));
+        }
     }
 
     private void downloadersUp() {
@@ -567,6 +580,7 @@ class RMIClient {
             }
 
             ArrayList<String> checked = this.sv.checkLogin(username, password);
+            System.out.println(checked);
             if (checked.get(0).equals("true")) {
                 boolean admin = Boolean.getBoolean(checked.get(1));
                 this.client = new Client(username, Boolean.getBoolean(checked.get(1)));

@@ -16,7 +16,6 @@ import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
@@ -170,6 +169,7 @@ public class Downloader extends Thread implements Remote {
             SiteInfo.add(desciption);
 
             Elements hrefs = doc.select("a[href]");
+            // System.out.println("Links: " + hrefs.size());
             for (Element link : hrefs) {
                 if (!link.attr("href").startsWith("#") || link.attr("href").startsWith("http")) {
                     Links.add(link.attr("href"));
@@ -283,6 +283,10 @@ public class Downloader extends Thread implements Remote {
                     }
 
                     System.out.println("[DOWNLOADER " + this.id + "] ALL INFO SENDED");
+
+                    // print the first info
+                    // System.out.println("[DOWNLOADER " + this.id + "] " + info.get(0));
+
                     sendMessage("id:done|type:ack|" + this.id);
                     //colocar os novos links na queue para continuar a ir buscar informaçã
                     for (String l : links) {
