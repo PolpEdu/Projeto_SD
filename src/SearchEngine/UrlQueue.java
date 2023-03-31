@@ -22,7 +22,7 @@ public class UrlQueue extends UnicastRemoteObject implements RMIUrlQueueInterfac
 
     public UrlQueue() throws RemoteException {
         super();
-        this.db = new Database(1);
+        this.db = new Database();
 
         this.urlqueuefile = new File("src\\urlqueue");
         this.urlqueuefileb = new File("src\\urlqueueb");
