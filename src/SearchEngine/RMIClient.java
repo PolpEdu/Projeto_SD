@@ -1,6 +1,7 @@
 package SearchEngine;
 
 import Client.Client;
+import interfaces.RMIBarrelInterface;
 import interfaces.RMIServerInterface;
 
 import java.io.*;
@@ -71,9 +72,7 @@ class RMIClient {
 
             // GET SERVER INTERFACE USING REGISTRY
             RMIServerInterface svInterface = (RMIServerInterface) LocateRegistry.getRegistry(rmiHost, rmiPort).lookup(rmiRegistryName);
-
-            System.out.println("[CLIENT] Connected to server: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName + "");
-
+            System.out.println("[CLIENT] Connected to Search Model Server: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName + "");
 
             Client client = new Client("Anon", false);
             RMIClient rmi_client = new RMIClient(svInterface, client, rmiHost, rmiPort, rmiRegistryName);
@@ -99,15 +98,15 @@ class RMIClient {
         switch (type) {
             case 0:
                 // Login or Register
-                System.out.print("\n### Login Menu ###\n1.Search Links\n  2.Login\n  3.Register\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### Login Menu ###\n1.Search Links\n2.Index New URL\n  3.Login\n  4.Register\n  e.Exit\n --> Choice: ");
                 return;
             case 1:
                 // admin - main menu
-                System.out.print("\n### Admin Panel ###\n1.Search Links\n2.Barrels List\n3.Downloaders List\n4.Top 10 searches\n  5.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### Admin Panel ###\n1.Search Links\n2.Index New URL\n3.Barrels List\n4.Downloaders List\n5.Top 10 searches\n  6.Logout\n  e.Exit\n --> Choice: ");
                 return;
             case 2:
                 // user - main menu
-                System.out.print("\n### User Panel ###\n1.Search Links\n  2.Logout\n  e.Exit\n --> Choice: ");
+                System.out.print("\n### User Panel ###\n1.Search Links\n2.Index New URL\n  3.Logout\n  e.Exit\n --> Choice: ");
                 return;
             default:
                 System.out.println("[EXCEPTION] Invalid menu type");
@@ -170,58 +169,6 @@ class RMIClient {
         }
     }
 
-    /**
-     * Method that handles the logic for the anonymous user menu.
-     * @param br the buffered reader object
-     * @return true if there wasn't an error, false otherwise
-     * @throws IOException if there was an error reading from the buffer
-     */
-    private boolean adminLoggedLogic(BufferedReader br) throws IOException {
-        String choice = "";
-
-        try {
-            choice = br.readLine();
-        } catch (IOException ei) {
-            System.out.println("EXCEPTION: IOException");
-            return false;
-        }
-
-        // System.out.print("\n### Admin Panel ###\n1.Search Links\n2.Barrels List\n3.Downloaders List\n4.Top 10 searches\n  5.Logout\n  e.Exit\n --> Choice: ");
-
-        switch (choice.toLowerCase()) {
-            case "1":
-                // Search Link
-                searchLinks(br);
-                break;
-            case "2":
-                // Index new URL
-                barrelsUp();
-                break;
-            case "3":
-                // Downloaders List
-                downloadersUp();
-                break;
-            case "4":
-                // User List
-                topSearches();
-                break;
-            case "5":
-                // Logout
-                logout();
-                break;
-            case "e":
-                // Exit
-                System.out.println("[CLIENT] Exiting...");
-                System.exit(0);
-                break;
-            default:
-                System.out.println("[CLIENT] Invalid choice");
-                break;
-        }
-        return true;
-    }
-
-
     private void topSearches() {
         ArrayList<String> top10 = new ArrayList<>();
         // get the top 10 searches from the server
@@ -272,6 +219,10 @@ class RMIClient {
                 searchLinks(br);
                 break;
             case "2":
+                // Index new URL
+                indexNewUrl(br);
+                break;
+            case "3":
                 logout();
                 break;
             case "e":
@@ -303,9 +254,13 @@ class RMIClient {
                 break;
             case "2":
                 // Login
-                login(br);
+                indexNewUrl(br);
                 break;
             case "3":
+                // Login
+                login(br);
+                break;
+            case "4":
                 // Register
                 register(br);
                 break;
@@ -319,6 +274,81 @@ class RMIClient {
                 break;
         }
         return true;
+    }
+
+    /**
+     * Method that handles the logic for the anonymous user menu.
+     * @param br the buffered reader object
+     * @return true if there wasn't an error, false otherwise
+     * @throws IOException if there was an error reading from the buffer
+     */
+    private boolean adminLoggedLogic(BufferedReader br) throws IOException {
+        String choice = "";
+
+        try {
+            choice = br.readLine();
+        } catch (IOException ei) {
+            System.out.println("EXCEPTION: IOException");
+            return false;
+        }
+
+        // System.out.print("\n### Admin Panel ###\n1.Search Links\n2.Barrels List\n3.Downloaders List\n4.Top 10 searches\n  5.Logout\n  e.Exit\n --> Choice: ");
+
+        switch (choice.toLowerCase()) {
+            case "1":
+                // Search Link
+                searchLinks(br);
+                break;
+            case "2":
+                // Index new URL
+                indexNewUrl(br);
+                break;
+            case "3":
+                // Index new URL
+                barrelsUp();
+                break;
+            case "4":
+                // Downloaders List
+                downloadersUp();
+                break;
+            case "5":
+                // User List
+                topSearches();
+                break;
+            case "6":
+                // Logout
+                logout();
+                break;
+            case "e":
+                // Exit
+                System.out.println("[CLIENT] Exiting...");
+                System.exit(0);
+                break;
+            default:
+                System.out.println("[CLIENT] Invalid choice");
+                break;
+        }
+        return true;
+    }
+
+    private void indexNewUrl(BufferedReader br) throws RemoteException {
+        String url = "";
+        System.out.print("\nURL: ");
+
+        try {
+            url = br.readLine();
+        } catch (IOException e) {
+            System.out.println("[EXCEPTION] IOException");
+            e.printStackTrace();
+        }
+
+        boolean res = this.sv.indexNewUrl(url);
+
+        if (res) {
+            System.out.println("[CLIENT] URL indexed successfully");
+        } else {
+            System.out.println("[CLIENT] URL already indexed");
+        }
     }
 
     private void searchLinks(BufferedReader br) throws RemoteException {
@@ -582,8 +612,8 @@ class RMIClient {
             ArrayList<String> checked = this.sv.checkLogin(username, password);
             System.out.println(checked);
             if (checked.get(0).equals("true")) {
-                boolean admin = Boolean.getBoolean(checked.get(1));
-                this.client = new Client(username, Boolean.getBoolean(checked.get(1)));
+                boolean admin = checked.get(1).equals("true");
+                this.client = new Client(username, admin);
 
                 if (admin) {
                     System.out.println("[CLIENT] Login successful as admin");

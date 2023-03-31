@@ -5,6 +5,7 @@ import Utility.Message;
 import Utility.MulticastSend;
 import interfaces.RMIBarrelInterface;
 import interfaces.RMIServerInterface;
+import interfaces.RMIUrlQueueInterface;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -39,6 +40,8 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     // Interface for the barrels
     RMIBarrelInterface b;
 
+    RMIUrlQueueInterface u;
+
     // this is the multicast that will send the messages
     MulticastSend m_Send;
 
@@ -46,7 +49,12 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     String bRMIhost;
     int bRMIport;
 
-    public RMIServer(String multicastAddress, int multicastSendPort, RMIServerInterface hPrincipal, String bRMIregistry, String bRMIhost, int bRMIport) throws RemoteException {
+    String uRMIregistry;
+    String uRMIhost;
+    int uRMIport;
+
+
+    public RMIServer(String multicastAddress, int multicastSendPort, RMIServerInterface hPrincipal, String bRMIregistry, String bRMIhost, int bRMIport, String uRMIregistry, String uRMIhost, int uRMIport) throws RemoteException {
         super();
 
         this.m_Send = new MulticastSend(multicastAddress, multicastSendPort);
@@ -56,6 +64,10 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         this.bRMIregistry = bRMIregistry;
         this.bRMIhost = bRMIhost;
         this.bRMIport = bRMIport;
+
+        this.uRMIregistry = uRMIregistry;
+        this.uRMIhost = uRMIhost;
+        this.uRMIport = uRMIport;
 
         this.clients = new HashMap<>();
         this.sendQueue = new LinkedList<>();
@@ -78,6 +90,10 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         String bRmiHost;
         int bRmiPort;
 
+        String uRmiRegistryName;
+        String uRmiHost;
+        int uRmiPort;
+
 
         String mcAddress;
         int mcSendPort;
@@ -98,18 +114,24 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             bRmiPort = Integer.parseInt(prop.getProperty("B_PORT"));
             bRmiRegistryName = prop.getProperty("B_RMI_REGISTRY_NAME");
 
+            uRmiHost = prop.getProperty("U_RMI_HOST");
+            uRmiPort = Integer.parseInt(prop.getProperty("U_RMI_PORT"));
+            uRmiRegistryName = prop.getProperty("U_RMI_REGISTRY_NAME");
+
+
 
             // check if any of the properties are null
-            if (rmiHost == null || mcAddress == null || mcSendPort == 0 || rmiPort == 0 || rmiRegistryName == null || bRmiHost == null || bRmiPort == 0 || bRmiRegistryName == null) {
+            if (rmiHost == null || mcAddress == null || mcSendPort == 0 || rmiPort == 0 || rmiRegistryName == null || bRmiHost == null || bRmiPort == 0 || bRmiRegistryName == null || uRmiHost == null || uRmiPort == 0 || uRmiRegistryName == null) {
                 System.out.println("[EXCEPTION] Properties file is missing some properties");
                 System.out.println("Current config: " + rmiHost + ":" + rmiPort + " " + rmiRegistryName);
                 System.out.println("Current config: " + mcAddress + ":" + mcSendPort);
                 System.out.println("Current config: " + bRmiHost + ":" + bRmiPort + " " + bRmiRegistryName);
+                System.out.println("Current config: " + uRmiHost + ":" + uRmiPort + " " + uRmiRegistryName);
                 return;
             }
 
 
-            rmiServer = new RMIServer(mcAddress, mcSendPort, null, bRmiRegistryName, bRmiHost, bRmiPort);
+            rmiServer = new RMIServer(mcAddress, mcSendPort, null, bRmiRegistryName, bRmiHost, bRmiPort, uRmiRegistryName, uRmiHost, uRmiPort);
 
         } catch (RemoteException er) {
             System.out.println("[EXCEPTION] RemoteException");
@@ -132,18 +154,20 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
                 while (true) {
                     try {
                         rmiServer.b = (RMIBarrelInterface) LocateRegistry.getRegistry(bRmiHost, bRmiPort).lookup(bRmiRegistryName);
+                        rmiServer.u = (RMIUrlQueueInterface) LocateRegistry.getRegistry(uRmiHost, uRmiPort).lookup(uRmiRegistryName);
                         System.out.println("[SERVER] Got barrel registry on " + bRmiHost + ":" + bRmiPort + "->" + bRmiRegistryName);
+                        System.out.println("[SERVER] Got url queue registry on " + uRmiHost + ":" + uRmiPort + "->" + uRmiRegistryName);
                         break;
                     } catch (NotBoundException | RemoteException e1) {
-                        Thread.sleep(await_time);
                         System.out.println("[EXCEPTION] NotBoundException | RemoteException, could not get barrel Registry: " + e1.getMessage());
                         System.out.println("Current barrel config: " + bRmiHost + ":" + bRmiPort + " " + bRmiRegistryName);
+                        System.out.println("Current url queue config: " + uRmiHost + ":" + uRmiPort + " " + uRmiRegistryName);
                     }
                 }
 
                 // keep the server running
                 loop();
-            } catch (RemoteException | InterruptedException e) {
+            } catch (RemoteException e) {
                 System.out.println("[EXCEPTION] RemoteException, could not create registry. Retrying in 1 second...");
                 try {
                     Thread.sleep(await_time);
@@ -347,6 +371,12 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             return new ArrayList<String>();
         }
         return new ArrayList<String>(res);
+    }
+
+    @Override
+    public boolean indexNewUrl(String url) throws RemoteException {
+        this.u.offerLink(url);
+        return true;
     }
 
     @Override
