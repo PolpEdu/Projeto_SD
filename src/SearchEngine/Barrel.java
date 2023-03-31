@@ -14,6 +14,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.Semaphore;
 
+/**
+ * Classe que representa um barril de dados de um mecanismo de busca.
+ */
+
 class Barrel extends Thread implements Serializable {
     public final File linkfile;
     public final File wordfile;
@@ -39,6 +43,18 @@ class Barrel extends Thread implements Serializable {
     private InetAddress group;
     private MulticastSocket receiveSocket;
 
+    /**
+     * Construtor da classe Barrel.
+     * @param id ID do barril.
+     * @param MULTICAST_RECEIVE_PORT Porta multicast para downloaders.
+     * @param MULTICAST_ADDRESS Endereço multicast para downloaders.
+     * @param linkfile Arquivo de links.
+     * @param wordfile Arquivo de palavras.
+     * @param infofile Arquivo de informações.
+     * @param files Instância do banco de dados.
+     * @param ackSem Semáforo para controle de exclusão mútua.
+     */
+
     public Barrel(int id, int MULTICAST_RECEIVE_PORT, String MULTICAST_ADDRESS, File linkfile, File wordfile, File infofile, Database files,  Semaphore ackSem) {
         this.id = id;
         this.receiveSocket = null;
@@ -63,6 +79,13 @@ class Barrel extends Thread implements Serializable {
         this.link_info = files.getLinksInfo(infofile, this.infofileb);
         this.top_searches = files.getTop10Searches();
     }
+
+    /**
+     * Neste método recebemos várias mensagens multicast de downloaders, e as processamos.
+     * Dependendo do tipo de mensagem, adicionamos numa lista geral ou atualizamos os arquivos.
+     * Fazemos também acknowledgement para os downloaders.
+     * @throws IOException
+     */
 
     public void loop() throws IOException {
         ArrayList<String> queuelist = new ArrayList<>();
@@ -172,14 +195,20 @@ class Barrel extends Thread implements Serializable {
         }
     }
 
+    /**
+     * Devolve os links associados a uma palavra
+     * @param word palavra a procurar
+     * @return links associados a uma palavra
+     */
     public HashSet<String> getLinksAssciatedWord(String word) {
         return this.word_Links.get(word);
     }
 
-    public HashMap<String, Integer> getTopSearches() {
-        return this.top_searches;
-    }
-
+    /**
+     * Devolve a descrição de um link
+     * @param link link a procurar
+     * @return descrição do link
+     */
     public String getLinkDescription(String link) {
         ArrayList<String> description = this.link_info.get(link);
         if (description == null) {
@@ -188,6 +217,11 @@ class Barrel extends Thread implements Serializable {
         return this.link_info.get(link).get(1);
     }
 
+    /**
+     * devolve o titulo de um link
+     * @param link link a procurar
+     * @return titulo do link
+     */
     public String getLinkTitle(String link) {
         ArrayList<String> title = this.link_info.get(link);
         if (title == null) {
@@ -196,6 +230,11 @@ class Barrel extends Thread implements Serializable {
         return this.link_info.get(link).get(0);
     }
 
+    /**
+     * devolve links em que o link aparece
+     * @param link link a procurar
+     * @return links em que o link aparece
+     */
     public HashSet<String> getLinkPointers(String link){
         if (this.link_links.get(link) == null){
             return new HashSet<>();
@@ -203,6 +242,9 @@ class Barrel extends Thread implements Serializable {
         return this.link_links.get(link);
     }
 
+    /**
+     * run do barrel para iniciar a socket multicast e a função loop
+     */
     public void run() {
         System.out.println("[BARREL " + this.id + "] Barrel running...");
 
@@ -221,6 +263,10 @@ class Barrel extends Thread implements Serializable {
         }
     }
 
+    /**
+     * envia uma mensagem multicast
+     * @param send mensagem a enviar
+     */
     private void sendMessage(String send) {
         try {
             this.ackSem.acquire();
