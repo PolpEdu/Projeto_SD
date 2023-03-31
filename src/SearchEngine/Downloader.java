@@ -166,7 +166,7 @@ public class Downloader extends Thread implements Remote {
                 if (line == null) {
                     break;
                 }
-                String[] splited = line.split("[ ,;:.?!(){}\\[\\]<>'\n]+");
+                String[] splited = line.split("[ ,;:.?“”!(){}\\[\\]<>'\n]+");
                 for (String word : splited) {
                     word = word.toLowerCase();
                     if (!wordList.contains(word) && !"".equals(word) && !stopWords.contains(word)) {
