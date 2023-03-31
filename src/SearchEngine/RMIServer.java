@@ -37,20 +37,45 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     // Interface for the barrels
     RMIBarrelInterface b;
 
+    // Interface for the urlQueue
     RMIUrlQueueInterface u;
 
     // this is the multicast that will send the messages
     MulticastSend m_Send;
 
+    // Registry for the barrels
     String bRMIregistry;
+
+    // Host for the barrels
     String bRMIhost;
+
+    // Port for the barrels
     int bRMIport;
 
+    // Registry for the urlQueue
     String uRMIregistry;
+
+    // Host for the urlQueue
     String uRMIhost;
+
+    // Port for the urlQueue
     int uRMIport;
 
-
+    /**
+     * Constructor for the RMIServer.
+     * Here we initialize the variables and the multicast.
+     * @param multicastAddress multicast address to send the messages
+     * @param multicastSendPort multicast port to send the messages
+     * @param hPrincipal interface for the server that will receive the messages. We set this here to execute failovers in the future
+     *                   if we can't create a RMI connection with the server, we use this variable to keep trying to create the RMI registry
+     * @param bRMIregistry registry for the barrels
+     * @param bRMIhost host for the barrels
+     * @param bRMIport port for the barrels
+     * @param uRMIregistry registry for the urlQueue program
+     * @param uRMIhost host for the urlQueue program
+     * @param uRMIport port for the urlQueue program
+     * @throws RemoteException if there is a problem with the RMI connection when creating the MulticastSend
+     */
     public RMIServer(String multicastAddress, int multicastSendPort, RMIServerInterface hPrincipal, String bRMIregistry, String bRMIhost, int bRMIport, String uRMIregistry, String uRMIhost, int uRMIport) throws RemoteException {
         super();
 
@@ -71,6 +96,13 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
     }
 
+    /**
+     * The main method of the RMIServer. Here we set the security policy and load the properties file.
+     * We also create the RMI registry and bind the server to it. As a last step, we create the server and keep it alive.
+     * @implNote As a failover precaution, we keep trying to create the RMI registry with our interface if we can't connect to the server.
+     * @param args command line arguments, none are used
+     * @throws RemoteException if there is a problem with the RMI connection
+     */
     public static void main(String[] args) throws RemoteException {
         System.getProperties().put("java.security.policy", "policy.all");
 
@@ -179,11 +211,23 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
     }
 
+    /**
+     * Keep the server running
+     */
     public static void loop() {
         while (true) {
         }
     }
 
+    /**
+     * This is our failover method, it will try to connect to the server and if it fails it will create a new one
+     * @param rmiPort rmi port to connect to the server, we use this to create a new server if the connection fails
+     * @param rmiHost rmi host to connect to the server, we use this to create a new server if the connection fails
+     * @param rmiRegistryName rmi registry name to connect to the server, we use this to create a new server if the connection fails
+     * @throws NotBoundException this is thrown if the registry is not bound
+     * @throws RemoteException this is thrown if the registry is not bound, usually when the server is unable to connect to the registry
+     * @throws InterruptedException this is thrown if the thread is interrupted
+     */
     public void backUpCreate(int rmiPort, String rmiHost, String rmiRegistryName) throws NotBoundException, RemoteException, InterruptedException {
         while (true) {
             try {
@@ -216,11 +260,21 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
     }
 
+    /**
+     * Function to check if the server is alive. This is used for the failover, send alive to the principal server and if it fails, create a new one
+     * @return returns true if the server is alive
+     * @throws RemoteException if there is a problem with the connection to the barrel
+     */
     public boolean alive() throws RemoteException {
         return true;
     }
 
-
+    /**
+     * Function to login a user.
+     * @param username
+     * @param client
+     * @throws RemoteException
+     */
     private void updateClient(String username, Client client) throws RemoteException {
         if (client == null) {
             this.clients.remove(username);
@@ -235,10 +289,10 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
     /**
      * Function to login a user.
-     * The function searches for the logged in user in the hashmap and if it is not found, it will add it to the hashmap
-     *
+     * The function searches for the logged in user in the hashmap and if it is not found,
+     * it will add it to the hashmap of the current connect users.
      * @param username the username of the user
-     * @return returns true if the user is logged in and false if the user is already logged in
+     * @return returns true if the user is logged (is in the connection hashmap) and false if the user is not logged in
      * @throws RemoteException if there is a problem with the connection to the barrel
      */
     @Override
@@ -246,6 +300,13 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return this.clients.containsKey(username);
     }
 
+    /**
+     * Function to login a user. This simply removes the user from the hashmap of the current connected users.
+     *
+     * @param username the username of the user that we want to logout
+     * @return returns true if the loggout was successful and false if the user was not logged in
+     * @throws RemoteException if there is a problem with the connection to the barrel
+     */
     @Override
     public boolean logout(String username) throws RemoteException {
         if (this.clients.containsKey(username)) {
@@ -360,6 +421,12 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return res;
     }
 
+    /**
+     * Returns the links that point to the given link. This function calls the barrel interface to get the links associated with the given link.
+     * @param link the link to get the pointers for
+     * @return an arraylist of links that point to the given link
+     * @throws RemoteException if the barrel interface throws an exception
+     */
     @Override
     public ArrayList<String> getLinksByRelevance(String link) throws RemoteException {
         HashSet<String> res = this.b.linkpointers(link);
@@ -370,25 +437,46 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return new ArrayList<String>(res);
     }
 
+    /**
+     * Returns the current alive barrels.
+     * @return an arraylist of the alive barrels, port, host and name
+     * @throws RemoteException if the barrel interface throws an exception
+     */
     @Override
     public ArrayList<String> getAliveBarrels() throws RemoteException {
+        throw new UnsupportedOperationException("Not supported yet.");
 
-
-        return null;
     }
 
+    /**
+     * Returns the current alive crawlers.
+     * @return an arraylist of the alive crawlers, port, host and name
+     * @throws RemoteException if the barrel interface throws an exception
+     */
     @Override
     public ArrayList<String> getAliveCrawlers() throws RemoteException {
-
-        return null;
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * Adds a new url to the queue by calling through RMI the Url Queue interface.
+     * @return true if the url was added to the queue
+     * @throws RemoteException if the url queue interface throws an exception
+     */
     @Override
     public boolean indexNewUrl(String url) throws RemoteException {
         this.u.offerLink(url);
         return true;
     }
 
+    /**
+     * This method checks if the user is logged in and if the user is an admin. It goes to the barrel interface
+     * to get the user information and then updates the client hashmap with a new client object.
+     * @param username the username of the user to check if logged in
+     * @param password the password of the user to check if logged in
+     * @return an arraylist of the login status: [status, admin, message]
+     * @throws RemoteException if the barrel interface throws an exception
+     */
     @Override
     public ArrayList<String> checkLogin(String username, String password) throws RemoteException {
         ArrayList<String> res = this.b.verifyUser(username, password);
@@ -408,11 +496,23 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return new ArrayList<String>(Arrays.asList("true", admin, message));
     }
 
+    /**
+     * This method calls the barrel interface to check whether the user is an admin.
+     * @param username the username of the user to check if admin
+     * @return true if the user is an admin
+     * @throws RemoteException if the barrel interface throws an exception
+     */
     @Override
     public boolean isAdmin(String username) throws RemoteException {
         return this.b.isAdmin(username);
     }
 
+    /**
+     * This method calls the barrel interface to get all the searches and the number of times they have been searched by everyone.
+     * and then only returns the top 10 searches (the words with the most number of searches)
+     * @return the top 10 searches of our users ordered by the number of times they have been searched by everyone
+     * @throws RemoteException if the barrel interface throws an exception
+     */
     @Override
     public ArrayList<String> getTop10Searches() throws RemoteException {
         // gives a hashmap of all the searches and the number of times they have been searched
@@ -437,6 +537,17 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return top10;
     }
 
+    /**
+     * This methods is used to register users. It calls the barrel interface to register the user and then updates the
+     * client hashmap with a new client object (log in) if the registration was successful.
+     *
+     * @param username the username of the user to register
+     * @param password the password of the user to register
+     * @param firstName the first name of the user to register
+     * @param lastName the last name of the user to register
+     * @return an arraylist of the registration status: [status, admin, message]
+     * @throws RemoteException if the barrel interface throws an exception
+     */
     @Override
     public ArrayList<String> checkRegister(String username, String password, String firstName, String lastName) throws RemoteException {
         ArrayList<String> res = this.b.checkUserRegistration(username, password, firstName, lastName);
@@ -457,6 +568,13 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         return new ArrayList<String>(Arrays.asList("true", admin, message));
     }
 
+    /**
+     * This method is used to get all the links that point to a given link from our database. We use this in
+     * the user admin panel to show all the links were generated from a given link.
+     * @param link the link to get all the links that point to it
+     * @return an arraylist of all the links that point to the given link
+     * @throws RemoteException if the barrel interface throws an exception
+     */
     @Override
     public ArrayList<String> linkPointers(String link) throws RemoteException {
         HashSet<String> res = this.b.linkpointers(link);
