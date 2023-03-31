@@ -8,6 +8,8 @@ import java.util.HashMap;
 public interface RMIServerInterface extends Remote {
     boolean alive() throws RemoteException;
     
+    boolean indexNewUrl(String url) throws RemoteException;
+
     boolean isLoggedIn(String username) throws RemoteException;
     ArrayList<String> checkLogin(String username, String password) throws RemoteException;
     ArrayList<String> checkRegister(String username, String password, String firstName, String lastName) throws RemoteException;
@@ -21,5 +23,5 @@ public interface RMIServerInterface extends Remote {
 
     ArrayList<String> getLinksByRelevance(String link) throws RemoteException;
 
-    boolean indexNewUrl(String url) throws RemoteException;
+    ArrayList<String> getAliveBarrels() throws RemoteException;
 }

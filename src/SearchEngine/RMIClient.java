@@ -334,12 +334,23 @@ class RMIClient {
     private void indexNewUrl(BufferedReader br) throws RemoteException {
         String url = "";
         System.out.print("\nURL: ");
+        // check if the url is valid (http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])
+        Pattern pattern = Pattern.compile("^(http|ftp|https):\\/\\/([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])$");
 
-        try {
-            url = br.readLine();
-        } catch (IOException e) {
-            System.out.println("[EXCEPTION] IOException");
-            e.printStackTrace();
+        while (true) {
+            try {
+                url = br.readLine();
+            } catch (IOException e) {
+                System.out.println("[EXCEPTION] IOException");
+                e.printStackTrace();
+            }
+
+            Matcher matcher = pattern.matcher(url);
+            if (!matcher.matches()) {
+                System.out.print("[CLIENT] Invalid URL\nURL: ");
+                continue;
+            }
+            break;
         }
 
         boolean res = this.sv.indexNewUrl(url);
@@ -610,7 +621,7 @@ class RMIClient {
             }
 
             ArrayList<String> checked = this.sv.checkLogin(username, password);
-            System.out.println(checked);
+            // System.out.println(checked);
             if (checked.get(0).equals("true")) {
                 boolean admin = checked.get(1).equals("true");
                 this.client = new Client(username, admin);
