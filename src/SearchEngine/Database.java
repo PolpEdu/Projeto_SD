@@ -81,6 +81,9 @@ public class Database implements Serializable {
             if (!wordsFile.exists()) {
                 wordsFile.createNewFile();
             }
+            if (!backup.exists()) {
+                backup.createNewFile();
+            }
             FileOutputStream fos = new FileOutputStream(wordsFile);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(fileWords);
@@ -105,6 +108,10 @@ public class Database implements Serializable {
             this.s_linksInfoFile.acquire();
             if (!infoFile.exists()) {
                 infoFile.createNewFile();
+            }
+
+            if (!backup.exists()) {
+                backup.createNewFile();
             }
             // escreve numa class "HashNap"
             FileOutputStream fos = new FileOutputStream(infoFile);
@@ -213,12 +220,21 @@ public class Database implements Serializable {
         } catch (StreamCorruptedException | EOFException e) {
             System.out.println("[EXCEPTION] EOF Error, corrupted file: " + e.getMessage());
             try {
-                FileInputStream fis = new FileInputStream(backup);
-                ObjectInputStream ois = new ObjectInputStream(fis);
 
-                links = (HashMap<String, HashSet<String>>) ois.readObject();
+                if(!backup.exists()){
+                    backup.createNewFile();
+                    updateWords(new HashMap<String, HashSet<String>>(), linksFile, backup);
+                }
+                else{
+                    FileInputStream fis = new FileInputStream(backup);
+                    ObjectInputStream ois = new ObjectInputStream(fis);
 
+                    links = (HashMap<String, HashSet<String>>) ois.readObject();
 
+                    ois.close();
+
+                }
+                return  links;
             } catch (FileNotFoundException ex) {
                 throw new RuntimeException(ex);
             } catch (IOException ex) {
@@ -230,11 +246,20 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting links: " + e.getMessage());
 
             try {
-                FileInputStream fis = new FileInputStream(backup);
-                ObjectInputStream ois = new ObjectInputStream(fis);
+                if(!backup.exists()){
+                    backup.createNewFile();
+                    updateWords(new HashMap<String, HashSet<String>>(), linksFile, backup);
+                }
+                else{
+                    FileInputStream fis = new FileInputStream(backup);
+                    ObjectInputStream ois = new ObjectInputStream(fis);
 
-                links = (HashMap<String, HashSet<String>>) ois.readObject();
+                    links = (HashMap<String, HashSet<String>>) ois.readObject();
 
+                    ois.close();
+
+                }
+                return links;
 
             } catch (FileNotFoundException ex) {
                 throw new RuntimeException(ex);
@@ -271,11 +296,18 @@ public class Database implements Serializable {
         } catch (StreamCorruptedException | EOFException e) {
             System.out.println("[EXCEPTION] EOF Error, corrupted file: " + e.getMessage());
             try {
-                FileInputStream fis = new FileInputStream(backup);
-                ObjectInputStream ois = new ObjectInputStream(fis);
+                if(!backup.exists()){
+                    backup.createNewFile();
+                    updateWords(new HashMap<String, HashSet<String>>(), infofile, backup);
+                }
+                else{
+                    FileInputStream fis = new FileInputStream(backup);
+                    ObjectInputStream ois = new ObjectInputStream(fis);
 
-                linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
-                ois.close();
+                    linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
+                    ois.close();
+                }
+
                 return linksInfo;
 
             } catch (FileNotFoundException ex) {
@@ -289,11 +321,18 @@ public class Database implements Serializable {
             System.out.println("[EXCEPTION] While getting info: " + e.getMessage());
 
             try {
-                FileInputStream fis = new FileInputStream(backup);
-                ObjectInputStream ois = new ObjectInputStream(fis);
+                if(!backup.exists()){
+                    backup.createNewFile();
+                    updateWords(new HashMap<String, HashSet<String>>(), infofile, backup);
+                }
+                else{
+                    FileInputStream fis = new FileInputStream(backup);
+                    ObjectInputStream ois = new ObjectInputStream(fis);
 
-                linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
-                ois.close();
+                    linksInfo = (HashMap<String, ArrayList<String>>) ois.readObject();
+                    ois.close();
+                }
+
                 return linksInfo;
 
             } catch (FileNotFoundException ex) {
@@ -333,12 +372,19 @@ public class Database implements Serializable {
         } catch (StreamCorruptedException | EOFException e) {
             System.out.println("[EXCEPTION] EOF Error, corrupted file: " + e.getMessage());
             try {
-                FileInputStream fis = new FileInputStream(backup);
-                ObjectInputStream ois = new ObjectInputStream(fis);
+                if(!backup.exists()){
+                    backup.createNewFile();
+                    updateWords(new HashMap<String, HashSet<String>>(), wordsfile, backup);
+                }
+                else{
+                    FileInputStream fis = new FileInputStream(backup);
+                    ObjectInputStream ois = new ObjectInputStream(fis);
 
-                words = (HashMap<String, HashSet<String>>) ois.readObject();
+                    words = (HashMap<String, HashSet<String>>) ois.readObject();
 
-                ois.close();
+                    ois.close();
+                }
+
 
                 return words;
             } catch (FileNotFoundException ex) {
@@ -352,12 +398,19 @@ public class Database implements Serializable {
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             System.out.println("[EXCEPTION] While getting words: " + e.getMessage());
             try {
-                FileInputStream fis = new FileInputStream(backup);
-                ObjectInputStream ois = new ObjectInputStream(fis);
+                if(!backup.exists()){
+                    backup.createNewFile();
+                    updateWords(new HashMap<String, HashSet<String>>(), wordsfile, backup);
+                }
+                else{
+                    FileInputStream fis = new FileInputStream(backup);
+                    ObjectInputStream ois = new ObjectInputStream(fis);
 
-                words = (HashMap<String, HashSet<String>>) ois.readObject();
+                    words = (HashMap<String, HashSet<String>>) ois.readObject();
 
-                ois.close();
+                    ois.close();
+                }
+
 
                 return words;
             } catch (FileNotFoundException ex) {

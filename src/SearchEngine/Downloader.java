@@ -66,6 +66,8 @@ public class Downloader extends Thread implements Remote {
      */
     public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
+        InputStream in = System.in;
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
         try {
             Properties Prop = new Properties();
@@ -77,7 +79,8 @@ public class Downloader extends Thread implements Remote {
             String rmiHost = Prop.getProperty("RMI_HOST");
             String rmiRegister = Prop.getProperty("RMI_REGISTER");
             int rmiPort = Integer.parseInt(Prop.getProperty("RMI_PORT"));
-
+            System.out.println("GIVE ID: ");
+            int id = Integer.parseInt(br.readLine());
             if (rmiHost == null || rmiPort == 0 || rmiRegister == null) {
                 System.out.println("[DOWNLOADER] Error reading RMI config");
                 System.out.println("[DOWNLOADER] Config: " + rmiHost + ":" + rmiPort + "/" + rmiRegister);
@@ -101,14 +104,14 @@ public class Downloader extends Thread implements Remote {
 
             Semaphore listsem = new Semaphore(1);
 
-            for (int i = 1; i < 3; i++) {
+            for (int i = 1; i < 2; i++) {
 
                 if (multicastAddress == null || sendPort == 0) {
-                    System.out.println("[DOWNLOADER" + i + "] Error reading properties file");
+                    System.out.println("[DOWNLOADER" + id + "] Error reading properties file");
                     System.exit(1);
                 }
 
-                Downloader downloader = new Downloader(i, sendPort, multicastAddress, listsem, server);
+                Downloader downloader = new Downloader(id, sendPort, multicastAddress, listsem, server);
                 downloader.start();
             }
 
@@ -208,6 +211,10 @@ public class Downloader extends Thread implements Remote {
         } catch (IOException e) {
             System.out.println("[EXCEPTION] Getting info from website: " + ws);
             // e.printStackTrace();
+            return false;
+        }
+        catch (IllegalArgumentException e){
+            System.out.println("[EXCEPTION] Getting info from website: " + ws);
             return false;
         }
         return true;

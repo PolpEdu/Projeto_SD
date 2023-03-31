@@ -3,9 +3,7 @@ package SearchEngine;
 import Client.User;
 import interfaces.RMIBarrelInterface;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -24,9 +22,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     public int PORT;
     public String HOST;
     public String RMI_REGISTER;
-
     private ArrayList<Barrel> barrels_threads;
-
     private int id;
 
     public IndexBarrel(int id, String HOST, int PORT, String RMI_REGISTER) throws RemoteException {
@@ -45,6 +41,8 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
     public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
+        InputStream in = System.in;
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
         try {
             Properties barrelProp = new Properties();
@@ -61,8 +59,8 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
             // Multicast to receive data from downloaders
             String multicastAddress = multicastServerProp.getProperty("MC_ADDR");
             int receivePort = Integer.parseInt(multicastServerProp.getProperty("MC_RECEIVE_PORT"));
-
-            int id = 1;
+            System.out.println("GIVE ID");
+            int id = Integer.parseInt(br.readLine());
             IndexBarrel mainBarrel = new IndexBarrel(id, rmiHost, rmiPort, rmiRegister);
             try {
                 // create the registry
@@ -99,7 +97,7 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
                 File infofile = new File("src\\info-" + i);
 
                 Database files = new Database(i);
-                Barrel barrel_t = new Barrel(i ,receivePort, multicastAddress,  linkfile, wordfile, infofile, files, ackSem);
+                Barrel barrel_t = new Barrel(id ,receivePort, multicastAddress,  linkfile, wordfile, infofile, files, ackSem);
                 mainBarrel.barrels_threads.add(barrel_t);
                 barrel_t.start();
             }

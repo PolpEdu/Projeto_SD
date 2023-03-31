@@ -15,7 +15,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
+
 
 public class RMIServer extends UnicastRemoteObject implements RMIServerInterface {
     // number of times to check if server is alive
