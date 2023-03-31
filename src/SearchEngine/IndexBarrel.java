@@ -12,7 +12,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
-// needs to be serializable to be sent through rmi
+/**
+ * Classe indexBarrel que implementa a interface RMIBarrelInterface
+ */
 public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterface {
     static final int alive_checks = 5;
     static final int await_time = 2000;
@@ -25,6 +27,14 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
     private ArrayList<Barrel> barrels_threads;
     private int id;
 
+    /**
+     * construtor da classe IndexBarrel
+     * @param id id do indexBarrel
+     * @param HOST host ip do RMI
+     * @param PORT port do RMI
+     * @param RMI_REGISTER nome do RMI
+     * @throws RemoteException
+     */
     public IndexBarrel(int id, String HOST, int PORT, String RMI_REGISTER) throws RemoteException {
         super();
         // create a list of barrel threads
@@ -37,7 +47,12 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
 
     }
 
-
+    /**
+     * aqui iniciamos a thread barrel , iniciamos o server RMI e guardamos os dados do multicast
+     *
+     * main do indexBarrel
+     * @param args argumentos
+     */
 
     public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
@@ -110,6 +125,14 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         }
     }
 
+    /**
+     * Caso o registry do RMI nao seja criado, esta função é chamada para recriar o registry
+     *
+     * @param rmiPort port do RMI
+     * @param rmiHost host do RMI
+     * @param rmiRegister nome do RMI
+     * @throws RemoteException
+     */
     private void backUp(int rmiPort, String rmiHost, String rmiRegister) throws RemoteException {
         while (true) {
             try {
@@ -142,11 +165,29 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         }
     }
 
+    /**
+     * Retorna se ele está vivo
+     *
+     * @return barrel alive
+     * @throws RemoteException
+     */
     @Override
     public boolean alive() throws RemoteException {
         Barrel barrel = this.selectBarrelToExcute();
         return barrel != null;
     }
+
+    /**
+     *
+     * Guarda o novo user no hashmap e escreve no ficheiro
+     *
+     * @param username recebe o username
+     * @param password recebe a password
+     * @param firstName recebe o primeiro nome
+     * @param lastName recebe o ultimo nome
+     * @return arraylist com o status e a mensagem
+     * @throws RemoteException
+     */
 
     @Override
     public ArrayList<String> checkUserRegistration(String username, String password, String firstName, String lastName) throws RemoteException {
@@ -177,6 +218,14 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return new ArrayList<>(Arrays.asList("success", "User registered", "false"));
     }
 
+    /**
+     * verficar se o user existe e se a password está correta
+     *
+     * @param username recebe o username
+     * @param password recebe a password
+     * @return arraylist com o status e a mensagem
+     * @throws RemoteException
+     */
     public ArrayList<String> verifyUser(String username, String password) throws RemoteException {
         // get the barrel to register the user
         Barrel barrel = this.selectBarrelToExcute();
@@ -201,6 +250,15 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return new ArrayList<>(Arrays.asList("success", "User verified", Boolean.toString(user.admin)));
     }
 
+    /**
+     *
+     * procura os links associados a uma palavra
+     *
+     * @param word recebe a palavra
+     * @return links associados a palavra
+     * @throws RemoteException
+     */
+
     @Override
     public HashSet<String> searchLinks(String word) throws RemoteException {
         Barrel barrel = this.selectBarrelToExcute();
@@ -213,6 +271,14 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return barrel.getLinksAssciatedWord(word);
     }
 
+    /**
+     *
+     * retorna o titulo do link
+     *
+     * @param word recebe a palavra
+     * @return titulo do link
+     * @throws RemoteException
+     */
     @Override
     public ArrayList<String> searchTitle(String word) throws RemoteException {
         if (word == null) {
@@ -244,6 +310,13 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return result;
     }
 
+    /**
+     * devolve a descricao do link
+     *
+     * @param word recebe a palavra
+     * @return descricao do link
+     * @throws RemoteException
+     */
     @Override
     public ArrayList<String> searchDescription(String word) throws RemoteException {
         if (word == null) {
@@ -270,6 +343,13 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return result;
     }
 
+    /**
+     * devolve os links onde o link aparece
+     *
+     * @param link recebe o link
+     * @return devolve links onde o link aparece
+     * @throws RemoteException
+     */
     @Override
     public HashSet<String> linkpointers(String link) throws RemoteException {
         Barrel barrel = this.selectBarrelToExcute();
@@ -283,6 +363,13 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return barrel.getLinkPointers(link);
     }
 
+    /**
+     * devolve se o user é admin ou nao
+     *
+     * @param username recebe o username
+     * @return true se for admin, false se nao for
+     * @throws RemoteException
+     */
     @Override
     public boolean isAdmin(String username) throws RemoteException {
         Barrel barrel = this.selectBarrelToExcute();
@@ -301,6 +388,11 @@ public class IndexBarrel extends UnicastRemoteObject implements RMIBarrelInterfa
         return user.admin;
     }
 
+    /**
+     *
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public ArrayList<ArrayList<String>> getBarrelsAlive() throws RemoteException {
         // return the current ip port and status of the barrels

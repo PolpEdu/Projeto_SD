@@ -183,7 +183,8 @@ public class Downloader extends Thread implements Remote {
     }
 
     /**
-     * function to add the info in the arraylists
+     * function to crawl in the website and get the info from it
+     * add to the arrays links, words and title and description
      *
      *
      * @param webs - website to get info
@@ -240,6 +241,11 @@ public class Downloader extends Thread implements Remote {
 
     /**
      * function to send the info to the barrels
+     * in this function we get a link from the urlqueue
+     * and then we get the info from the website of that link
+     * we process all the info and send to the barrels and wait for the ack
+     * if we dont get the ack we send the message again
+     * in the and we send the link to the barrel to say that we already processed all that link
      */
     void QueueInfo() {
 
