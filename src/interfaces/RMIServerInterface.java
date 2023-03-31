@@ -24,4 +24,5 @@ public interface RMIServerInterface extends Remote {
     ArrayList<String> getLinksByRelevance(String link) throws RemoteException;
 
     ArrayList<String> getAliveBarrels() throws RemoteException;
+    ArrayList<String> getAliveCrawlers() throws RemoteException;
 }

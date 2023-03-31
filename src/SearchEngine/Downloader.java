@@ -1,6 +1,5 @@
 package SearchEngine;
 
-import interfaces.RMIServerInterface;
 import interfaces.RMIUrlQueueInterface;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -24,36 +23,31 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-
-/** 
+/**
  * Downloader class
  * this class is responsible for downloading the pages from the queue
- * 
- *  
- * 
-*/
+ */
 public class Downloader extends Thread implements Remote {
 
     private final int MULTICAST_SEND_PORT;
     private final String MULTICAST_ADDRESS;
     private final Semaphore conSem;
-    private MulticastSocket sendSocket;
-    private InetAddress group;
     private final RMIUrlQueueInterface server;
     private final int id;
+    private MulticastSocket sendSocket;
+    private InetAddress group;
 
 
     /**
-     * 
      * constructor of the Downloader class
-     * 
-     * @param id - id of the downloader
+     *
+     * @param id                  - id of the downloader
      * @param MULTICAST_SEND_PORT - port to send the multicast
-     * @param MULTICAST_ADDRESS  - address to send the multicast
-     * @param conSem - semaphore to control the access to the queue
-     * @param server - RMI server
+     * @param MULTICAST_ADDRESS   - address to send the multicast
+     * @param conSem              - semaphore to control the access to the queue
+     * @param server              - RMI server
      */
-    public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem,RMIUrlQueueInterface server) {
+    public Downloader(int id, int MULTICAST_SEND_PORT, String MULTICAST_ADDRESS, Semaphore conSem, RMIUrlQueueInterface server) {
         this.sendSocket = null;
         this.group = null;
         this.conSem = conSem;
@@ -65,13 +59,11 @@ public class Downloader extends Thread implements Remote {
         this.id = id;
         this.server = server;
     }
-    
+
     /**
-     * 
      * main method of the Downloader class
      * here we make the connection to the multicast and the RMI server and start the download
      */
-
     public static void main(String[] args) {
         System.getProperties().put("java.security.policy", "policy.all");
 
@@ -116,7 +108,7 @@ public class Downloader extends Thread implements Remote {
                     System.exit(1);
                 }
 
-                Downloader downloader = new Downloader(i, sendPort, multicastAddress, listsem,server);
+                Downloader downloader = new Downloader(i, sendPort, multicastAddress, listsem, server);
                 downloader.start();
             }
 
@@ -129,12 +121,10 @@ public class Downloader extends Thread implements Remote {
     }
 
     /**
-     * 
-     * 
-     * @param words - words to add
+     * @param words    - words to add
      * @param wordList - list of words to save
      */
-     
+
     private static void seperateWords(String words, ArrayList<String> wordList) {
         BufferedReader buffer = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(words.getBytes(StandardCharsets.UTF_8))));
         String line;
@@ -248,9 +238,9 @@ public class Downloader extends Thread implements Remote {
                     for (String w : listWords) {
                         Matcher matcher = pattern.matcher(w);
                         if (matcher.matches()) {
-                            wo = "id:dwnl|type:word|" + w + "|" + link + "|" +  this.id;
+                            wo = "id:dwnl|type:word|" + w + "|" + link + "|" + this.id;
                             boolean quit = false;
-                            while(!quit) {
+                            while (!quit) {
                                 this.sendMessage(wo);
                                 long tempoinicial = System.currentTimeMillis();
                                 int messageSize = 8 * 1024;
@@ -259,7 +249,7 @@ public class Downloader extends Thread implements Remote {
                                 while (System.currentTimeMillis() < (tempoinicial + 1000)) {
                                     this.sendSocket.receive(receivePacket);
                                     String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                                    if(received.equals("id:ack|type:ack|"+this.id + "|" + "word") || System.currentTimeMillis() >= (tempoinicial + 1000)){
+                                    if (received.equals("id:ack|type:ack|" + this.id + "|" + "word") || System.currentTimeMillis() >= (tempoinicial + 1000)) {
                                         quit = true;
                                         break;
                                     }
@@ -268,10 +258,10 @@ public class Downloader extends Thread implements Remote {
                         }
                     }
                     for (String l : links) {
-                        li = "id:dwnl|type:links|" + l + "|" + link+ "|" + this.id;
+                        li = "id:dwnl|type:links|" + l + "|" + link + "|" + this.id;
                         this.sendMessage(li);
                         boolean quit = false;
-                        while(!quit) {
+                        while (!quit) {
                             this.sendMessage(li);
                             long tempoinicial = System.currentTimeMillis();
 
@@ -283,7 +273,7 @@ public class Downloader extends Thread implements Remote {
                                 this.sendSocket.receive(receivePacket);
                                 String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                                if(received.equals("id:ack|type:ack|"+this.id + "|" + "links") || System.currentTimeMillis() >= (tempoinicial + 1000)){
+                                if (received.equals("id:ack|type:ack|" + this.id + "|" + "links") || System.currentTimeMillis() >= (tempoinicial + 1000)) {
                                     quit = true;
                                     break;
                                 }
@@ -291,10 +281,10 @@ public class Downloader extends Thread implements Remote {
                         }
                     }
 
-                    i = "id:dwnl|type:siteinfo|" + link + "|" + info.get(0) + "|" + info.get(1)+ "|" + this.id;
+                    i = "id:dwnl|type:siteinfo|" + link + "|" + info.get(0) + "|" + info.get(1) + "|" + this.id;
                     this.sendMessage(i);
                     boolean quit = false;
-                    while(!quit) {
+                    while (!quit) {
                         this.sendMessage(i);
                         long tempoinicial = System.currentTimeMillis();
                         int messageSize = 8 * 1024;
@@ -305,7 +295,7 @@ public class Downloader extends Thread implements Remote {
                             this.sendSocket.receive(receivePacket);
                             String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                            if(received.equals("id:ack|type:ack|"+this.id + "|" + "siteinfo") || System.currentTimeMillis() >= (tempoinicial + 1000)){
+                            if (received.equals("id:ack|type:ack|" + this.id + "|" + "siteinfo") || System.currentTimeMillis() >= (tempoinicial + 1000)) {
                                 quit = true;
                                 break;
                             }

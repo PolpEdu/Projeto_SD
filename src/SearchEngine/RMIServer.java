@@ -28,9 +28,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     // HashMap of clients connected to server
     HashMap<String, Client> clients;
 
-    // save the number of searches of each word: <word, number of searches>
-    HashMap<String, Integer> wordSearches;
-
     // this is the queue that will store the messages that are waiting for an ack
     LinkedList<Message> sendQueue;
 
@@ -371,6 +368,19 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             return new ArrayList<String>();
         }
         return new ArrayList<String>(res);
+    }
+
+    @Override
+    public ArrayList<String> getAliveBarrels() throws RemoteException {
+
+
+        return null;
+    }
+
+    @Override
+    public ArrayList<String> getAliveCrawlers() throws RemoteException {
+
+        return null;
     }
 
     @Override
