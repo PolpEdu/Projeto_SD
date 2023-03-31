@@ -20,4 +20,6 @@ public interface RMIServerInterface extends Remote {
     ArrayList<String> linkPointers(String link) throws RemoteException;
 
     ArrayList<String> getLinksByRelevance(String link) throws RemoteException;
+
+    boolean indexNewUrl(String url) throws RemoteException;
 }
