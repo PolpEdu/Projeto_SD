@@ -638,6 +638,13 @@ class RMIClient {
         }
     }
 
+    /**
+     * Method to login to log the user in the server
+     * here we will ask for the username and password
+     * if the user fails to login 3 times, the program will ask him if he wants to try again
+     * @param br BufferedReader to read the user input
+     * @throws RemoteException
+     */
     private void login(BufferedReader br) throws RemoteException {
         String username = "";
         String password = "";
