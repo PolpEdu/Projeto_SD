@@ -167,7 +167,7 @@ public class Downloader extends Thread implements Remote {
     }
 
     /**
-     * run funcition to start the thread and the socket
+     * run function to start the thread and the socket to send messages to the downloaders
      */
     public void run() {
         System.out.println("[DOWNLOADER " + this.id + "] is running ...");

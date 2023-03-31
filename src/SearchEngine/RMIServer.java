@@ -1,8 +1,6 @@
 package SearchEngine;
 
 import Client.Client;
-import Utility.Message;
-import Utility.MulticastSend;
 import interfaces.RMIBarrelInterface;
 import interfaces.RMIServerInterface;
 import interfaces.RMIUrlQueueInterface;
@@ -28,9 +26,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     // HashMap of clients connected to server
     HashMap<String, Client> clients;
 
-    // this is the queue that will store the messages that are waiting for an ack
-    LinkedList<Message> sendQueue;
-
     // Interface for the server that will receive the messages (this class)
     RMIServerInterface hPrincipal;
 
@@ -39,9 +34,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
 
     // Interface for the urlQueue
     RMIUrlQueueInterface u;
-
-    // this is the multicast that will send the messages
-    MulticastSend m_Send;
 
     // Registry for the barrels
     String bRMIregistry;
@@ -79,8 +71,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     public RMIServer(String multicastAddress, int multicastSendPort, RMIServerInterface hPrincipal, String bRMIregistry, String bRMIhost, int bRMIport, String uRMIregistry, String uRMIhost, int uRMIport) throws RemoteException {
         super();
 
-        this.m_Send = new MulticastSend(multicastAddress, multicastSendPort);
-
         this.hPrincipal = hPrincipal;
 
         this.bRMIregistry = bRMIregistry;
@@ -92,8 +82,6 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         this.uRMIport = uRMIport;
 
         this.clients = new HashMap<>();
-        this.sendQueue = new LinkedList<>();
-
     }
 
     /**
