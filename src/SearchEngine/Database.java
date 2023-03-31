@@ -17,13 +17,13 @@ public class Database implements Serializable {
     Semaphore s_searchesFiles = new Semaphore(1);
     private File usersFile;
     private File searchesFile;
-    private int svID;
 
-
-    public Database(int svID) {
+    /**
+     * Construtor da classe Database.
+     */
+    public Database() {
         this.usersFile = new File("src\\users");
         this.searchesFile = new File("src\\searches");
-        this.svID = svID;
     }
 
     public void updateUsers(HashMap<String, User> users) {
