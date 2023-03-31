@@ -19,13 +19,20 @@ public class Database implements Serializable {
     private File searchesFile;
 
     /**
-     * Construtor da classe Database.
+     * Construtor da classe Database. Here we initialize the files that are not barrel thread dependent,
+     * in other words, since we'll have just a users file and a searches file that will be used to store the data
+     * of all the barrels, we don't need to create a new file for each barrel.
      */
     public Database() {
         this.usersFile = new File("src\\users");
         this.searchesFile = new File("src\\searches");
     }
 
+    /**
+     * Method that updates the users file. It takes in a HashMap of users and writes it to the file.
+     * It also uses a semaphore to control the access to the file. 
+     * @param users HashMap of users <username, User> to be written to the file.
+     */
     public void updateUsers(HashMap<String, User> users) {
         try {
             this.s_usersFile.acquire();
@@ -45,6 +52,17 @@ public class Database implements Serializable {
         }
     }
 
+    /**
+     * Method that updates the links file. It takes in a HashMap of links and writes it to the file.
+     * This method also uses a semaphore to control the access to the file. It also updates a backup file
+     * whenever it updates the links file to be used in case of a crash, we'll always have the last updated
+     * version of the file. Without the backup file, we would lose the data by corruption that was not written to the file
+     * (Usually we use the back-up when we close the program in a middle of a write operation, that corrupts the file)
+     * 
+     * @param fileLinks HashMap of links <link, HashSet of links> to be written to the file.
+     * @param linksFile File to be written to. Usually it depends on the barrel thread.
+     * @param backup Backup file to be written to.
+     */
     public void updateLinks(HashMap<String, HashSet<String>> fileLinks, File linksFile, File backup) {
         try {
             this.s_linksFile.acquire();
@@ -75,6 +93,16 @@ public class Database implements Serializable {
         }
     }
 
+    /**
+     * Method that updates the words file. It takes in a HashMap of words and writes it to the file.
+     * This method also uses a semaphore to control the access to the file. It also updates a backup file
+     * whenever it updates the words file to be used in case of a crash, we'll always have the last updated
+     * version of the file. Without the backup file, we would lose the data by corruption that was not written to the file
+     * (Usually we use the back-up when we close the program in a middle of a write operation, that corrupts the file)
+     * @param fileWords HashMap of words <word, HashSet of links> to be written to the file.
+     * @param wordsFile File to be written to. Usually it depends on the barrel thread.
+     * @param backup Backup file to be written to.
+     */
     public void updateWords(HashMap<String, HashSet<String>> fileWords, File wordsFile, File backup) {
         try {
             this.s_wordsFile.acquire();
@@ -103,6 +131,16 @@ public class Database implements Serializable {
         }
     }
 
+    /**
+     * Method that updates the Information about a link file (the file that stores the small quotes about a link).
+     * It takes in a HashMap of information and writes it to the file. This method also uses a semaphore to control the access to the file.
+     * It also updates a backup file whenever it updates the information file to be used in case of a crash, we'll always have the last updated
+     * version of the file. Without the backup file, we would lose the data by corruption that was not written to the file
+     * (Usually we use the back-up when we close the program in a middle of a write operation, that corrupts it)
+     * @param fileInfo HashMap of information <link, ArrayList of small quotes> to be written to the file.
+     * @param infoFile File to be written to. Usually it depends on the barrel thread.
+     * @param backup Backup file to be written to.
+     */
     public void updateInfo(HashMap<String, ArrayList<String>> fileInfo, File infoFile, File backup) {
         try {
             this.s_linksInfoFile.acquire();
@@ -133,6 +171,12 @@ public class Database implements Serializable {
         }
     }
 
+    /**
+     * Method that updates the top searches file. It takes in a HashMap of top searches and writes it to the file.
+     * This method also uses a semaphore to control the access to the file and doesn't use any backup because there's
+     * no constant writing to this file. Only occasionally, when the user searches for a word.
+     * @param topWords HashMap of top searches <word, number of searches> to be written to the file.
+     */
     public void updateTopWords(HashMap<String, Integer> topWords) {
         try {
             this.s_searchesFiles.acquire();
@@ -152,6 +196,11 @@ public class Database implements Serializable {
         }
     }
 
+    /**
+     * Method that gets all the users from the users file. This method returns a HashMap of users <username, User object>.
+     * This method also uses a semaphore to control the access to the file. If the file doesn't exist, it creates a new one.
+     * @return HashMap of users stored <username, User object>.
+     */
     public HashMap<String, User> getUsers() {
         HashMap<String, User> users = new HashMap<>();
         try {
@@ -175,6 +224,11 @@ public class Database implements Serializable {
         return users;
     }
 
+    /**
+     * Method that gets all the number of times a phrase was searched. This method returns a HashMap of top searches <word, number of searches>.
+     * This method also uses a semaphore to control the access to the file. If the file doesn't exist, it creates a new one.
+     * @return HashMap of searches <phrase, number of searches>.
+     */
     public HashMap<String, Integer> getTop10Searches() {
         HashMap<String, Integer> words = new HashMap<>();
         try {
@@ -197,7 +251,16 @@ public class Database implements Serializable {
         return words;
     }
 
-    // links - links.
+    /**
+     * Method that gets all the links from the links file. This method returns a HashMap of links HashMap<link, HashSet<link>>.
+     * If it is unable to read the file, it will try to read the backup file. As mentioned above, we update to two files 
+     * simultaneously, so if one is corrupted, we can still read the other. This is our fail-over mechanism.
+     * This method also uses a semaphore to control the access to the file. If the file doesn't exist, it creates a new one.
+     * 
+     * @param linksFile File to be read from.
+     * @param backup Backup file to be read from if the main file is corrupted.
+     * @return HashMap of links stored <link, HashSet<link>>.
+     */
     public HashMap<String, HashSet<String>> getLinks(File linksFile, File backup) {
         HashMap<String, HashSet<String>> links = new HashMap<>();
         try {
@@ -274,7 +337,15 @@ public class Database implements Serializable {
         return links;
     }
 
-    // links- phrases.
+    /**
+     * Method that gets all the links from the links file. This method returns a HashMap of links HashMap<link, ArrayList<linkQuotes>>.
+     * If it is unable to read the file, it will try to read the backup file. As mentioned above, we update to two files
+     * simultaneously, so if one is corrupted, we can still read the other. This is our fail-over mechanism.
+     * This method also uses a semaphore to control the access to the file. If the file doesn't exist, it creates a new one.
+     * @param infofile Main file to be read from.
+     * @param backup Backup file to be read from if the main file is corrupted.
+     * @return HashMap of links stored <link, ArrayList<link>>.
+     */
     public HashMap<String, ArrayList<String>> getLinksInfo(File infofile, File backup) {
         HashMap<String, ArrayList<String>> linksInfo = new HashMap<>();
         try {
@@ -349,7 +420,15 @@ public class Database implements Serializable {
         return linksInfo;
     }
 
-    // single words -> links.
+    /**
+     * Method that gets all the links associated with a word from the words file. This method returns a HashMap of words HashMap<word, Hashset<links>>.
+     * If it is unable to read the file, it will try to read the backup file. As mentioned above, we update to two files
+     * simultaneously, so if one is corrupted, we can still read the other. This is our fail-over mechanism.
+     * This method also uses a semaphore to control the access to the file. If the file doesn't exist, it creates a new one.
+     * @param wordsfile Main file to be read from.
+     * @param backup Backup file to be read from if the main file is corrupted.
+     * @return HashMap of words stored <word, Hashset<links>>.
+     */
     public HashMap<String, HashSet<String>> getWords(File wordsfile, File backup) {
         HashMap<String, HashSet<String>> words = new HashMap<>();
         try {
@@ -426,6 +505,15 @@ public class Database implements Serializable {
         return words;
     }
 
+    /**
+     * Method that gets the stored url queue from the urlQueue file. This method returns a LinkedBlockingQueue of urls.
+     * If it is unable to read the file, it will try to read the url queue backup file. As mentioned above, we update to
+     * two files simultaneously, so if one is corrupted, we can still read the other. This is our fail-over mechanism.
+     * This method also uses a semaphore to control the access to the file. If the file doesn't exist, it creates a new one.
+     * @param urlQueue Main file to be read from.
+     * @param backup Backup file to be read from if the main file is corrupted.
+     * @return LinkedBlockingQueue of urls stored.
+     */
     public LinkedBlockingQueue<String> getUrlQueue(File urlQueue, File backup) {
         LinkedBlockingQueue<String> queue = new LinkedBlockingQueue<>();
         try {
@@ -485,6 +573,16 @@ public class Database implements Serializable {
         // System.out.println("getLinksInfo: " + linksInfo);
         return queue;
     }
+
+    /**
+     * Method that updates the UrlQueue file. This method uses a semaphore to control the access to the file.
+     * If the file doesn't exist, it creates a new one. This method also updates the backup file to the same content because
+     * if the program fails while updating the main file it corrupts it so we created a backup file to be used as a fail-over
+     * mechanism.
+     * @param uqueue LinkedBlockingQueue of urls to be stored.
+     * @param urlqueue Main file to be updated.
+     * @param backup Backup file to be updated.
+     */
     public void updateUrlQueue(LinkedBlockingQueue<String> uqueue, File urlqueue, File backup) {
         try {
 
