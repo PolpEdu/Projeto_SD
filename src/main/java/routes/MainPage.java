@@ -14,7 +14,7 @@ import java.io.PrintWriter;
         description = "Example Servlet Using Annotations",
         urlPatterns = {"/AnnotationExample"}
 )
-public class Example extends HttpServlet {
+public class MainPage extends HttpServlet {
 
     @Override
     protected void doGet(
@@ -23,6 +23,6 @@ public class Example extends HttpServlet {
 
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
-        out.println("<p>Hello World!</p>");
+        out.println("<p>Hello lol!</p>");
     }
 }

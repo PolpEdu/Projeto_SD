@@ -4,16 +4,23 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import routes.Example;
+import routes.MainPage;
+import routes.MenuPage;
 
 @SpringBootApplication
 public class ProjetoSdApplication {
 
 	@Bean
-	public ServletRegistrationBean<Example> exampleServletBean() {
-		ServletRegistrationBean<Example> bean = new ServletRegistrationBean<>(new Example(), "/*");
+	public ServletRegistrationBean<MenuPage> MenuPage() {
+		ServletRegistrationBean<MainPage> bean = new ServletRegistrationBean<>(new MenuPage(), "/hello");
+		bean.setLoadOnStartup(1);
+		return bean;
+	}
+
+
+	@Bean
+	public ServletRegistrationBean<MainPage> MainPage() {
+		ServletRegistrationBean<MainPage> bean = new ServletRegistrationBean<>(new MainPage(), "/");
 		bean.setLoadOnStartup(1);
 		return bean;
 	}
