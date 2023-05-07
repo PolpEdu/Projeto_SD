@@ -1,28 +1,17 @@
 package routes;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+@Controller
+public class MainPage  {
 
-@WebServlet(
-        name = "AnnotationExample",
-        description = "Example Servlet Using Annotations",
-        urlPatterns = {"/AnnotationExample"}
-)
-public class MainPage extends HttpServlet {
-
-    @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
-
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-        out.println("<p>Hello lol!</p>");
+    @GetMapping("/greeting")
+    public String greeting(@RequestParam(name="name", required=false, defaultValue="World") String name, Model model) {
+        model.addAttribute("name", name);
+        model.addAttribute("othername", "SD");
+        return "index";
     }
 }
