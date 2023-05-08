@@ -15,9 +15,12 @@ import java.io.IOException;
 public class MenuPage {
 
     @GetMapping("/")
-    public String greeting(@RequestParam(name="name", required=false, defaultValue="World") String name, Model model) {
-        model.addAttribute("name", name);
-        model.addAttribute("othername", "SD");
+    public String greeting() {
         return "index";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
     }
 }

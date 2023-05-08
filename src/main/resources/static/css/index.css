@@ -1,0 +1,37 @@
+@font-face {
+    font-family: 'Monocraft';
+    src: url('monocraft.ttf') format('truetype');
+}
+
+html {
+    /* load the font monocraft.ttf from static page */
+    font-family: 'Monocraft', sans-serif;
+}
+
+body {
+    background-color: #f1f1f1;
+    font-family: 'Monocraft', Arial, Helvetica, sans-serif;
+
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+.main-menu {
+    width: 100vw;
+    height: 100vh;
+}
+
+.main-menu-row-btns {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-rect {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
