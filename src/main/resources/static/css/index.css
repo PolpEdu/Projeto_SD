@@ -10,16 +10,18 @@ html {
 
 body {
     background-color: #f1f1f1;
-    font-family: 'Monocraft', Arial, Helvetica, sans-serif;
-
+    font-family: 'Monocraft', Arial, Helvetica, sans-serif !important;
     width: 100vw;
     height: 100vh;
     position: relative;
 }
 
-.main-menu {
-    width: 100vw;
-    height: 100vh;
+h1 {
+    font-size: 3rem;
+    font-weight: 700 !important;
+    text-align: center;
+    margin: 0;
+    padding: 0;
 }
 
 .main-menu-row-btns {
@@ -31,7 +33,7 @@ body {
 
 .main-rect {
   width: 100%;
-  max-width: 330px;
+  max-width: 40%;
   padding: 15px;
   margin: 0 auto;
 }
