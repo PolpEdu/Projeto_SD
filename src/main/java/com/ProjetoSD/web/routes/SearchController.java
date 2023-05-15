@@ -28,19 +28,14 @@ public class SearchController {
 
 
     @GetMapping("/topsearches")
-    public String showTopsearchesPage(Model m) {
+    public String showTopsearchesPage(Model m) throws RemoteException {
+
         // model serve para passar variveis para templates
-//        m.addAttribute("TopSearchesRequest", new TopSearchesRequest());
+
+        m.addAttribute("searches", this.sv.getTop10Searches());
         return "topsearches"; // Return the name of the Thymeleaf template for the register page
     }
 
-    @PostMapping("/topsearches")
-    public String handleTopSearchesFormSubmission() throws RemoteException {
-        ArrayList<String> topsearches = this.sv.getTop10Searches();
-        System.out.println("[CLIENT] TopSearches requested");
-
-        return "redirect:/topsearches";
-    }
 
     //get users
     @GetMapping("/hackerNewsUsers")
