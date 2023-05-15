@@ -468,8 +468,10 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
     @Override
     public ArrayList<String> checkLogin(String username, String password) throws RemoteException {
         ArrayList<String> res = this.b.verifyUser(username, password);
+        System.out.println("[SERVER] Login status: " + res);
 
         String message = res.get(1);
+
 
         if (res.get(0).equals("failure")) {
             // login unsuccessful and not admin

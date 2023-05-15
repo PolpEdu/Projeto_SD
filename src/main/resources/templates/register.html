@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - Googol Application</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width"/>
+
+    <link rel="stylesheet" type="text/css" href="css/login.css" th:href="@{/css/login.css}"/>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}"/>
+    <script type="text/javascript" src="js/bootstrap.min.js" th:src="@{/js/bootstrap.min.js}"></script>
+    <script>
+        // function on to only load on page load
+        window.onload = function() {
+            document.getElementById('registerForm').addEventListener('submit', function (event) {
+            // make a post request with input inputEmail and inputPassword as request param
+
+            // prevent the form from submitting
+            event.preventDefault();
+            
+            // get the values from the form
+
+            const email = document.getElementById('inputEmail').value;
+            const password = document.getElementById('inputPassword').value;
+
+            const firstName = document.getElementById('inputName1').value;
+            const lastName = document.getElementById('inputName2').value;
+
+            // make a post request to the server
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/register?email=' + email + '&password=' + password + '&firstName=' + firstName + '&lastName=' + lastName, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send();
+
+            });
+        };
+    </script>
+</head>
+
+<body class="text-center">
+<form class="form-signin" id="registerForm" th:action="@{/register}" method="post">
+    <img class="mb-4" src="https://d31sxl6qgne2yj.cloudfront.net/wordpress/wp-content/uploads/20190121140709/Minecraft-Pig-Head.jpg" alt="" width="72" height="72">
+    <h1 class="h3 mb-3 font-weight-normal">Please Register</h1>
+
+    <label for="inputEmail" class="sr-only">Email address</label>
+    <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required="" autofocus="">
+    <label for="inputPassword" class="sr-only">Password</label>
+    <input type="password" id="inputPassword" class="form-control" placeholder="Password" required="">
+
+    <label for="inputName1" class="sr-only">First Name</label>
+    <input type="text" id="inputName1" class="form-control mt-3" placeholder="First Name" required="">
+    <label for="inputName2" class="sr-only">Last Name</label>
+    <input type="text" id="inputName2" class="form-control mt-1" placeholder="Last Name" required="">
+
+    <button class="btn btn-lg btn-danger btn-block mt-3" type="submit">Register</button>
+    <p class="mt-5 mb-3 text-muted f-sm">© 2023 Minecraft Rodrigo Edu Fixe</p>
+
+    <!-- back button -->
+    <a type="button" class="btn btn-link btn-lg mx-1 w-75" th:href="@{/}">Back</a>
+</form>
+</body>
+</html>

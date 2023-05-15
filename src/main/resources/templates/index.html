@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Googol Application</title>
+    <title>Anon - Googol Application</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="viewport" content="width=device-width"/>
 
@@ -10,12 +10,49 @@
     <script type="text/javascript" src="js/bootstrap.min.js" th:src="@{/js/bootstrap.min.js}"></script>
 </head>
 <body>
-    <div class="main-rect my-auto d-flex align-middle flex-column h-100 justify-content-center">
-        <h1 class="px-3 pt-md-5 pb-md-4 mx-auto text-center">Googol App</h1>
-        <div class="main-menu-row-btns">
-            <button type="button" class="btn btn-primary btn-lg mx-1" onclick="location.href='/login'">Login</button>
-            <button type="button" class="btn btn-warning btn-lg mx-1" onclick="location.href='/register'">Register</button>
+<div class="main-rect my-auto d-flex align-middle flex-column h-100 justify-content-center">
+    <h1 class="pb-1 px-md-3 mx-auto text-center text-nowrap">Googol App</h1>
+    <h2 class="pb-1 mx-auto text-center">Search Engine</h2>
+    <img class="mb-4 mx-auto" src="https://i.pinimg.com/originals/85/78/bf/8578bfd439ef6ee41e103ae82b561986.png" alt=""
+         width="100" height="100">
+    <h5 class="pb-3 mx-auto text-center font-weight-light font-italic">Anon Panel</h5>
+    <!-- Place to index a new URL -->
+    <div class="main-menu-row-input mb-2">
+        <div class="input-group">
+
+
+            <input type="text" class="form-control" placeholder="Enter Word" aria-label="Enter Word"
+                   aria-describedby="basic-addon2">
+
+            <div class="input-group-prepend">
+                <div class="input-group-text">
+                    <input type="checkbox" aria-label="Checkbox for following text input" class="mx-1">Hacker News
+                </div>
+                <button class="btn btn-outline-secondary btn-sm" type="button" id="button-addon1">Search Links</button>
+            </div>
+
+
+            <!--<div class="checkbox mb-3">
+                <label>
+                    <input type="checkbox" value="remember-me"> Indexar Termos com Hacker News
+                </label>
+            </div>-->
         </div>
     </div>
+    <div class="main-menu-row-input mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Enter URL" aria-label="Enter URL"
+                   aria-describedby="basic-addon2">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary btn-sm" type="button" id="button-addon2">Index new URL</button>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex flex-row align-middle justify-content-center">
+        <button type="button" class="btn btn-success btn-lg mx-1 w-75" onclick="location.href='/login'">Login</button>
+        <button type="button" class="btn btn-danger btn-lg mx-1 w-75" onclick="location.href='/register'">Register
+        </button>
+    </div>
+</div>
 </body>
 </html>
