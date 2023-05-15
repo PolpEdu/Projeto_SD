@@ -53,8 +53,12 @@ public class SearchController {
         return hackerNewsUserRecords;
     }
 
-    @GetMapping("/searchLinks")
-    public String fetchLinks(Model m , @RequestParam(name = "s", required = true) String search, @RequestParam(name = "h", required = false) boolean hackernews) throws RemoteException {
+    @GetMapping("/searchlinks")
+    public String fetchLinks(Model m , @RequestParam(name = "s") String search,
+                             @RequestParam(name = "h", required = false) boolean hackernews) throws RemoteException {
+        System.out.println("searching for: " + search);
+        System.out.println("hackernews: " + hackernews);
+
         HashMap<String, ArrayList<String>> res = new HashMap<>();
 
         if (hackernews) {
@@ -73,7 +77,7 @@ public class SearchController {
 
         m.addAttribute("linksfound", res);
 
-        return "redirect:/searchlinks?s=" + search;
+        return "searchlinks";
     }
 
     @GetMapping("/topStories")
