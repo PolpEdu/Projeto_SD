@@ -7,6 +7,7 @@ import com.ProjetoSD.web.HackerNewsUserRecord;
 import com.ProjetoSD.web.Models.FormRequest;
 import com.ProjetoSD.web.Models.IndexRequest;
 import com.ProjetoSD.web.Models.RegisterRequest;
+import com.ProjetoSD.web.Models.TopSearchesRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -75,6 +76,7 @@ class AuthController {
     }
 
 
+
     @GetMapping("/register")
     public String showRegisterPage(Model m) {
         // model serve para passar variveis para templates
@@ -131,7 +133,6 @@ class AuthController {
     public String showdashboard(Model m, @RequestParam(name = "admin", required = false) boolean adm) {
         m.addAttribute("IndexRequest", new IndexRequest());
 
-
         // check if admin is null, if so, set it to false
         if (adm) {
             System.out.println("[CLIENT] Dashboard page requested as admin");
@@ -147,7 +148,7 @@ class AuthController {
     //get top stories
     @GetMapping("/topStories")
     @ResponseBody
-    public List<HackerNewsItemRecord> hackerNewsTopStories(@RequestParam(name = "search", required = false) String search){
+    public HashMap<String, ArrayList<String>> hackerNewsTopStories(@RequestParam(name = "search", required = false) String search){
         String endPoint = "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty";
         RestTemplate restTemplate = new RestTemplate();
 
@@ -166,13 +167,30 @@ class AuthController {
             if (search != null) {
                 List<String> searchTermsList = List.of(search.toLowerCase().split(" "));
                 if (searchTermsList.stream().anyMatch(hackerNewsItemRecord.title().toLowerCase()::contains))
+
                     hackerNewsItemRecords.add(hackerNewsItemRecord);
+
             } else {
                 System.out.println("No search terms");
                 hackerNewsItemRecords.add(hackerNewsItemRecord);
             }
         }
-        return hackerNewsItemRecords;
+        return null;
+    }
+
+    @GetMapping("/topsearches")
+    public String showTopsearchesPage(Model m) {
+        // model serve para passar variveis para templates
+//        m.addAttribute("TopSearchesRequest", new TopSearchesRequest());
+        return "topsearches"; // Return the name of the Thymeleaf template for the register page
+    }
+
+    @PostMapping("/topsearches")
+    public String handleTopSearchesFormSubmission() throws RemoteException {
+        ArrayList<String> topsearches = this.sv.getTop10Searches();
+        System.out.println("[CLIENT] TopSearches requested");
+
+        return "redirect:/topsearches";
     }
 
     //get users
@@ -192,15 +210,22 @@ class AuthController {
     }
     @GetMapping("/searchLinks")
     public String fetchLinks(Model m , @RequestParam(name = "s", required = true) String search,  @RequestParam(name = "h", required = false) boolean hackernews) throws RemoteException {
+        HashMap<String, ArrayList<String>> res = new HashMap<>();
+
         if (hackernews) {
-            // get request here
+            ArrayList<HackerNewsItemRecord> hackernewslist = new ArrayList<>();
+            //res.put("res", hackernewslist);
         }
+        else{
+            res = this.sv.searchLinks(search);
+        }
+
+
         // first, get the links from the search model
-        HashMap<String, ArrayList<String>> res = this.sv.searchLinks(search);
+
+
 
         m.addAttribute("linksfound", res);
-
-
 
         return "redirect:/searchlinks?s=" + search;
     }
