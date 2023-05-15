@@ -1,4 +1,4 @@
-package com.ProjetoSD.web;
+package com.ProjetoSD.web.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

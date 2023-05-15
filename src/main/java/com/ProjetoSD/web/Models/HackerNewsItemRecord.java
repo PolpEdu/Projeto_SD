@@ -1,4 +1,4 @@
-package com.ProjetoSD.web;
+package com.ProjetoSD.web.Models;
 
 import java.util.List;
 
