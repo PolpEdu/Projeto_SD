@@ -453,6 +453,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
      */
     @Override
     public boolean indexNewUrl(String url) throws RemoteException {
+        System.out.println("[SERVER] Adding url to queue: " + url);
         this.u.offerLink(url);
         return true;
     }

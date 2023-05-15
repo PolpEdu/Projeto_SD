@@ -3,6 +3,8 @@ package com.ProjetoSD.web.routes;
 import com.ProjetoSD.Client.Client;
 import com.ProjetoSD.interfaces.RMIServerInterface;
 import com.ProjetoSD.web.Models.FormRequest;
+import com.ProjetoSD.web.Models.IndexRequest;
+import com.ProjetoSD.web.Models.RegisterRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,6 +23,12 @@ class AuthController {
         this.sv = rmiServerInterface;
     }
 
+    @GetMapping("/")
+    public String showIndexPage(Model m) {
+        // model serve para passar variveis para templates
+        m.addAttribute("IndexRequest", new IndexRequest());
+        return "index"; // Return the name of the Thymeleaf template for the index page
+    }
 
     @GetMapping("/login")
     public String showLoginPage(Model m) {
@@ -61,16 +69,24 @@ class AuthController {
         return "redirect:/login?error=true"; // Redirect back to the login page with an error parameter
     }
 
+
+    @GetMapping("/register")
+    public String showRegisterPage(Model m) {
+        // model serve para passar variveis para templates
+        m.addAttribute("RegisterRequest", new RegisterRequest());
+        return "register"; // Return the name of the Thymeleaf template for the register page
+    }
+
     @PostMapping("/register")
-    public String handleRegisterFormSubmission(
-            @RequestParam("email") String username,
-            @RequestParam("password") String password,
-            @RequestParam("firstName") String firstName,
-            @RequestParam("lastName") String lastName
-    ) throws RemoteException {
+    public String handleRegisterFormSubmission(@ModelAttribute RegisterRequest rr) throws RemoteException {
         // Process the email and password data
         // Perform authentication and validation logic here
         // Redirect to the appropriate page based on the login result
+
+        String username = rr.getUsername();
+        String password = rr.getPassword();
+        String firstName = rr.getFirstName();
+        String lastName = rr.getLastName();
 
         ArrayList<String> res = this.sv.checkRegister(username, password, firstName, lastName);
 
@@ -87,8 +103,39 @@ class AuthController {
     }
 
 
-    @GetMapping("/register")
-    public String showRegisterPage() {
-        return "register"; // Return the name of the Thymeleaf template for the register page
+    /**
+     * This function is called on the POST request to /indexnewurl. When you press the button to index a new url.
+     * @param ir IndexRequest object with the url to index
+     * @return String with the name of the template to render
+     * @throws RemoteException if there is an error with the RMI connection
+     */
+    @PostMapping("/indexnewurl")
+    public String handleIndexNewUrlFormSubmission(@ModelAttribute IndexRequest ir) throws RemoteException {
+        String url = ir.getUrl();
+
+        // System.out.println("[CLIENT] IndexNewUrl requested for url: " + url);
+
+        if (this.sv.indexNewUrl(url)) {
+            System.out.println("[CLIENT] IndexNewUrl successful");
+            return "redirect:/?success=true";
+        }
+        return "redirect:/?error=true" ; // Redirect back to the login page with an error parameter
+    }
+
+    @GetMapping("/dashboard")
+    public String showdashboard(Model m, @RequestParam(name = "admin", required = false) boolean adm) {
+        m.addAttribute("IndexRequest", new IndexRequest());
+
+
+        // check if admin is null, if so, set it to false
+        if (adm) {
+            System.out.println("[CLIENT] Dashboard page requested as admin");
+        } else {
+            System.out.println("[CLIENT] Dashboard page requested");
+        }
+
+        // model serve para passar variveis para templates
+        m.addAttribute("admin", adm);
+        return "dashboard"; // Return the name of the Thymeleaf template for the dashboard page
     }
 }
