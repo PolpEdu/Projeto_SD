@@ -28,11 +28,12 @@ public class SearchController {
 
 
     @GetMapping("/topsearches")
-    public String showTopsearchesPage(Model m) throws RemoteException {
+    public String showTopsearchesPage(Model m, @RequestParam(name = "admin", required = false) boolean adm) throws RemoteException {
 
         // model serve para passar variveis para templates
 
         m.addAttribute("searches", this.sv.getTop10Searches());
+        m.addAttribute("admin", adm);
         return "topsearches"; // Return the name of the Thymeleaf template for the register page
     }
 

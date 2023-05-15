@@ -73,7 +73,7 @@
             </form>
         </div>
         <div class="d-flex flex-row align-middle justify-content-center">
-            <a type="button" class="btn btn-primary btn-lg mx-1 w-75" th:href="@{/topsearches}">TopSearches</a>
+            <a type="button" class="btn btn-primary btn-lg mx-1 w-75" th:href="@{/topsearches(__${'admin=' + admin}__) }">Top Searches</a>
 
             <!-- TODO: Call the logout route -->
             <a type="button" class="btn btn-warning btn-lg mx-1 w-75" th:href="@{/}">LogOut</a>

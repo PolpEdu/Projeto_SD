@@ -9,53 +9,30 @@
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}"/>
     <script type="text/javascript" src="js/bootstrap.min.js" th:src="@{/js/bootstrap.min.js}"></script>
     <script>
-        // check if we have url parameter error=true. Keep looking for the error param
-        // if it exists, show an alert
+        // check if the redirect:/dashboard?admin=true is true
+        // if true, then show the admin panel
         window.onload = function () {
+
             const urlParams = new URLSearchParams(window.location.search);
-            const error = urlParams.get('error');
-            if (error) {
-                alert("Couldn't fulfill your request.");
-            } else {
-                const success = urlParams.get('success');
-                if (success) {
-                    alert("URL indexed successfully.");
-                }
-            }
+            const admin = urlParams.get('admin');
+            console.log(admin)
+
         }
     </script>
 </head>
+
 <body>
-<div class="main-rect my-auto d-flex align-middle flex-column h-100 justify-content-center">
+<div class="d-flex flex-column align-items-center justify-content-center">
     <h1 class="pb-1 px-md-3 mx-auto text-center text-nowrap">Googol App</h1>
     <h2 class="pb-1 mx-auto text-center">Search Engine</h2>
     <img class="mb-4 mx-auto" src="https://i.pinimg.com/originals/85/78/bf/8578bfd439ef6ee41e103ae82b561986.png" alt=""
          width="100" height="100">
-    <h5 class="pb-3 mx-auto text-center font-weight-light font-italic">Anon Panel</h5>
-    <!-- Place to index a new URL -->
-    <div class="main-menu-row-input mb-2">
-        <div class="input-group">
-
-
-            <input type="text" class="form-control" placeholder="Enter Word" aria-label="Enter Word"
-                   aria-describedby="basic-addon2">
-
-            <div class="input-group-prepend d-flex flex-row">
-                <div class="input-group-text">
-                    <input type="checkbox" aria-label="Checkbox for following text input" class="mx-1"> Hacker News
-                </div>
-                <!-- redirect to searchlinks?s= -->
-                <button class="btn btn-outline-secondary btn-sm" type="button" id="button-addon1" th:href="@{/searchLinks?s=}">Search Links</button>
-            </div>
-
-
-            <!--<div class="checkbox mb-3">
-                <label>
-                    <input type="checkbox" value="remember-me"> Indexar Termos com Hacker News
-                </label>
-            </div>-->
-        </div>
-    </div>
+    <tr th:each="search ,iter: ${searches}">
+        <p>
+            <span th:text="${iter.count} + '-' + ${search}"></span>
+        </p>
+    </tr>
+    <a type="button" class="btn btn-link btn-lg mx-1 w-75" th:href="@{/dashboard(__${'admin=' + admin}__)}">Back</a>
 </div>
 </body>
 </html>
