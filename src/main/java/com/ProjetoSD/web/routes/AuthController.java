@@ -16,6 +16,8 @@ import org.springframework.web.client.RestTemplate;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+
 @Controller
 @RequestMapping("/")
 class AuthController {
@@ -176,16 +178,30 @@ class AuthController {
     //get users
     @GetMapping("hackerNewsUsers")
     @ResponseBody
-    public List<HackerNewsUserRecord> hackerNewsUsers(){
+    public List<HackerNewsUserRecord> hackerNewsUsers() {
         List<String> userEndpoins = List.of("https://hacker-news.firebaseio.com/v0/user/jl.json?print=pretty");
         List<HackerNewsUserRecord> hackerNewsUserRecords = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
-        for(String endpoint : userEndpoins){
+        for (String endpoint : userEndpoins) {
             HackerNewsUserRecord hackerNewsUserRecord = restTemplate.getForObject(endpoint, HackerNewsUserRecord.class);
             hackerNewsUserRecords.add(hackerNewsUserRecord);
             System.out.println(hackerNewsUserRecord);
         }
         return hackerNewsUserRecords;
+    }
+    @GetMapping("/searchLinks")
+    public String fetchLinks(Model m , @RequestParam(name = "s", required = true) String search,  @RequestParam(name = "h", required = false) boolean hackernews) throws RemoteException {
+        if (hackernews) {
+            // get request here
+        }
+        // first, get the links from the search model
+        HashMap<String, ArrayList<String>> res = this.sv.searchLinks(search);
+
+        m.addAttribute("linksfound", res);
+
+
+
+        return "redirect:/searchlinks?s=" + search;
     }
 }
