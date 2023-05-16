@@ -16,6 +16,7 @@
             const error = urlParams.get('error');
             const url = urlParams.get('url');
 
+
             if (error) {
                 alert("Couldn't fulfill your request.");
             } else {
@@ -26,7 +27,7 @@
             }
             // change the main-text to the search query
             if (url) {
-                document.getElementById("main-text").innerHTML = "Search results for: \"" + url + "\"";
+                document.getElementById("main-text").innerHTML = "links pointing to \"" + url + "\"";
             }
         }
 
@@ -51,24 +52,12 @@
 
            Using th show me all the keys and the respective objects in the ArrayList of the HashMap that is not null
           -->
+        <tr th:each="pointer : ${pointers}">
+            <p>
+                <a th:href="${pointer}" th:text="${pointer}"></a>
+            </p>
+        </tr>
 
-        <ul>
-            <li th:each="entry : ${hackernewslist}">
-               <!--
-               Fazer merdas...
-                Rodas bota codigo nisso
-
-               <a th:href="${entry.key}" th:text="${entry.key}" target="_blank"></a>
-                &lt;!&ndash; search the link pointers from that link, pass url as parameter &ndash;&gt;
-                <button type="button" class="btn btn-primary btn-sm mx-1" th:href="@{/pointers(url=${entry.key})}">Pointers</button>
-                <ul>
-                    &lt;!&ndash; Each entry.value is an ArrayList<String>, Map it accordly&ndash;&gt;
-                    <li th:each="url : ${entry.value}">
-                        <span th:text="${url}"></span>
-                    </li>
-                </ul>-->
-            </li>
-        </ul>
 
 
     </div>

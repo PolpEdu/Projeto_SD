@@ -39,6 +39,19 @@ public class SearchController {
         return "topsearches"; // Return the name of the Thymeleaf template for the register page
     }
 
+    @GetMapping("/pointers")
+    public String showLinkpointersPage(Model m, @RequestParam(name = "url") String url) throws RemoteException {
+
+        // model serve para passar variveis para templates
+        ArrayList<String> res = this.sv.linkPointers(url);
+        if(res.isEmpty()){
+            res.add("No pointers found");
+        }
+        m.addAttribute("pointers", res);
+
+        return "pointers"; // Return the name of the Thymeleaf template for the register page
+    }
+
     public List<HackerNewsUserRecord> hackerNewsUser(String user) {
         List<String> userEndpoins = List.of("https://hacker-news.firebaseio.com/v0/user/" + user + ".json?print=pretty");
         List<HackerNewsUserRecord> hackerNewsUserRecords = new ArrayList<>();
