@@ -33,6 +33,11 @@
                 document.getElementById("adminPanel").style.display = "none";
             }
         }
+
+        function generateUrlSearch(){
+            const urlParams = new URLSearchParams(window.location.search);
+            return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked + "&admin=" + urlParams.get('admin');
+        }
     </script>
 </head>
 <body>
@@ -49,16 +54,18 @@
         <!-- Place to index a new URL -->
         <div class="main-menu-row-input mb-2">
             <div class="input-group">
+
+
                 <input type="text" class="form-control" placeholder="Enter Word" aria-label="Enter Word"
-                       aria-describedby="basic-addon2">
+                       aria-describedby="basic-addon2" id="wordInput">
 
                 <div class="input-group-prepend d-flex flex-row">
                     <div class="input-group-text">
-                        <input type="checkbox" aria-label="Checkbox for following text input" class="mx-1"> Hacker News
+                        <input id="hackerNews" type="checkbox" aria-label="Checkbox for following text input" class="mx-1"> Hacker News
                     </div>
+                    <!-- redirect to searchlinks?s=<the value of the input above) using th:redirect -->
                     <button class="btn btn-outline-secondary btn-sm" type="button" id="button-addon1" th:onclick="'window.location.href = generateUrlSearch()'" >Search</button>
                 </div>
-
             </div>
         </div>
         <div class="main-menu-row-input mb-4">
