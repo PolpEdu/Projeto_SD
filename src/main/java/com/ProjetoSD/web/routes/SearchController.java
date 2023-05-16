@@ -98,8 +98,9 @@ public class SearchController {
     @GetMapping("/searchlinks")
     public String fetchLinks(Model m,
                              @RequestParam(name = "s") String search,
-                             @RequestParam(name = "h", required = false) boolean hackernews
-    ) throws RemoteException {
+                             @RequestParam(name = "h", required = false) boolean hackernews,
+                             @RequestParam(name = "page") int page)
+            throws RemoteException {
         System.out.println("searching for: " + search);
         System.out.println("hackernews: " + hackernews);
 
@@ -108,7 +109,7 @@ public class SearchController {
         if (hackernews) {
             res = hackerNewsTopStories(search);
         } else {
-            res = this.sv.searchLinks(search, 2);
+            res = this.sv.searchLinks(search, page);
         }
         System.out.println(res);
         m.addAttribute("hackernewslist", res);
