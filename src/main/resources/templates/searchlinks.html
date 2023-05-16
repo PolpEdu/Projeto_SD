@@ -1,19 +1,22 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Anon - Googol Application</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-  <meta name="viewport" content="width=device-width"/>
+    <title>Anon - Googol Application</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width"/>
 
-  <link rel="stylesheet" type="text/css" href="css/index.css" th:href="@{/css/index.css}"/>
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}"/>
-  <script type="text/javascript" src="js/bootstrap.min.js" th:src="@{/js/bootstrap.min.js}"></script>
-  <script>
+    <link rel="stylesheet" type="text/css" href="css/searchlinks.css" th:href="@{/css/searchlinks.css}"/>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}"/>
+    <script type="text/javascript" src="js/bootstrap.min.js" th:src="@{/js/bootstrap.min.js}"></script>
+    <script>
         // check if we have url parameter error=true. Keep looking for the error param
         // if it exists, show an alert
         window.onload = function () {
             const urlParams = new URLSearchParams(window.location.search);
             const error = urlParams.get('error');
+            const search = urlParams.get('s');
+            const hackerNews = urlParams.get('h');
+
             if (error) {
                 alert("Couldn't fulfill your request.");
             } else {
@@ -22,39 +25,64 @@
                     alert("URL indexed successfully.");
                 }
             }
+            // change the main-text to the search query
+            if (search) {
+                if (hackerNews && hackerNews === "true") {
+                    document.getElementById("main-text").innerHTML = "Search results for \"" + search + "\" (Hacker News)";
+                } else {
+                    document.getElementById("main-text").innerHTML = "Search results for: \"" + search + "\"";
+                }
+            }
         }
-        
+
         function genURLback() {
-        // if we have admin parameter as true or false
-        // redirect to dashboard with admin parameter
-        // else redirect to /
-        const urlParams = new URLSearchParams(window.location.search);
-        const admin = urlParams.get('admin');
-        if (admin) {
-            window.location.href = "/dashboard?admin=" + admin;
-        } else {
-            window.location.href = "/";
+            // if we have admin parameter as true or false
+            // redirect to dashboard with admin parameter
+            // else redirect to /
+            const urlParams = new URLSearchParams(window.location.search);
+            const admin = urlParams.get('admin');
+            if (admin) {
+                window.location.href = "/dashboard?admin=" + admin;
+            } else {
+                window.location.href = "/";
+            }
         }
+
     </script>
 </head>
 <body>
 <div class="main-rect my-auto d-flex align-middle flex-column h-100 justify-content-center">
-  <h1 class="pb-1 px-md-3 mx-auto text-center text-nowrap">Googol App</h1>
-  <h2 class="pb-1 mx-auto text-center">Search Engine</h2>
-  <img class="mb-4 mx-auto" src="https://minecraftfaces.com/wp-content/bigfaces/big-blaze-face.png" alt=""
-       width="100" height="100">
-  <h5 class="pb-3 mx-auto text-center font-weight-light font-italic">Anon Panel</h5>
-  <!-- Place to index a new URL -->
-  <div class="main-menu-row-input mb-2">
-    
-  </div>
-  <div class="main-menu-row-input mb-4">
+    <h1 class="pb-1 px-md-3 mx-auto text-center text-nowrap">Googol App</h1>
+    <h2 class="pb-1 mx-auto text-center">Search Engine</h2>
+    <img class="mb-4 mx-auto" src="https://minecraftfaces.com/wp-content/bigfaces/big-blaze-face.png" alt=""
+         width="100" height="100">
+    <h5 class="pb-3 mx-auto text-center font-weight-light font-italic" id="main-text">Loading...</h5>
+    <!-- Place to index a new URL -->
+    <div class="main-menu-row-input mb-2">
+        <!-- I have two models in Springboot. Both are an HashMap<String, ArrayList<String>>
+           One of each is always null and the other dont.
 
-  </div>
-  <div class="d-flex flex-row align-middle justify-content-center">
-    <!-- TODO: Call the logout route -->
-    <a type="button" class="btn btn-warning btn-lg mx-1 w-75" th:onclick="'genURLback()'">Back</a>
-  </div>
+           Using th show me all the keys and the respective objects in the ArrayList of the HashMap that is not null
+          -->
+
+        <ul>
+            <li th:each="entry : ${hackernewslist}">
+                <a th:href="${entry.key}" th:text="${entry.key}" target="_blank"></a>
+                <ul>
+                    <!-- Each entry.value is an ArrayList<String>, Map it accordly-->
+                    <li th:each="url : ${entry.value}">
+                        <span th:text="${url}"></span>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+
+
+    </div>
+    <div class="d-flex flex-row align-middle justify-content-center">
+        <!-- TODO: Call the logout route -->
+        <a type="button" class="btn btn-warning btn-lg mx-1 w-75" th:onclick="'genURLback()'">Back</a>
+    </div>
 </div>
 </body>
 </html>

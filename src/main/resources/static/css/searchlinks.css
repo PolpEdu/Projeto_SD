@@ -1,0 +1,30 @@
+@font-face {
+    font-family: 'Monocraft';
+    src: url('monocraft.ttf') format('truetype');
+}
+html {
+    margin : 0;
+    padding: 0;
+    position: relative;
+}
+
+body {
+    background-color: #f1f1f1;
+    font-family: 'Monocraft', Arial, Helvetica, sans-serif !important;
+    position: relative;
+}
+
+h1 {
+    font-size: 3rem !important;
+    font-weight: 700 !important;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.main-rect {
+  width: 100%;
+  max-width: 45%;
+  padding: 5% 15px 15px 15px;
+  margin: 0 auto;
+}

@@ -21,6 +21,8 @@ public class SearchController {
 
     private final RMIServerInterface sv;
 
+    private String hackerNewsUsers = "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty";
+
     @Autowired
     SearchController(RMIServerInterface rmiServerInterface) {
         this.sv = rmiServerInterface;
@@ -37,12 +39,8 @@ public class SearchController {
         return "topsearches"; // Return the name of the Thymeleaf template for the register page
     }
 
-
-    //get users
-    @GetMapping("/hackerNewsUsers")
-    @ResponseBody
-    public List<HackerNewsUserRecord> hackerNewsUsers() {
-        List<String> userEndpoins = List.of("https://hacker-news.firebaseio.com/v0/user/jl.json?print=pretty");
+    public List<HackerNewsUserRecord> hackerNewsUser(String user) {
+        List<String> userEndpoins = List.of("https://hacker-news.firebaseio.com/v0/user/" + user + ".json?print=pretty");
         List<HackerNewsUserRecord> hackerNewsUserRecords = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
@@ -55,61 +53,65 @@ public class SearchController {
     }
 
     @GetMapping("/searchlinks")
-    public String fetchLinks(Model m , @RequestParam(name = "s") String search,
-                             @RequestParam(name = "h", required = false) boolean hackernews) throws RemoteException {
+    public String fetchLinks(Model m,
+                             @RequestParam(name = "s") String search,
+                             @RequestParam(name = "h", required = false) boolean hackernews
+    ) throws RemoteException {
         System.out.println("searching for: " + search);
         System.out.println("hackernews: " + hackernews);
 
-        HashMap<String, ArrayList<String>> res = new HashMap<>();
+        HashMap<String, ArrayList<String>> res;
 
         if (hackernews) {
-            ArrayList<HackerNewsItemRecord> hackernewslist = new ArrayList<>();
-            //res.put("res", hackernewslist);
-
-        }
-        else{
+            res = hackerNewsTopStories(search);
+        } else {
             res = this.sv.searchLinks(search);
         }
-
-
+        System.out.println(res);
+        m.addAttribute("hackernewslist", res);
         // first, get the links from the search model
-
-
-
-        m.addAttribute("linksfound", res);
-
         return "searchlinks";
     }
 
-    @GetMapping("/topStories")
-    @ResponseBody
-    public HashMap<String, ArrayList<String>> hackerNewsTopStories(@RequestParam(name = "search", required = false) String search){
-        String endPoint = "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty";
-        RestTemplate restTemplate = new RestTemplate();
 
-        List topStories  = restTemplate.getForObject(endPoint, List.class);
+    public HashMap<String, ArrayList<String>> hackerNewsTopStories(String search) {
+        RestTemplate restTemplate = new RestTemplate();
+        List topStories = restTemplate.getForObject(hackerNewsUsers, List.class);
+
+        System.out.println(topStories);
 
         assert topStories != null;
-        List<HackerNewsItemRecord> hackerNewsItemRecords = new ArrayList<>();
+        HashMap<String, ArrayList<String>> hackerNewsItemRecords = new HashMap<>();
 
-        //iterar apenas por 30
-        for (int i = 0; i <= 30;i++){
+        //add the link has the key in the Hashmap and the title as the object to the hashmap.
+        // if the link is already in the hashmap, append the title to the list of titles
+        for (int i = 0; i < 30; i++) {
             Integer storyId = (Integer) topStories.get(i);
 
             String storyItemDetailsEndpoint = String.format("https://hacker-news.firebaseio.com/v0/item/%s.json?print=pretty", storyId);
+            System.out.println(storyItemDetailsEndpoint);
             HackerNewsItemRecord hackerNewsItemRecord = restTemplate.getForObject(storyItemDetailsEndpoint, HackerNewsItemRecord.class);
-
             if (search != null) {
                 List<String> searchTermsList = List.of(search.toLowerCase().split(" "));
-                if (searchTermsList.stream().anyMatch(hackerNewsItemRecord.title().toLowerCase()::contains))
-
-                    hackerNewsItemRecords.add(hackerNewsItemRecord);
-
+                if (searchTermsList.stream().anyMatch(hackerNewsItemRecord.title().toLowerCase()::contains)) {
+                    if (hackerNewsItemRecords.containsKey(hackerNewsItemRecord.url())) {
+                        hackerNewsItemRecords.get(hackerNewsItemRecord.url()).add(hackerNewsItemRecord.title());
+                    } else {
+                        ArrayList<String> titles = new ArrayList<>();
+                        titles.add(hackerNewsItemRecord.title());
+                        hackerNewsItemRecords.put(hackerNewsItemRecord.url(), titles);
+                    }
+                }
             } else {
-                System.out.println("No search terms");
-                hackerNewsItemRecords.add(hackerNewsItemRecord);
+                if (hackerNewsItemRecords.containsKey(hackerNewsItemRecord.url())) {
+                    hackerNewsItemRecords.get(hackerNewsItemRecord.url()).add(hackerNewsItemRecord.title());
+                } else {
+                    ArrayList<String> titles = new ArrayList<>();
+                    titles.add(hackerNewsItemRecord.title());
+                    hackerNewsItemRecords.put(hackerNewsItemRecord.url(), titles);
+                }
             }
         }
-        return null;
+        return hackerNewsItemRecords;
     }
 }
