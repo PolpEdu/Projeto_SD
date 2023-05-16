@@ -55,6 +55,35 @@
             }
         }
 
+
+        function getPreviousPage() {
+            // get the current page number
+            // if page number is 1, do nothing
+            // else redirect to /searchlinks?page=page-1
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = urlParams.get('page');
+            if (page) {
+                if (page !== "1") {
+                    window.location.href = "/searchlinks" + "?s=" + urlParams.get('s') + "&h=false" +"&page=" + (parseInt(page) - 1);
+                }
+            }
+        }
+
+        function getNextPage() {
+            // get the current page number
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = urlParams.get('page');
+            if (page) {
+                window.location.href = "/searchlinks" + "?s=" + urlParams.get('s') + "&h=false" + "&page=" + (parseInt(page) + 1);
+            }
+        }
+
+        function redirectToPage(page) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const search = urlParams.get('s');
+            window.location.href = "/searchlinks" + "?s=" + search + "&h=false" + "&page=" + page;
+        }
+
     </script>
 </head>
 <body>
@@ -85,10 +114,19 @@
                 </ul>
             </li>
         </ul>
-
-
-
     </div>
+    <nav class="d-flex align-middle justify-content-center" aria-label="Page navigation">
+        <ul class="pagination">
+            <li class="page-item"><a class="page-link" th:onclick="'getPreviousPage()'">Previous</a></li>
+            <li class="page-item"><a class="page-link" th:onclick="'redirectToPage(1)'">1</a></li>
+            <li class="page-item"><a class="page-link" th:onclick="'redirectToPage(2)'">2</a></li>
+            <li class="page-item"><a class="page-link" th:onclick="'redirectToPage(3)'">3</a></li>
+            <li class="page-item"><a class="page-link" th:onclick="'redirectToPage(4)'">4</a></li>
+            <li class="page-item"><a class="page-link" th:onclick="'redirectToPage(5)'">5</a></li>
+            <li class="page-item"><a class="page-link" th:onclick="'getNextPage()'">Next</a></li>
+        </ul>
+    </nav>
+
     <div class="d-flex flex-row align-middle justify-content-center">
         <!-- TODO: Call the logout route -->
         <a type="button" class="btn btn-warning btn-lg mx-1 w-75" th:onclick="'genURLback()'">Back</a>

@@ -29,9 +29,9 @@
         function generateUrlSearch(){
             const urlParams = new URLSearchParams(window.location.search);
             if(urlParams.get('admin')) {
-                return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked + "&admin=" + urlParams.get('admin');
+                return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked + "&admin=" + urlParams.get('admin') + "&page=1";
             }
-            return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked;
+            return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked + "&page=1";
         }
 
         function generateUrlUserSearch() {
