@@ -21,7 +21,7 @@ public class SearchController {
 
     private final RMIServerInterface sv;
 
-    private String hackerNewsUsers = "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty";
+    private String hackerNewsTopStories = "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty";
 
     @Autowired
     SearchController(RMIServerInterface rmiServerInterface) {
@@ -52,16 +52,46 @@ public class SearchController {
         return "pointers"; // Return the name of the Thymeleaf template for the register page
     }
 
-    public List<HackerNewsUserRecord> hackerNewsUser(String user) {
-        List<String> userEndpoins = List.of("https://hacker-news.firebaseio.com/v0/user/" + user + ".json?print=pretty");
-        List<HackerNewsUserRecord> hackerNewsUserRecords = new ArrayList<>();
+    @GetMapping("/userstories")
+    public String showUserstoriesPage(Model m, @RequestParam(name = "user") String user, @RequestParam(name = "admin", required = false) boolean adm) throws RemoteException {
+
+        System.out.println("user: " + user);
+
+        // model serve para passar variveis para templates
+        ArrayList<HackerNewsItemRecord> res = hackerNewsUser(user);
+        System.out.println("res: " + res);
+        if (res.isEmpty()) {
+            return "redirect:/userstories?empty=true";
+        }
+        m.addAttribute("stories", res);
+        return "userstories"; // Return the name of the Thymeleaf template for the register page
+    }
+
+
+    public ArrayList<HackerNewsItemRecord> hackerNewsUser(String user) {
+        String userEndpoins = "https://hacker-news.firebaseio.com/v0/user/" + user + ".json?print=pretty";
+        ArrayList<HackerNewsItemRecord> hackerNewsUserRecords = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
-        for (String endpoint : userEndpoins) {
-            HackerNewsUserRecord hackerNewsUserRecord = restTemplate.getForObject(endpoint, HackerNewsUserRecord.class);
-            hackerNewsUserRecords.add(hackerNewsUserRecord);
-            System.out.println(hackerNewsUserRecord);
+        HackerNewsUserRecord hackerNewsUserRecord = restTemplate.getForObject(userEndpoins, HackerNewsUserRecord.class);
+
+        // {"about":"","created":1175289467,"delay":0,"id":"test","karma":1,"submitted":[1043201,1029445,1026445,586568,418362,418361,11780]}
+
+        // for each story id, get the story details https://hacker-news.firebaseio.com/v0/item/<number>.json?print=pretty
+        assert hackerNewsUserRecord != null;
+
+        for (Object storyId : hackerNewsUserRecord.submitted()) {
+            String storyItemDetailsEndpoint = String.format("https://hacker-news.firebaseio.com/v0/item/%s.json?print=pretty", storyId);
+            HackerNewsItemRecord hackerNewsItemRecord = restTemplate.getForObject(storyItemDetailsEndpoint, HackerNewsItemRecord.class);
+
+            // filter out the stories that don't have a url or title
+            if (hackerNewsItemRecord == null || hackerNewsItemRecord.url() == null || hackerNewsItemRecord.title() == null) {
+                continue;
+            }
+
+            hackerNewsUserRecords.add(hackerNewsItemRecord);
         }
+
         return hackerNewsUserRecords;
     }
 
@@ -89,7 +119,7 @@ public class SearchController {
 
     public HashMap<String, ArrayList<String>> hackerNewsTopStories(String search) {
         RestTemplate restTemplate = new RestTemplate();
-        List topStories = restTemplate.getForObject(hackerNewsUsers, List.class);
+        List topStories = restTemplate.getForObject(hackerNewsTopStories, List.class);
 
         System.out.println(topStories);
 

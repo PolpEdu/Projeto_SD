@@ -51,6 +51,10 @@ class AuthController {
 
         ArrayList<String> checked = this.sv.checkLogin(email, password);
         System.out.println(checked);
+        if (checked == null || checked.isEmpty()) {
+            System.out.println("[CLIENT] Login failed");
+            return "redirect:/login?error=true"; // Redirect back to the login page with an error parameter
+        }
         if (checked.get(0).equals("true")) {
             boolean admin = checked.get(1).equals("true");
             Client client = new Client(email, admin);

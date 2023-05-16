@@ -691,6 +691,10 @@ class RMIClient {
             }
 
             ArrayList<String> checked = this.sv.checkLogin(username, password);
+            if (checked == null) {
+                System.out.println("[CLIENT] Login failed: Server is down");
+                return;
+            }
             // System.out.println(checked);
             if (checked.get(0).equals("true")) {
                 boolean admin = checked.get(1).equals("true");

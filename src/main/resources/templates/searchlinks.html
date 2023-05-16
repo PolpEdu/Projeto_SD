@@ -65,7 +65,7 @@
          width="100" height="100">
     <h5 class="pb-3 mx-auto text-center font-weight-light font-italic" id="main-text">Loading...</h5>
     <!-- Place to index a new URL -->
-    <div class="main-menu-row-input mb-2">
+    <div class="main-menu-row-input mb-2 mx-1">
         <!-- I have two models in Springboot. Both are an HashMap<String, ArrayList<String>>
            One of each is always null and the other dont.
 
@@ -73,7 +73,7 @@
           -->
 
         <ul>
-            <li th:each="entry, iterStat : ${hackernewslist}" th:if="${iterStat.count} &lt;= 10">
+            <li th:each="entry, iterStat : ${hackernewslist}" th:if="${iterStat.count}">
                 <a th:href="${entry.key}" th:text="${entry.key}" target="_blank"></a>
                 <!-- search the link pointers from that link, pass url as parameter -->
                 <a type="button" class="btn btn-primary btn-sm mx-1 btn-pointers-urls" th:href="@{/pointers(url=${entry.key})}" target="_blank">Pointers</a>

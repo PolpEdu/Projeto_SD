@@ -38,6 +38,11 @@
             const urlParams = new URLSearchParams(window.location.search);
             return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked + "&admin=" + urlParams.get('admin');
         }
+        function generateUrlUserSearch() {
+        // username-input
+            const urlParams = new URLSearchParams(window.location.search);
+            return "/userstories?user=" + document.getElementById("username-input").value + "&admin=" + urlParams.get('admin');
+        }
     </script>
 </head>
 <body>
@@ -52,7 +57,7 @@
     <div id="adminPanel">
         <h5 class="pb-3 mx-auto text-center font-weight-light font-italic">DashBoard - Admin</h5>
         <!-- Place to index a new URL -->
-        <div class="main-menu-row-input mb-2">
+        <div class="main-menu-row-input mb-2 mx-1">
             <div class="input-group">
 
 
@@ -63,12 +68,12 @@
                     <div class="input-group-text">
                         <input id="hackerNews" type="checkbox" aria-label="Checkbox for following text input" class="mx-1"> Hacker News
                     </div>
-                    <!-- redirect to searchlinks?s=<the value of the input above) using th:redirect -->
+                    <!-- redirect to searchlinks?s=<the value of the input above)?admin= -->
                     <button class="btn btn-outline-secondary btn-sm" type="button" id="button-addon1" th:onclick="'window.location.href = generateUrlSearch()'" >Search</button>
                 </div>
             </div>
         </div>
-        <div class="main-menu-row-input mb-4">
+        <div class="main-menu-row-input mb-2 mx-1">
             <form th:action="@{/indexnewurl}" th:object="${IndexRequest}" method="post" id="urlForm">
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="Enter URL" aria-label="Enter URL"
@@ -83,6 +88,18 @@
                 </div>
             </form>
         </div>
+        <div class="main-menu-row-input mb-4 mx-1">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Enter User Name" aria-label="Enter User Name"
+                       aria-describedby="basic-addon2" id="username-input">
+
+                <div class="input-group-append">
+                    <!-- when clicked, the button will redirect to the search user stories page -->
+                    <a class="btn btn-outline-secondary btn-md" id="button-addon3" th:onclick="'window.location.href = generateUrlUserSearch()'" >Search User Stories</a>
+                </div>
+
+            </div>
+        </div>
         <div class="d-flex flex-row align-middle justify-content-center">
             <a type="button" class="btn btn-primary btn-lg mx-1 w-75" th:href="@{/topsearches(__${'admin=' + admin}__) }">Top Searches</a>
 
@@ -95,7 +112,7 @@
     <div id="defaultPanel">
         <h5 class="pb-3 mx-auto text-center font-weight-light font-italic">DashBoard - User</h5>
         <!-- Place to index a new URL -->
-        <div class="main-menu-row-input mb-2">
+        <div class="main-menu-row-input mb-2 mx-1">
             <div class="input-group">
 
                 <input type="text" class="form-control" placeholder="Enter Word" aria-label="Enter Word"
@@ -110,7 +127,7 @@
 
             </div>
         </div>
-        <div class="main-menu-row-input mb-4">
+        <div class="main-menu-row-input mb-4 mx-1">
             <form th:action="@{/indexnewurl}" th:object="${IndexRequest}" method="post">
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="Enter URL" aria-label="Enter URL"

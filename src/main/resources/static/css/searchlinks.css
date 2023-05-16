@@ -28,3 +28,8 @@ h1 {
   padding: 5% 15px 15px 15px;
   margin: 0 auto;
 }
+
+table {
+    table-layout: auto;
+    word-wrap: break-word;
+}

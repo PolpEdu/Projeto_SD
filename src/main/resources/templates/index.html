@@ -31,6 +31,14 @@
             return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked + "&admin=" + urlParams.get('admin');
         }
 
+        function generateUrlUserSearch() {
+        // username-input
+            const urlParams = new URLSearchParams(window.location.search);
+            return "/userstories?user=" + document.getElementById("username-input").value;
+        }
+
+
+
     </script>
 </head>
 <body>
@@ -41,10 +49,8 @@
          width="100" height="100">
     <h5 class="pb-3 mx-auto text-center font-weight-light font-italic">Anon Panel</h5>
     <!-- Place to index a new URL -->
-    <div class="main-menu-row-input mb-2">
+    <div class="main-menu-row-input mb-2 mx-1">
         <div class="input-group">
-
-
             <input type="text" class="form-control" placeholder="Enter Word" aria-label="Enter Word"
                    aria-describedby="basic-addon2" id="wordInput">
 
@@ -57,7 +63,7 @@
             </div>
         </div>
     </div>
-    <div class="main-menu-row-input mb-4">
+    <div class="main-menu-row-input mb-2 mx-1">
         <form th:action="@{/indexnewurl}" th:object="${IndexRequest}" method="post" id="urlForm">
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Enter URL" aria-label="Enter URL"
@@ -68,10 +74,23 @@
                     <!-- when clicked, the button will send a POST request to the /indexnewurl route, we use custom to allow the POST method without forms-->
                     <button class="btn btn-outline-secondary btn-md" type="submit" id="button-addon2">Index URL</button>
                 </div>
-
             </div>
         </form>
     </div>
+
+    <div class="main-menu-row-input mb-4 mx-1">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Enter User Name" aria-label="Enter User Name"
+                   aria-describedby="basic-addon2" id="username-input">
+
+            <div class="input-group-append">
+                <!-- when clicked, the button will redirect to the search user stories page -->
+                <a class="btn btn-outline-secondary btn-md" id="button-addon3" th:onclick="'window.location.href = generateUrlUserSearch()'" >Search User Stories</a>
+            </div>
+
+        </div>
+    </div>
+
     <div class="d-flex flex-row align-middle justify-content-center">
         <a type="button" class="btn btn-success btn-lg mx-1 w-75" th:href="@{/login}">Login</a>
         <a type="button" class="btn btn-danger btn-lg mx-1 w-75" th:href="@{/register}">Register</a>
