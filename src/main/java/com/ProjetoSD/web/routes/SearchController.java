@@ -53,7 +53,7 @@ public class SearchController {
     }
 
     @GetMapping("/userstories")
-    public String showUserstoriesPage(Model m, @RequestParam(name = "user") String user, @RequestParam(name = "admin", required = false) boolean adm) throws RemoteException {
+    public String showUserstoriesPage(Model m, @RequestParam(name = "user", required = false) String user, @RequestParam(name = "admin", required = false) boolean adm) throws RemoteException {
 
         System.out.println("user: " + user);
 
@@ -61,7 +61,8 @@ public class SearchController {
         ArrayList<HackerNewsItemRecord> res = hackerNewsUser(user);
         System.out.println("res: " + res);
         if (res.isEmpty()) {
-            return "redirect:/userstories?empty=true";
+            return "userstories";
+
         }
         m.addAttribute("stories", res);
         return "userstories"; // Return the name of the Thymeleaf template for the register page
@@ -79,6 +80,12 @@ public class SearchController {
 
         // for each story id, get the story details https://hacker-news.firebaseio.com/v0/item/<number>.json?print=pretty
         assert hackerNewsUserRecord != null;
+        assert hackerNewsUserRecord.submitted() != null;
+        if (hackerNewsUserRecord == null) {
+            return hackerNewsUserRecords;
+        } else if (hackerNewsUserRecord.submitted() == null) {
+            return hackerNewsUserRecords;
+        }
 
         for (Object storyId : hackerNewsUserRecord.submitted()) {
             String storyItemDetailsEndpoint = String.format("https://hacker-news.firebaseio.com/v0/item/%s.json?print=pretty", storyId);

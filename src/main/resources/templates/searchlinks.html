@@ -62,9 +62,10 @@
             // else redirect to /searchlinks?page=page-1
             const urlParams = new URLSearchParams(window.location.search);
             const page = urlParams.get('page');
+            const admin = urlParams.get('admin');
             if (page) {
                 if (page !== "1") {
-                    window.location.href = "/searchlinks" + "?s=" + urlParams.get('s') + "&h=false" + "&admin=" + urlParams.get('admin') + "&page=" + (parseInt(page) - 1);
+                    redirectToPage(parseInt(page) - 1);
                 }
             }
         }
@@ -74,14 +75,18 @@
             const urlParams = new URLSearchParams(window.location.search);
             const page = urlParams.get('page');
             if (page) {
-                window.location.href = "/searchlinks" + "?s=" + urlParams.get('s') + "&h=false" + "&admin=" + urlParams.get('admin') + "&page=" + (parseInt(page) + 1);
+                redirectToPage(parseInt(page) + 1);
             }
         }
 
         function redirectToPage(page) {
             const urlParams = new URLSearchParams(window.location.search);
             const search = urlParams.get('s');
-            window.location.href = "/searchlinks" + "?s=" + search + "&h=false" + "&admin=" + urlParams.get('admin') + "&page=" + (parseInt(page) + 1);
+            if (urlParams.get('admin')) {
+                window.location.href = "/searchlinks" + "?s=" + search + "&h=false" + "&admin=" + urlParams.get('admin') + "&page=" + page;
+            } else {
+                window.location.href = "/searchlinks" + "?s=" + search + "&h=false" + "&page=" + page;
+            }
         }
 
     </script>
