@@ -25,4 +25,6 @@ public class RMIServerConfig {
         Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
         return (RMIServerInterface) registry.lookup(rmiRegistryName);
     }
+
+
 }

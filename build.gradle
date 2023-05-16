@@ -19,6 +19,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.15.4'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'ognl:ognl:3.1.12'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 
 tasks.named('test') {
