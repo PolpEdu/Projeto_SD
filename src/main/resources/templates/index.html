@@ -28,7 +28,10 @@
 
         function generateUrlSearch(){
             const urlParams = new URLSearchParams(window.location.search);
-            return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked + "&admin=" + urlParams.get('admin');
+            if(urlParams.get('admin')) {
+                return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked + "&admin=" + urlParams.get('admin');
+            }
+            return "/searchlinks?s=" + document.getElementById("wordInput").value + "&h=" + document.getElementById("hackerNews").checked;
         }
 
         function generateUrlUserSearch() {

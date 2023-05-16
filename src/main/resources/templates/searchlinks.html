@@ -76,7 +76,7 @@
             <li th:each="entry, iterStat : ${hackernewslist}" th:if="${iterStat.count}">
                 <a th:href="${entry.key}" th:text="${entry.key}" target="_blank"></a>
                 <!-- search the link pointers from that link, pass url as parameter -->
-                <a type="button" class="btn btn-primary btn-sm mx-1 btn-pointers-urls" th:href="@{/pointers(url=${entry.key})}" target="_blank">Pointers</a>
+                <a type="button" class="btn btn-warning btn-sm mx-1 btn-pointers-urls" th:href="@{/pointers(url=${entry.key})}" target="_blank">Pointers</a>
                 <ul>
                     <!-- Each entry.value is an ArrayList<String>, Map it accordingly -->
                     <li th:each="url : ${entry.value}">
