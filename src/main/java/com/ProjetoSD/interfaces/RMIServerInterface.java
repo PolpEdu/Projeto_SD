@@ -18,7 +18,7 @@ public interface RMIServerInterface extends Remote {
 
     ArrayList<String> getTop10Searches() throws RemoteException;
 
-    HashMap<String, ArrayList<String>> searchLinks(String phrase) throws RemoteException;
+    HashMap<String, ArrayList<String>> searchLinks(String phrase, int page) throws RemoteException;
     ArrayList<String> linkPointers(String link) throws RemoteException;
 
     ArrayList<String> getLinksByRelevance(String link) throws RemoteException;

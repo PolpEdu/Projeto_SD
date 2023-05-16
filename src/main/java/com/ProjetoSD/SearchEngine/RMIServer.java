@@ -313,7 +313,7 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
      * @return returns an hashmap like. If no links are found, it will return an empty hashmap
      * @throws RemoteException if there is a problem with the connection to the barrel
      */
-    public HashMap<String, ArrayList<String>> searchLinks(String phrase) throws RemoteException {
+    public HashMap<String, ArrayList<String>> searchLinks(String phrase, int page) throws RemoteException {
         // separate words by space
         String[] words = phrase.split(" ");
         String[] pois = {"de", "sobre", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem", "hei", "há", "havemos", "hão", "houve", "houvemos", "houveram", "houvera", "houvéramos", "haja", "hajamos", "hajam", "houvesse", "houvéssemos", "houvessem", "houver", "houvermos", "houverem", "houverei", "houverá", "houveremos", "houverão", "houveria", "houveríamos", "houveriam", "sou", "somos", "são", "era", "éramos", "eram", "fui", "foi", "fomos", "foram", "fora", "fôramos", "seja", "sejamos", "sejam", "fosse", "fôssemos", "fossem", "for", "formos", "forem", "serei", "será", "seremos", "serão", "seria", "seríamos", "seriam", "tenho", "tem", "temos", "tém", "tinha", "tínhamos", "tinham", "tive", "teve", "tivemos", "tiveram", "tivera", "tivéramos", "tenha", "tenhamos", "tenham", "tivesse", "tivéssemos", "tivessem", "tiver", "tivermos", "tiverem", "terei", "terá", "teremos", "terão", "teria", "teríamos", "teriam"};
@@ -327,8 +327,8 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
         }
 
 
-        ArrayList<HashSet<String>> totalUrlfound = new ArrayList<HashSet<String>>();
-        HashMap<String, ArrayList<String>> res = new HashMap<String, ArrayList<String>>();
+        ArrayList<HashSet<String>> totalUrlfound = new ArrayList<>();
+        HashMap<String, ArrayList<String>> res = new HashMap<>();
 
         System.out.println("[SERVER] Searching for links. From words: " + Arrays.toString(words) + "");
 
@@ -406,7 +406,58 @@ public class RMIServer extends UnicastRemoteObject implements RMIServerInterface
             System.out.println("[SERVER] Error updating word searches: "+ res1.get(1));
         }
 
-        return res;
+        HashMap<String, Integer> linksRelevance = new HashMap<>();
+
+        for(String link: res.keySet()){
+            int relevance = this.getLinksByRelevance(link).size();
+            linksRelevance.put(link, relevance);
+        }
+
+        res = sortByValue(res, linksRelevance);
+        HashMap<String, ArrayList<String>> resfinal = new HashMap<>();
+        int i = 0;
+        int size = res.size();
+        for(String link: res.keySet()){
+            if(10*page <= size){
+                if(i >= 10*(page-1) && i < 10*page){
+                    resfinal.put(link, res.get(link));
+                }
+            }
+            i++;
+        }
+
+
+        return resfinal;
+    }
+
+    private HashMap<String, ArrayList<String>> sortByValue(HashMap<String, ArrayList<String>> links, HashMap<String, Integer> linksRelevance) {
+        /*
+            links: {
+                <link> : [<title>, <description>],
+                <link> : [<title>, <description>]
+            }
+            linksRelevance: {
+                <link> : <relevanceWeight>,
+                <link> : <relevanceWeight>
+            }
+         */
+
+        // System.out.println("Links Relevance: " + linksRelevance);
+
+        // Sort the keys of links HashMap based on the corresponding values in linksRelevance HashMap
+        List<String> sortedKeys = new ArrayList<>(links.keySet());
+        Collections.sort(sortedKeys, (a, b) -> linksRelevance.get(b) - linksRelevance.get(a));
+
+
+        // Create a new HashMap with the sorted keys and their corresponding values
+        HashMap<String, ArrayList<String>> sortedLinks = new LinkedHashMap<>();
+        for (String key : sortedKeys) {
+            sortedLinks.put(key, links.get(key));
+        }
+
+        //System.out.println("Sorted Links: " + sortedLinks);
+
+        return sortedLinks;
     }
 
     /**

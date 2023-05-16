@@ -432,7 +432,7 @@ class RMIClient {
 
 
 
-        HashMap<String, ArrayList<String>> res = this.sv.searchLinks(phrase);
+        HashMap<String, ArrayList<String>> res = this.sv.searchLinks(phrase, 1);
 
         // check for empty results
         if (res.size() == 0) {

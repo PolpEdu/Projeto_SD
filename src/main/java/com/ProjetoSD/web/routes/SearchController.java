@@ -78,7 +78,7 @@ public class SearchController {
         if (hackernews) {
             res = hackerNewsTopStories(search);
         } else {
-            res = this.sv.searchLinks(search);
+            res = this.sv.searchLinks(search, 2);
         }
         System.out.println(res);
         m.addAttribute("hackernewslist", res);
