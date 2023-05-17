@@ -13,16 +13,29 @@ import org.springframework.web.bind.annotation.*;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
+/**
+ * AuthController class
+ */
 @Controller
 @RequestMapping("/")
 class AuthController {
+    /** the RMI server interface */
     private final RMIServerInterface sv;
 
+    /**
+     * Constructor
+     * @param rmiServerInterface the RMI server interface
+     */
     @Autowired
     AuthController(RMIServerInterface rmiServerInterface) {
         this.sv = rmiServerInterface;
     }
 
+    /**
+     * This function is called on the GET request to /index. When you access the index page.
+     * @param m Model object
+     * @return String with the name of the index template to render
+     */
     @GetMapping("/")
     public String showIndexPage(Model m) {
         // model serve para passar variveis para templates
@@ -30,6 +43,12 @@ class AuthController {
         return "index"; // Return the name of the Thymeleaf template for the index page
     }
 
+    /**
+     * This function is called on the GET request to /login. When you access the login page
+     *
+     * @param m Model object
+     * @return String with the name of the login template to render
+     */
     @GetMapping("/login")
     public String showLoginPage(Model m) {
         // model serve para passar variveis para templates
@@ -40,6 +59,13 @@ class AuthController {
         return "login"; // Return the name of the Thymeleaf template for the login page
     }
 
+    /**
+     * This function is called on the POST request to /login. When you submit the login form
+     * In this function you should process the login form data and perform the authentication and validation logic
+     *
+     * @param fr FormRequest object
+     * @return String with the name of the dashboard template to render or the login template with an error parameter
+     */
     @PostMapping("/login")
     public String handleLoginFormSubmission(@ModelAttribute FormRequest fr) throws RemoteException {
         // Process the email and password data
@@ -74,7 +100,12 @@ class AuthController {
     }
 
 
-
+    /**
+     * This function is called on the GET request to /register. When you access the register page
+     *
+     * @param m Model object
+     * @return String with the name of the register template to render
+     */
     @GetMapping("/register")
     public String showRegisterPage(Model m) {
         // model serve para passar variveis para templates
@@ -82,6 +113,13 @@ class AuthController {
         return "register"; // Return the name of the Thymeleaf template for the register page
     }
 
+    /**
+     * This function is called on the POST request to /register. When you submit the register form
+     * In this function you should process the register form data and perform the validation logic
+     *
+     * @param rr RegisterRequest object
+     * @return String with the name of the login template to render or the register template with an error parameter
+     */
     @PostMapping("/register")
     public String handleRegisterFormSubmission(@ModelAttribute RegisterRequest rr) throws RemoteException {
         // Process the email and password data
@@ -127,6 +165,12 @@ class AuthController {
         return "redirect:/?error=true" ; // Redirect back to the login page with an error parameter
     }
 
+    /**
+     * This function is called on the GET request to /dashboard. When you access the dashboard page
+     * @param m Model object
+     * @param adm boolean to check if the user is admin
+     * @return String with the name of the dashboard template to render
+     */
     @GetMapping("/dashboard")
     public String showdashboard(Model m, @RequestParam(name = "admin", required = false) boolean adm) {
         m.addAttribute("IndexRequest", new IndexRequest());
